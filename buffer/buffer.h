@@ -1,14 +1,15 @@
-/* OVERVIEW:
- * Dynamic array with standard I/O library API,
- *
- * Minimum version - C89, except
- * bprinf/vbprintf available in C99 and
- * bscanf/vbscanf not avaible, because not
- * common way get read it characters count
- */
+/* * * * * * * * * * * * * * * * * * * * * *
+ * Dynamic buffer with API like as std IO. *
+ * Most function available in C89, but     *
+ * bprintf and vbprintf available in C99.  *
+ * Functions bscanf and vbscanf not exist. *
+ * * * * * * * * For example * * * * * * * *
+ *        fwrite -> write to  file         *
+ *        bwrite -> write to buffer        *
+ * * * * * * * * * * * * * * * * * * * * * */
 
-#ifndef BUFFER_LIBRARY_H
-#define BUFFER_LIBRARY_H
+#ifndef IO_DYNAMIC_BUFFER_H
+#define IO_DYNAMIC_BUFFER_H
 
 #include <stddef.h>
 
@@ -89,4 +90,4 @@ size_t      bsize(BUFFER* buffer);
 }
 #endif
 
-#endif /* BUFFER_LIBRARY_H */
+#endif /* IO_DYNAMIC_BUFFER_H */
