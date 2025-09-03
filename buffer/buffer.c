@@ -229,8 +229,9 @@ int beob(BUFFER* buf) {
 /* Buffer API extension */
 
 int bpeek(BUFFER* buf) {
-    int ch = bgetc(    buf);
-    return bungetc(ch, buf);
+    if (!buf || !buf->data) return EOB;
+    if (buf->cursor == buf->count) return EOB;
+    return buf->data[buf->cursor];
 }
 
 void breset(BUFFER* buf) {
