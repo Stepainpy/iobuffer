@@ -13,16 +13,19 @@
 
 #include <stddef.h>
 
-#ifdef __GNUC__
-#  define __bprintf_gccattr __attribute__((format(printf, 2, 3)))
-#else
-#  define __bprintf_gccattr
-#  if __STDC_VERSION__ >= 199901L
-#    define __restrict__ restrict
+#if __STDC_VERSION__ < 199901L
+#  if defined(__GNUC__) && !defined(__clang__)
+#    define restrict __restrict__
 #  else
-#    define __restrict__
-#  endif /* C99 */
-#endif /* ifdef __GNUC__ */
+#    define restrict
+#  endif
+#endif
+
+#ifdef __GNUC__
+#  define __bprintf_attr(ftc) __attribute__((format(printf, 2, ftc)))
+#else
+#  define __bprintf_attr(...)
+#endif /* __GNUC__ */
 
 #ifdef __cplusplus
 extern "C" {
@@ -39,19 +42,19 @@ typedef size_t bpos_t;
 BUFFER* bopen(void);
 void bclose(BUFFER* buffer);
 
-int bgetpos(BUFFER* __restrict__ buffer,       bpos_t* __restrict__ pos);
-int bsetpos(BUFFER*              buffer, const bpos_t*              pos);
+int bgetpos(BUFFER* restrict buffer,       bpos_t* restrict pos);
+int bsetpos(BUFFER*          buffer, const bpos_t*          pos);
 long btell(BUFFER* buffer);
 int  bseek(BUFFER* buffer, long offset, int origin);
 void brewind(BUFFER* buffer);
 
-size_t bread (      void* __restrict__ data, size_t size, size_t count, BUFFER* __restrict__ buffer);
-size_t bwrite(const void* __restrict__ data, size_t size, size_t count, BUFFER* __restrict__ buffer);
+size_t bread (      void* restrict data, size_t size, size_t count, BUFFER* restrict buffer);
+size_t bwrite(const void* restrict data, size_t size, size_t count, BUFFER* restrict buffer);
 
 int bgetc(BUFFER* buffer);
-char* bgets(char* __restrict__ str, int count, BUFFER* __restrict__ buffer);
+char* bgets(char* restrict str, int count, BUFFER* restrict buffer);
 int bputc(int byte, BUFFER* buffer);
-int bputs(const char* __restrict__ string, BUFFER* __restrict__ buffer);
+int bputs(const char* restrict string, BUFFER* restrict buffer);
 int bungetc(int byte, BUFFER* buffer);
 
 int beob(BUFFER* buffer);
@@ -59,8 +62,8 @@ int beob(BUFFER* buffer);
 #if __STDC_VERSION__ >= 199901L
 #include <stdarg.h>
 
-int vbprintf(BUFFER* __restrict__ buffer, const char* __restrict__ format, va_list list);
-int  bprintf(BUFFER* __restrict__ buffer, const char* __restrict__ format, ...) __bprintf_gccattr;
+int vbprintf(BUFFER* restrict buffer, const char* restrict format, va_list list) __bprintf_attr(0);
+int  bprintf(BUFFER* restrict buffer, const char* restrict format, ...         ) __bprintf_attr(3);
 #endif /* C99 */
 
 /* Buffer API extension */

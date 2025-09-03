@@ -39,7 +39,7 @@ void bclose(BUFFER* buf) {
     free(buf);
 }
 
-int bgetpos(BUFFER* __restrict__ buf, bpos_t* __restrict__ pos) {
+int bgetpos(BUFFER* restrict buf, bpos_t* restrict pos) {
     if (!buf || !buf->data || !pos) return 1;
     *pos = buf->cursor;
     return 0;
@@ -92,7 +92,7 @@ int bgetc(BUFFER* buf) {
     return buf->data[buf->cursor++];
 }
 
-char* bgets(char* __restrict__ str, int count, BUFFER* __restrict__ buf) {
+char* bgets(char* restrict str, int count, BUFFER* restrict buf) {
     unsigned char* newline; size_t minlen, offset;
     if (!buf || !buf->data || !str) return NULL;
 
@@ -130,7 +130,7 @@ int bputc(int ch, BUFFER* buf) {
     return ch;
 }
 
-int bputs(const char* __restrict__ str, BUFFER* __restrict__ buf) {
+int bputs(const char* restrict str, BUFFER* restrict buf) {
     size_t len;
     if (!buf || !str) return EOB;
 
@@ -159,7 +159,7 @@ int bungetc(int ch, BUFFER* buf) {
 }
 
 #if __STDC_VERSION__ >= 199901L
-int bprintf(BUFFER* __restrict__ buf, const char* __restrict__ fmt, ...) {
+int bprintf(BUFFER* restrict buf, const char* restrict fmt, ...) {
     if (!buf || !fmt) return -1;
 
     va_list args;
@@ -170,7 +170,7 @@ int bprintf(BUFFER* __restrict__ buf, const char* __restrict__ fmt, ...) {
     return len;
 }
 
-int vbprintf(BUFFER* __restrict__ buf, const char* __restrict__ fmt, va_list args) {
+int vbprintf(BUFFER* restrict buf, const char* restrict fmt, va_list args) {
     if (!buf || !fmt) return -1;
 
     /* measure from https://stackoverflow.com/a/12825199 */
@@ -194,7 +194,7 @@ int vbprintf(BUFFER* __restrict__ buf, const char* __restrict__ fmt, va_list arg
 }
 #endif /* C99 */
 
-size_t bread(void* __restrict__ data, size_t size, size_t count, BUFFER* __restrict__ buf) {
+size_t bread(void* restrict data, size_t size, size_t count, BUFFER* restrict buf) {
     size_t read;
     if (!buf || !buf->data) return 0;
     if (!data || !size) return 0;
@@ -206,7 +206,7 @@ size_t bread(void* __restrict__ data, size_t size, size_t count, BUFFER* __restr
     return read;
 }
 
-size_t bwrite(const void* __restrict__ data, size_t size, size_t count, BUFFER* __restrict__ buf) {
+size_t bwrite(const void* restrict data, size_t size, size_t count, BUFFER* restrict buf) {
     size_t bytes = size * count;
     if (!buf || bytes == 0) return 0;
     if (breserve(buf, bytes)) return 0;
