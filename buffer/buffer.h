@@ -68,10 +68,6 @@ int  bprintf(BUFFER* restrict buffer, const char* restrict format, ...         )
 
 /* Buffer API extension */
 
-#if __STDC_VERSION__ >= 199901L
-#  define bloop(bytevar, buffer) for (int bytevar; (bytevar = bgetc(buffer)) != EOB;)
-#endif /* C99 */
-
 int bpeek(BUFFER* buffer);
 void breset(BUFFER* buffer);
 
