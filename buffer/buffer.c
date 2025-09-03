@@ -7,6 +7,9 @@
 #define B_INIT_CAP 1024
 #define b_min(a, b) ((a) < (b) ? (a) : (b))
 
+#define INT_FALSE 1
+#define INT_TRUE  0
+
 struct BUFFER {
     unsigned char* data;
     size_t count, capacity;
@@ -124,7 +127,7 @@ int bputc(int ch, BUFFER* buf) {
     buf->data[buf->cursor++] = (unsigned char)ch;
     if (buf->cursor > buf->count) {
         buf->data[buf->cursor] = '\0';
-        ++buf->count;
+        buf->count = buf->cursor;
     }
 
     return ch;
