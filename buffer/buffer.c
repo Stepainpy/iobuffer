@@ -195,15 +195,15 @@ int vbprintf(BUFFER* __restrict__ buf, const char* __restrict__ fmt, va_list arg
 #endif /* C99 */
 
 size_t bread(void* __restrict__ data, size_t size, size_t count, BUFFER* __restrict__ buf) {
-    size_t readed;
-    if (!buf || !buf->data || !data) return 0;
-    if (!size) return 0;
+    size_t read;
+    if (!buf || !buf->data) return 0;
+    if (!data || !size) return 0;
 
-    readed = b_min((buf->count - buf->cursor) / size, count);
-    memcpy(data, buf->data + buf->cursor, readed * size);
-    buf->cursor += readed * size;
+    read = b_min((buf->count - buf->cursor) / size, count);
+    memcpy(data, buf->data + buf->cursor, read * size);
+    buf->cursor += read * size;
 
-    return readed;
+    return read;
 }
 
 size_t bwrite(const void* __restrict__ data, size_t size, size_t count, BUFFER* __restrict__ buf) {
