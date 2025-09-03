@@ -20,7 +20,8 @@ struct BUFFER {
  * takes into account the null-terminator character
  */
 static int breserve(BUFFER* buf, size_t add_size) {
-    if (buf->cursor + add_size + 1 <= buf->capacity) return 0;
+    if (buf->cursor + add_size + 1 <= buf->capacity)
+        return INT_TRUE;
 
     if (buf->capacity == 0) buf->capacity = B_INIT_CAP;
     while (buf->cursor + add_size + 1 > buf->capacity)
@@ -43,16 +44,16 @@ void bclose(BUFFER* buf) {
 }
 
 int bgetpos(BUFFER* restrict buf, bpos_t* restrict pos) {
-    if (!buf || !buf->data || !pos) return 1;
+    if (!buf || !buf->data || !pos) return INT_FALSE;
     *pos = buf->cursor;
-    return 0;
+    return INT_TRUE;
 }
 
 int bsetpos(BUFFER* buf, const bpos_t* pos) {
-    if (!buf || !buf->data || !pos) return 1;
-    if (*pos > buf->count) return 1;
+    if (!buf || !buf->data || !pos) return INT_FALSE;
+    if (*pos > buf->count) return INT_FALSE;
     buf->cursor = *pos;
-    return 0;
+    return INT_TRUE;
 }
 
 long btell(BUFFER* buf) {
@@ -62,26 +63,26 @@ long btell(BUFFER* buf) {
 }
 
 int bseek(BUFFER* buf, long off, int org) {
-    if (!buf || !buf->data) return 1;
-    if (org > BSEEK_END || org < BSEEK_SET) return 1;
+    if (!buf || !buf->data) return INT_FALSE;
+    if (org > BSEEK_END || org < BSEEK_SET) return INT_FALSE;
 
     switch (org) {
         case BSEEK_SET: {
-            if (off < 0 || (unsigned long)off > buf->count) return 1;
+            if (off < 0 || (unsigned long)off > buf->count) return INT_FALSE;
             buf->cursor = off;
         } break;
         case BSEEK_CUR: {
-            if (off > 0 && (unsigned long) off > buf->count - buf->cursor) return 1;
-            if (off < 0 && (unsigned long)-off > buf->cursor) return 1;
+            if (off > 0 && (unsigned long) off > buf->count - buf->cursor) return INT_FALSE;
+            if (off < 0 && (unsigned long)-off > buf->cursor) return INT_FALSE;
             buf->cursor += off;
         } break;
         case BSEEK_END: {
-            if (off > 0 || (unsigned long)-off > buf->count) return 1;
+            if (off > 0 || (unsigned long)-off > buf->count) return INT_FALSE;
             buf->cursor = buf->count + off;
         } break;
     }
 
-    return 0;
+    return INT_TRUE;
 }
 
 void brewind(BUFFER* buf) {
