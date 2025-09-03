@@ -207,12 +207,12 @@ size_t bread(void* __restrict__ data, size_t size, size_t count, BUFFER* __restr
 }
 
 size_t bwrite(const void* __restrict__ data, size_t size, size_t count, BUFFER* __restrict__ buf) {
-    size_t fullsize = size * count;
-    if (!buf || fullsize == 0) return 0;
-    if (breserve(buf, fullsize)) return 0;
+    size_t bytes = size * count;
+    if (!buf || bytes == 0) return 0;
+    if (breserve(buf, bytes)) return 0;
 
-    memcpy(buf->data + buf->cursor, data, fullsize);
-    buf->cursor += fullsize;
+    memcpy(buf->data + buf->cursor, data, bytes);
+    buf->cursor += bytes;
     if (buf->cursor > buf->count) {
         buf->data[buf->cursor] = '\0';
         buf->count = buf->cursor;
