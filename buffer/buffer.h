@@ -14,11 +14,7 @@
 #include <stddef.h>
 
 #if __STDC_VERSION__ < 199901L
-#  if defined(__GNUC__) && !defined(__clang__)
-#    define restrict __restrict__
-#  else
-#    define restrict
-#  endif
+#  define restrict __restrict
 #endif
 
 #ifdef __GNUC__
