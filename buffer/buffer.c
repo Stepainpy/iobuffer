@@ -1,7 +1,6 @@
 #include "buffer.h"
 #include <stdlib.h>
 #include <string.h>
-#include <limits.h>
 #include <stdio.h>
 
 #define B_FAIL 1
@@ -75,7 +74,7 @@ int bsetpos(BUFFER* buf, const bpos_t* pos) {
 
 long btell(BUFFER* buf) {
     if (!buf || !buf->data) return -1L;
-    if (buf->cursor > LONG_MAX) return -1L;
+    if (buf->cursor > (~0UL >> 1)) return -1L;
     return buf->cursor;
 }
 
