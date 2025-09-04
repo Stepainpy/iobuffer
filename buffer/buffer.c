@@ -7,7 +7,9 @@
 #define B_FAIL 1
 #define B_OKEY 0
 #define B_INIT_CAP 1024
+
 #define b_min(a, b) ((a) < (b) ? (a) : (b))
+#define b_max(a, b) ((a) > (b) ? (a) : (b))
 
 /* taken from GMP:
  * https://github.com/WinBuilds/gmplib/blob/ed48f534df05428c2474c1bde037e84e057a3972/gmp-impl.h#L304
@@ -33,11 +35,11 @@ struct BUFFER {
  * takes into account the null-terminator character
  */
 static int breserve(BUFFER* buf, size_t add_size) {
-    if (buf->cursor + add_size + 1 <= buf->capacity)
+    if (buf->cursor + add_size <= buf->capacity)
         return B_OKEY;
 
     if (buf->capacity == 0) buf->capacity = B_INIT_CAP;
-    while (buf->cursor + add_size + 1 > buf->capacity)
+    while (buf->cursor + add_size > buf->capacity)
         buf->capacity += buf->capacity / 2; /* + 50% */
     buf->data = realloc(buf->data, buf->capacity);
 
@@ -139,10 +141,7 @@ int bputc(int ch, BUFFER* buf) {
     if (breserve(buf, 1)) return EOB;
 
     buf->data[buf->cursor++] = (uchar)ch;
-    if (buf->cursor > buf->count) {
-        buf->data[buf->cursor] = '\0';
-        buf->count = buf->cursor;
-    }
+    buf->count = b_max(buf->count, buf->cursor);
 
     return ch;
 }
@@ -156,10 +155,7 @@ int bputs(const char* restrict str, BUFFER* restrict buf) {
 
     memcpy(buf->data + buf->cursor, str, len);
     buf->cursor += len;
-    if (buf->cursor > buf->count) {
-        buf->data[buf->cursor] = '\0';
-        buf->count = buf->cursor;
-    }
+    buf->count = b_max(buf->count, buf->cursor);
 
     return 0;
 }
@@ -187,15 +183,11 @@ int bprintf(BUFFER* restrict buf, const char* restrict fmt, ...) {
 
     saved = buf->data[buf->cursor + len];
     va_start(args, fmt);
-    len = vsnprintf((char*)buf->data + buf->cursor, len + 1, fmt, args);
+    vsprintf((char*)buf->data + buf->cursor, fmt, args);
     va_end(args);
 
-    if (len < 0) return -1;
     buf->data[buf->cursor += len] = saved;
-    if (buf->cursor > buf->count) {
-        buf->data[buf->cursor] = '\0';
-        buf->count = buf->cursor;
-    }
+    buf->count = b_max(buf->count, buf->cursor);
 
     return len;
 }
@@ -213,15 +205,11 @@ int vbprintf(BUFFER* restrict buf, const char* restrict fmt, va_list args) {
 
     saved = buf->data[buf->cursor + len];
     va_copy(acpy, args);
-    len = vsnprintf((char*)buf->data + buf->cursor, len + 1, fmt, acpy);
+    vsprintf((char*)buf->data + buf->cursor, fmt, acpy);
     va_end(acpy);
 
-    if (len < 0) return -1;
     buf->data[buf->cursor += len] = saved;
-    if (buf->cursor > buf->count) {
-        buf->data[buf->cursor] = '\0';
-        buf->count = buf->cursor;
-    }
+    buf->count = b_max(buf->count, buf->cursor);
 
     return len;
 }
@@ -245,10 +233,7 @@ size_t bwrite(const void* restrict data, size_t size, size_t count, BUFFER* rest
 
     memcpy(buf->data + buf->cursor, data, bytes);
     buf->cursor += bytes;
-    if (buf->cursor > buf->count) {
-        buf->data[buf->cursor] = '\0';
-        buf->count = buf->cursor;
-    }
+    buf->count = b_max(buf->count, buf->cursor);
 
     return count;
 }
