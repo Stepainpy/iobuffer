@@ -66,16 +66,17 @@ void breset(BUFFER* buffer);
 /* Buffer view extension */
 
 typedef struct BUFVIEW {
-    const void* data;
-    size_t      size;
+    const void* base;
+    const void* head;
+    const void* stop;
 } BUFVIEW;
 
 #define BV_FMT "%.*s"
-#define BV_ARG(view) (int)(view).size, (const char*)(view).data
+#define BV_ARG(view, from) \
+    (int)((char*)(view).stop - (char*)(view).from), \
+    (const char*)(view).from
 
-BUFVIEW     bview(BUFFER* buffer);
-const void* bdata(BUFFER* buffer);
-size_t      bsize(BUFFER* buffer);
+BUFVIEW bview(BUFFER* buffer);
 
 #ifdef __cplusplus
 }

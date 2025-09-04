@@ -262,15 +262,10 @@ void breset(BUFFER* buf) {
 
 BUFVIEW bview(BUFFER* buf) {
     BUFVIEW view = {0};
-    view.data = bdata(buf);
-    view.size = bsize(buf);
+    if (buf && buf->data) {
+        view.base = buf->data;
+        view.head = buf->data + buf->cursor;
+        view.stop = buf->data + buf->count;
+    }
     return view;
-}
-
-const void* bdata(BUFFER* buf) {
-    return buf ? buf->data : NULL;
-}
-
-size_t bsize(BUFFER* buf) {
-    return buf && buf->data ? buf->count : 0;
 }
