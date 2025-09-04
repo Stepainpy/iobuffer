@@ -10,9 +10,7 @@
 #define b_min(a, b) ((a) < (b) ? (a) : (b))
 #define b_max(a, b) ((a) > (b) ? (a) : (b))
 
-/* taken from GMP:
- * https://github.com/WinBuilds/gmplib/blob/ed48f534df05428c2474c1bde037e84e057a3972/gmp-impl.h#L304
- */
+/* taken from GMP: https://github.com/alisw/GMP/blob/master/gmp-impl.h#L305 */
 #ifndef va_copy
 #  ifdef __va_copy
 #    define va_copy(d, s) __va_copy(d, s)
