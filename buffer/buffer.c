@@ -4,11 +4,10 @@
 #include <limits.h>
 #include <stdio.h>
 
+#define B_FAIL 1
+#define B_OKEY 0
 #define B_INIT_CAP 1024
 #define b_min(a, b) ((a) < (b) ? (a) : (b))
-
-#define INT_FALSE 1
-#define INT_TRUE  0
 
 /* taken from GMP:
  * https://github.com/WinBuilds/gmplib/blob/ed48f534df05428c2474c1bde037e84e057a3972/gmp-impl.h#L304
@@ -32,7 +31,7 @@ struct BUFFER {
  */
 static int breserve(BUFFER* buf, size_t add_size) {
     if (buf->cursor + add_size + 1 <= buf->capacity)
-        return INT_TRUE;
+        return B_OKEY;
 
     if (buf->capacity == 0) buf->capacity = B_INIT_CAP;
     while (buf->cursor + add_size + 1 > buf->capacity)
@@ -55,16 +54,16 @@ void bclose(BUFFER* buf) {
 }
 
 int bgetpos(BUFFER* restrict buf, bpos_t* restrict pos) {
-    if (!buf || !buf->data || !pos) return INT_FALSE;
+    if (!buf || !buf->data || !pos) return B_FAIL;
     *pos = buf->cursor;
-    return INT_TRUE;
+    return B_OKEY;
 }
 
 int bsetpos(BUFFER* buf, const bpos_t* pos) {
-    if (!buf || !buf->data || !pos) return INT_FALSE;
-    if (*pos > buf->count) return INT_FALSE;
+    if (!buf || !buf->data || !pos) return B_FAIL;
+    if (*pos > buf->count) return B_FAIL;
     buf->cursor = *pos;
-    return INT_TRUE;
+    return B_OKEY;
 }
 
 long btell(BUFFER* buf) {
@@ -74,26 +73,26 @@ long btell(BUFFER* buf) {
 }
 
 int bseek(BUFFER* buf, long off, int org) {
-    if (!buf || !buf->data) return INT_FALSE;
-    if (org > BSEEK_END || org < BSEEK_SET) return INT_FALSE;
+    if (!buf || !buf->data) return B_FAIL;
+    if (org > BSEEK_END || org < BSEEK_SET) return B_FAIL;
 
     switch (org) {
         case BSEEK_SET: {
-            if (off < 0 || (unsigned long)off > buf->count) return INT_FALSE;
+            if (off < 0 || (unsigned long)off > buf->count) return B_FAIL;
             buf->cursor = off;
         } break;
         case BSEEK_CUR: {
-            if (off > 0 && (unsigned long) off > buf->count - buf->cursor) return INT_FALSE;
-            if (off < 0 && (unsigned long)-off > buf->cursor) return INT_FALSE;
+            if (off > 0 && (unsigned long) off > buf->count - buf->cursor) return B_FAIL;
+            if (off < 0 && (unsigned long)-off > buf->cursor) return B_FAIL;
             buf->cursor += off;
         } break;
         case BSEEK_END: {
-            if (off > 0 || (unsigned long)-off > buf->count) return INT_FALSE;
+            if (off > 0 || (unsigned long)-off > buf->count) return B_FAIL;
             buf->cursor = buf->count + off;
         } break;
     }
 
-    return INT_TRUE;
+    return B_OKEY;
 }
 
 void brewind(BUFFER* buf) {
