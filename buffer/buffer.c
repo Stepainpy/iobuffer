@@ -260,6 +260,15 @@ void breset(BUFFER* buf) {
     memset(buf->data, 0, buf->capacity);
 }
 
+void berase(BUFFER* buf, size_t count) {
+    if (!buf || !buf->data) return;
+    count = b_min(count, buf->count - buf->cursor);
+    memmove(buf->data + buf->cursor,
+        buf->data + buf->cursor + count,
+        buf->count - count - buf->cursor);
+    buf->count -= count;
+}
+
 /* Buffer view extension */
 
 BUFVIEW bview(BUFFER* buf) {

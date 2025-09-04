@@ -62,6 +62,8 @@ int vbprintf(BUFFER* restrict buffer, const char* restrict format, va_list list)
 
 int bpeek(BUFFER* buffer);
 void breset(BUFFER* buffer);
+/* Erase 'count' bytes starting from the current position */
+void berase(BUFFER* buffer, size_t count);
 
 /* Buffer view extension */
 
