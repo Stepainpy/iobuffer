@@ -20,8 +20,11 @@
 #  endif
 #endif
 
+typedef unsigned char uchar;
+typedef unsigned long ulong;
+
 struct BUFFER {
-    unsigned char* data;
+    uchar* data;
     size_t count, capacity;
     bpos_t cursor;
 };
@@ -78,16 +81,16 @@ int bseek(BUFFER* buf, long off, int org) {
 
     switch (org) {
         case BSEEK_SET: {
-            if (off < 0 || (unsigned long)off > buf->count) return B_FAIL;
+            if (off < 0 || (ulong) off > buf->count) return B_FAIL;
             buf->cursor = off;
         } break;
         case BSEEK_CUR: {
-            if (off > 0 && (unsigned long) off > buf->count - buf->cursor) return B_FAIL;
-            if (off < 0 && (unsigned long)-off > buf->cursor) return B_FAIL;
+            if (off > 0 && (ulong) off > buf->count - buf->cursor) return B_FAIL;
+            if (off < 0 && (ulong)-off > buf->cursor) return B_FAIL;
             buf->cursor += off;
         } break;
         case BSEEK_END: {
-            if (off > 0 || (unsigned long)-off > buf->count) return B_FAIL;
+            if (off > 0 || (ulong)-off > buf->count) return B_FAIL;
             buf->cursor = buf->count + off;
         } break;
     }
@@ -107,7 +110,7 @@ int bgetc(BUFFER* buf) {
 }
 
 char* bgets(char* restrict str, int count, BUFFER* restrict buf) {
-    unsigned char* newline; size_t minlen, offset;
+    uchar* newline; size_t minlen, offset;
     if (!buf || !buf->data || !str) return NULL;
 
     if (buf->count == buf->cursor) return NULL;
@@ -135,7 +138,7 @@ int bputc(int ch, BUFFER* buf) {
     if (!buf) return EOB;
     if (breserve(buf, 1)) return EOB;
 
-    buf->data[buf->cursor++] = (unsigned char)ch;
+    buf->data[buf->cursor++] = (uchar)ch;
     if (buf->cursor > buf->count) {
         buf->data[buf->cursor] = '\0';
         buf->count = buf->cursor;
@@ -166,14 +169,14 @@ int bungetc(int ch, BUFFER* buf) {
     if (ch == EOB) return EOB;
 
     if (buf->cursor == 0) return EOB;
-    if (buf->data[buf->cursor - 1] != (unsigned char)ch) return EOB;
+    if (buf->data[buf->cursor - 1] != (uchar)ch) return EOB;
 
     --buf->cursor;
     return ch;
 }
 
 int bprintf(BUFFER* restrict buf, const char* restrict fmt, ...) {
-    int len; va_list args; unsigned char saved;
+    int len; va_list args; uchar saved;
     if (!buf || !fmt) return -1;
 
     va_start(args, fmt);
@@ -199,7 +202,7 @@ int bprintf(BUFFER* restrict buf, const char* restrict fmt, ...) {
 }
 
 int vbprintf(BUFFER* restrict buf, const char* restrict fmt, va_list args) {
-    int len; va_list acpy; unsigned char saved;
+    int len; va_list acpy; uchar saved;
     if (!buf || !fmt) return -1;
 
     va_copy(acpy, args);
