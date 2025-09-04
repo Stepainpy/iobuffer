@@ -1,5 +1,4 @@
 #include "buffer.h"
-#include <stdarg.h>
 #include <stdlib.h>
 #include <string.h>
 #include <limits.h>
@@ -10,6 +9,17 @@
 
 #define INT_FALSE 1
 #define INT_TRUE  0
+
+/* taken from GMP:
+ * https://github.com/WinBuilds/gmplib/blob/ed48f534df05428c2474c1bde037e84e057a3972/gmp-impl.h#L304
+ */
+#ifndef va_copy
+#  ifdef __va_copy
+#    define va_copy(d, s) __va_copy(d, s)
+#  else
+#    define va_copy(d, s) do memcpy(&(d), &(s), sizeof(va_list)); while (0)
+#  endif
+#endif
 
 struct BUFFER {
     unsigned char* data;
@@ -189,22 +199,24 @@ int bprintf(BUFFER* restrict buf, const char* restrict fmt, ...) {
     return len;
 }
 
-#if __STDC_VERSION__ >= 199901L
 int vbprintf(BUFFER* restrict buf, const char* restrict fmt, va_list args) {
+    int len; va_list acpy; unsigned char saved;
     if (!buf || !fmt) return -1;
 
-    /* measure from https://stackoverflow.com/a/12825199 */
-    va_list args_measure;
-    va_copy(args_measure, args);
-    int len = vsnprintf(NULL, 0, fmt, args_measure);
-    va_end(args_measure);
+    va_copy(acpy, args);
+    len = vsnprintf(NULL, 0, fmt, acpy);
+    va_end(acpy);
 
+    if (len < 0) return -1;
     if (breserve(buf, len)) return -1;
 
-    unsigned char saved = buf->data[buf->cursor + len];
-    len = vsnprintf((char*)buf->data + buf->cursor, len + 1, fmt, args);
-    buf->data[buf->cursor += len] = saved;
+    saved = buf->data[buf->cursor + len];
+    va_copy(acpy, args);
+    len = vsnprintf((char*)buf->data + buf->cursor, len + 1, fmt, acpy);
+    va_end(acpy);
 
+    if (len < 0) return -1;
+    buf->data[buf->cursor += len] = saved;
     if (buf->cursor > buf->count) {
         buf->data[buf->cursor] = '\0';
         buf->count = buf->cursor;
@@ -212,7 +224,6 @@ int vbprintf(BUFFER* restrict buf, const char* restrict fmt, va_list args) {
 
     return len;
 }
-#endif /* C99 */
 
 size_t bread(void* restrict data, size_t size, size_t count, BUFFER* restrict buf) {
     size_t read;

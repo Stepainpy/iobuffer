@@ -11,6 +11,7 @@
 #ifndef IO_DYNAMIC_BUFFER_H
 #define IO_DYNAMIC_BUFFER_H
 
+#include <stdarg.h>
 #include <stddef.h>
 
 #if __STDC_VERSION__ < 199901L
@@ -59,12 +60,8 @@ int bungetc(int byte, BUFFER* buffer);
 
 int beob(BUFFER* buffer);
 
-int bprintf(BUFFER* restrict buffer, const char* restrict format, ...) __bprintf_attr(3);
-
-#if __STDC_VERSION__ >= 199901L
-#include <stdarg.h>
+int  bprintf(BUFFER* restrict buffer, const char* restrict format, ...         ) __bprintf_attr(3);
 int vbprintf(BUFFER* restrict buffer, const char* restrict format, va_list list) __bprintf_attr(0);
-#endif /* C99 */
 
 /* Buffer API extension */
 
