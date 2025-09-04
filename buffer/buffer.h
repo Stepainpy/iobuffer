@@ -1,7 +1,6 @@
 /* * * * * * * * * * * * * * * * * * * * * *
  * Dynamic buffer with API like as std IO. *
- * Most function available in C89, but     *
- * vbprintf available in C99.              *
+ * Support standard C89 and later.         *
  * Functions bscanf and vbscanf not exist. *
  * * * * * * * * For example * * * * * * * *
  *        fwrite -> write to  file         *
