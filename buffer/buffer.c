@@ -31,20 +31,22 @@ struct BUFFER {
     bpos_t cursor;
 };
 
-/* 0 upon success, 1 otherwise
- * takes into account the null-terminator character
- */
-static int breserve(BUFFER* buf, size_t add_size) {
-    if (buf->cursor + add_size <= buf->capacity)
+static int baddcap(BUFFER* buf, size_t require) {
+    size_t newcap = buf->capacity; void* newplace;
+    if (buf->cursor + require <= newcap)
         return B_OKEY;
 
-    if (buf->capacity == 0) buf->capacity = B_INIT_CAP;
-    while (buf->cursor + add_size > buf->capacity)
-        buf->capacity += buf->capacity / 2; /* + 50% */
-    buf->data = realloc(buf->data, buf->capacity);
+    if (newcap == 0) newcap = B_INIT_CAP;
+    while (buf->cursor + require > newcap)
+        newcap += newcap / 2; /* + 50% */
+    newplace = realloc(buf->data, newcap);
 
-    if (!buf->data) memset(buf, 0, sizeof *buf);
-    return buf->data == NULL;
+    if (newplace) {
+        buf->data = newplace;
+        buf->capacity = newcap;
+        return B_OKEY;
+    } else
+        return B_FAIL;
 }
 
 BUFFER* bopen(void) {
@@ -138,7 +140,7 @@ char* bgets(char* restrict str, int count, BUFFER* restrict buf) {
 
 int bputc(int ch, BUFFER* buf) {
     if (!buf) return EOB;
-    if (breserve(buf, 1)) return EOB;
+    if (baddcap(buf, 1)) return EOB;
 
     buf->data[buf->cursor++] = (uchar)ch;
     buf->count = b_max(buf->count, buf->cursor);
@@ -151,7 +153,7 @@ int bputs(const char* restrict str, BUFFER* restrict buf) {
     if (!buf || !str) return EOB;
 
     len = strlen(str);
-    if (breserve(buf, len)) return EOB;
+    if (baddcap(buf, len)) return EOB;
 
     memcpy(buf->data + buf->cursor, str, len);
     buf->cursor += len;
@@ -179,7 +181,7 @@ int bprintf(BUFFER* restrict buf, const char* restrict fmt, ...) {
     va_end(args);
 
     if (len < 0) return -1;
-    if (breserve(buf, len)) return -1;
+    if (baddcap(buf, len)) return -1;
 
     saved = buf->data[buf->cursor + len];
     va_start(args, fmt);
@@ -201,7 +203,7 @@ int vbprintf(BUFFER* restrict buf, const char* restrict fmt, va_list args) {
     va_end(acpy);
 
     if (len < 0) return -1;
-    if (breserve(buf, len)) return -1;
+    if (baddcap(buf, len)) return -1;
 
     saved = buf->data[buf->cursor + len];
     va_copy(acpy, args);
@@ -229,7 +231,7 @@ size_t bread(void* restrict data, size_t size, size_t count, BUFFER* restrict bu
 size_t bwrite(const void* restrict data, size_t size, size_t count, BUFFER* restrict buf) {
     size_t bytes = size * count;
     if (!buf || bytes == 0) return 0;
-    if (breserve(buf, bytes)) return 0;
+    if (baddcap(buf, bytes)) return 0;
 
     memcpy(buf->data + buf->cursor, data, bytes);
     buf->cursor += bytes;
