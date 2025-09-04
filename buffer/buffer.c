@@ -169,9 +169,8 @@ int bungetc(int ch, BUFFER* buf) {
     if (ch == EOB) return EOB;
 
     if (buf->cursor == 0) return EOB;
-    if (buf->data[buf->cursor - 1] != (uchar)ch) return EOB;
+    buf->data[--buf->cursor] = (uchar)ch;
 
-    --buf->cursor;
     return ch;
 }
 
