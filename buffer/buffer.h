@@ -1,7 +1,7 @@
 /* * * * * * * * * * * * * * * * * * * * * *
  * Dynamic buffer with API like as std IO. *
  * Most function available in C89, but     *
- * bprintf and vbprintf available in C99.  *
+ * vbprintf available in C99.              *
  * Functions bscanf and vbscanf not exist. *
  * * * * * * * * For example * * * * * * * *
  *        fwrite -> write to  file         *
@@ -59,11 +59,11 @@ int bungetc(int byte, BUFFER* buffer);
 
 int beob(BUFFER* buffer);
 
+int bprintf(BUFFER* restrict buffer, const char* restrict format, ...) __bprintf_attr(3);
+
 #if __STDC_VERSION__ >= 199901L
 #include <stdarg.h>
-
 int vbprintf(BUFFER* restrict buffer, const char* restrict format, va_list list) __bprintf_attr(0);
-int  bprintf(BUFFER* restrict buffer, const char* restrict format, ...         ) __bprintf_attr(3);
 #endif /* C99 */
 
 /* Buffer API extension */

@@ -1,4 +1,5 @@
 #include "buffer.h"
+#include <stdarg.h>
 #include <stdlib.h>
 #include <string.h>
 #include <limits.h>
@@ -162,18 +163,33 @@ int bungetc(int ch, BUFFER* buf) {
     return ch;
 }
 
-#if __STDC_VERSION__ >= 199901L
 int bprintf(BUFFER* restrict buf, const char* restrict fmt, ...) {
+    int len; va_list args; unsigned char saved;
     if (!buf || !fmt) return -1;
 
-    va_list args;
     va_start(args, fmt);
-    int len = vbprintf(buf, fmt, args);
+    len = vsnprintf(NULL, 0, fmt, args);
     va_end(args);
+
+    if (len < 0) return -1;
+    if (breserve(buf, len)) return -1;
+
+    saved = buf->data[buf->cursor + len];
+    va_start(args, fmt);
+    len = vsnprintf((char*)buf->data + buf->cursor, len + 1, fmt, args);
+    va_end(args);
+
+    if (len < 0) return -1;
+    buf->data[buf->cursor += len] = saved;
+    if (buf->cursor > buf->count) {
+        buf->data[buf->cursor] = '\0';
+        buf->count = buf->cursor;
+    }
 
     return len;
 }
 
+#if __STDC_VERSION__ >= 199901L
 int vbprintf(BUFFER* restrict buf, const char* restrict fmt, va_list args) {
     if (!buf || !fmt) return -1;
 
