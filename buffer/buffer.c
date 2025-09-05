@@ -3,8 +3,9 @@
 #include <string.h>
 #include <stdio.h>
 
-#define B_FAIL 1
-#define B_OKEY 0
+#define B_FNEG -1
+#define B_FAIL  1
+#define B_OKEY  0
 #define B_INIT_CAP 1024
 
 #define b_min(a, b) ((a) < (b) ? (a) : (b))
@@ -156,7 +157,7 @@ int bputs(const char* restrict str, BUFFER* restrict buf) {
     buf->cursor += len;
     buf->count = b_max(buf->count, buf->cursor);
 
-    return 0;
+    return B_OKEY;
 }
 
 int bungetc(int ch, BUFFER* buf) {
@@ -171,14 +172,14 @@ int bungetc(int ch, BUFFER* buf) {
 
 int bprintf(BUFFER* restrict buf, const char* restrict fmt, ...) {
     int len; va_list args; uchar saved;
-    if (!buf || !fmt) return -1;
+    if (!buf || !fmt) return B_FNEG;
 
     va_start(args, fmt);
     len = vsnprintf(NULL, 0, fmt, args);
     va_end(args);
 
-    if (len < 0) return -1;
-    if (baddcap(buf, len)) return -1;
+    if (len < 0) return B_FNEG;
+    if (baddcap(buf, len)) return B_FNEG;
 
     saved = buf->data[buf->cursor + len];
     va_start(args, fmt);
@@ -193,14 +194,14 @@ int bprintf(BUFFER* restrict buf, const char* restrict fmt, ...) {
 
 int vbprintf(BUFFER* restrict buf, const char* restrict fmt, va_list args) {
     int len; va_list acpy; uchar saved;
-    if (!buf || !fmt) return -1;
+    if (!buf || !fmt) return B_FNEG;
 
     va_copy(acpy, args);
     len = vsnprintf(NULL, 0, fmt, acpy);
     va_end(acpy);
 
-    if (len < 0) return -1;
-    if (baddcap(buf, len)) return -1;
+    if (len < 0) return B_FNEG;
+    if (baddcap(buf, len)) return B_FNEG;
 
     saved = buf->data[buf->cursor + len];
     va_copy(acpy, args);
