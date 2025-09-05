@@ -1,0 +1,8 @@
+{
+    "name": "iobuffer",
+    "version": "1.0.0",
+    "repo": "Stepainpy/iobuffer",
+    "description": "Dynamic buffer with API like as std IO",
+    "keywords": ["buffer", "dynamic", "io"],
+    "src": ["iobuffer.h", "iobuffer.c"]
+}
