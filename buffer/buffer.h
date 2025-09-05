@@ -13,6 +13,8 @@
 #include <stdarg.h>
 #include <stddef.h>
 
+/* ======= Preprocessor conditions ======= */
+
 #if __STDC_VERSION__ < 199901L
 #  define restrict __restrict
 #endif
@@ -21,22 +23,33 @@
 #  define __bprintf_attr(ftc) __attribute__((format(printf, 2, ftc)))
 #else
 #  define __bprintf_attr(...)
-#endif /* __GNUC__ */
+#endif
 
 #ifdef __cplusplus
 extern "C" {
 #endif
+
+/* =========== Macro constants =========== */
 
 #define EOB (-1)
 #define BSEEK_SET 0
 #define BSEEK_CUR 1
 #define BSEEK_END 2
 
+/* ================ Types ================ */
+
 typedef struct BUFFER BUFFER;
 typedef size_t bpos_t;
 
+/* ============ Buffer access ============ */
+
 BUFFER* bopen(void);
 void bclose(BUFFER* buffer);
+void breset(BUFFER* buffer); /* Extension */
+/* Extension. Erase 'count' bytes starting from the current position */
+void berase(BUFFER* buffer, size_t count);
+
+/* ========= Buffer positioning ========== */
 
 int bgetpos(BUFFER* restrict buffer,       bpos_t* restrict pos);
 int bsetpos(BUFFER*          buffer, const bpos_t*          pos);
@@ -44,28 +57,30 @@ long btell(BUFFER* buffer);
 int  bseek(BUFFER* buffer, long offset, int origin);
 void brewind(BUFFER* buffer);
 
+/* ========= Direct input/output ========= */
+
 size_t bread (      void* restrict data, size_t size, size_t count, BUFFER* restrict buffer);
 size_t bwrite(const void* restrict data, size_t size, size_t count, BUFFER* restrict buffer);
+
+/* ====== Unformatted input/output ======= */
 
 int bgetc(BUFFER* buffer);
 char* bgets(char* restrict str, int count, BUFFER* restrict buffer);
 int bputc(int byte, BUFFER* buffer);
 int bputs(const char* restrict string, BUFFER* restrict buffer);
 int bungetc(int byte, BUFFER* buffer);
+int bpeek(BUFFER* buffer); /* Extension */
 
-int beob(BUFFER* buffer);
+/* ======= Formatted input/output ======== */
 
 int  bprintf(BUFFER* restrict buffer, const char* restrict format, ...         ) __bprintf_attr(3);
 int vbprintf(BUFFER* restrict buffer, const char* restrict format, va_list list) __bprintf_attr(0);
 
-/* Buffer API extension */
+/* =========== Error handling ============ */
 
-int bpeek(BUFFER* buffer);
-void breset(BUFFER* buffer);
-/* Erase 'count' bytes starting from the current position */
-void berase(BUFFER* buffer, size_t count);
+int beob(BUFFER* buffer);
 
-/* Buffer view extension */
+/* =========== View extension ============ */
 
 typedef struct BUFVIEW {
     const void* base;

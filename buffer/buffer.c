@@ -243,7 +243,7 @@ int beob(BUFFER* buf) {
     return buf->cursor == buf->count;
 }
 
-/* Buffer API extension */
+/* API extension */
 
 int bpeek(BUFFER* buf) {
     if (!buf || !buf->data) return EOB;
@@ -267,7 +267,7 @@ void berase(BUFFER* buf, size_t count) {
     buf->count -= count;
 }
 
-/* Buffer view extension */
+/* View extension */
 
 BUFVIEW bview(BUFFER* buf) {
     BUFVIEW view = {0};
