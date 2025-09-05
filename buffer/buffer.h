@@ -45,16 +45,21 @@ typedef size_t bpos_t;
 
 BUFFER* bopen(void);
 void bclose(BUFFER* buffer);
-void breset(BUFFER* buffer); /* Extension */
+
+/* ======== Operations on buffer ========= */
+
 /* Extension. Erase 'count' bytes starting from the current position */
 void berase(BUFFER* buffer, size_t count);
+void breset(BUFFER* buffer); /* Extension */
 
 /* ========= Buffer positioning ========== */
 
 int bgetpos(BUFFER* restrict buffer,       bpos_t* restrict pos);
 int bsetpos(BUFFER*          buffer, const bpos_t*          pos);
+
 long btell(BUFFER* buffer);
 int  bseek(BUFFER* buffer, long offset, int origin);
+
 void brewind(BUFFER* buffer);
 
 /* ========= Direct input/output ========= */
@@ -65,11 +70,13 @@ size_t bwrite(const void* restrict data, size_t size, size_t count, BUFFER* rest
 /* ====== Unformatted input/output ======= */
 
 int bgetc(BUFFER* buffer);
+int bpeek(BUFFER* buffer); /* Extension */
 char* bgets(char* restrict str, int count, BUFFER* restrict buffer);
+
 int bputc(int byte, BUFFER* buffer);
 int bputs(const char* restrict string, BUFFER* restrict buffer);
+
 int bungetc(int byte, BUFFER* buffer);
-int bpeek(BUFFER* buffer); /* Extension */
 
 /* ======= Formatted input/output ======== */
 
