@@ -1,7 +1,6 @@
 /* * * * * * * * * * * * * * * * * * * * * *
  * Dynamic buffer with API like as std IO. *
  * Support standard C89 and later.         *
- * Functions bscanf and vbscanf not exist. *
  * * * * * * * * For example * * * * * * * *
  *        fwrite -> write to  file         *
  *        bwrite -> write to buffer        *
@@ -79,6 +78,12 @@ int bputs(const char* restrict string, BUFFER* restrict buffer);
 int bungetc(int byte, BUFFER* buffer);
 
 /* ======= Formatted input/output ======== */
+
+/* Why doesn't exist bscanf/vbscanf?
+ * Standard scanf return count success parsed values.
+ * Not exist common way get read it characters after scanf.
+ * I don't want to completely create bscanf/vbscanf.
+ */
 
 int  bprintf(BUFFER* restrict buffer, const char* restrict format, ...         ) __bprintf_attr(3);
 int vbprintf(BUFFER* restrict buffer, const char* restrict format, va_list list) __bprintf_attr(0);
