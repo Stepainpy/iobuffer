@@ -11,14 +11,16 @@ Dynamic buffer with API like standard C files. Support standard C89 (ANSI C).
 #include "iobuffer.h"
 
 int main(void) {
-    BUFVIEW bv;
-    BUFFER* bd = bopen();
+    BUFFER* bd; int ch;
+    bd = bopen("Hello, ", 7, "a+");
     if (!bd) return 1;
 
-    bprintf(bd, "Hello, %s!", "Alex");
+    bputs("Alex", bd);
 
-    bv = bview(bd);
-    printf(BV_FMT"\n", BV_ARG(bv, base));
+    brewind(bd);
+    while ((ch = bgetc(bd)) != EOB)
+        putchar(ch);
+    putchar('\n');
 
     bclose(bd);
     return 0;
