@@ -67,6 +67,8 @@ BUFFER* bopen(const void* restrict data, size_t size, const char* restrict mode)
     if (mode[0] != 'r' && mode[0] != 'w' && mode[0] != 'a') return NULL;
     if (mode[1] != '+' && mode[1] != '\0') return NULL;
 
+    if (!data && mode[0] == 'r' && mode[1] == '\0') return NULL;
+
     buf = calloc(1, sizeof *buf);
     if (!buf) return buf;
 
