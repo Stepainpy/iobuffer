@@ -3,10 +3,8 @@
 #include <string.h>
 #include <stdio.h>
 
-#define B_FNEG -1
-#define B_FAIL  1
-#define B_OKEY  0
-#define B_INIT_CAP 1024
+#define B_FAIL 1
+#define B_OKEY 0
 
 #define b_min(a, b) ((a) < (b) ? (a) : (b))
 #define b_max(a, b) ((a) > (b) ? (a) : (b))
@@ -48,7 +46,7 @@ static int baddcap(BUFFER* buf, size_t require) {
     if (buf->cursor + require <= newcap)
         return B_OKEY;
 
-    if (newcap == 0) newcap = B_INIT_CAP;
+    if (newcap == 0) newcap = 1024; /* init */
     while (buf->cursor + require > newcap)
         newcap += newcap / 2; /* + 50% */
     newplace = realloc(buf->data, newcap);
@@ -84,7 +82,8 @@ BUFFER* bopen(const void* restrict data, size_t size, const char* restrict mode)
         buf->count = size;
     }
 
-    if (mode[0] == 'a') buf->cursor = buf->count;
+    if (mode[0] == 'a')
+        buf->cursor = buf->count;
 
     return buf;
 }
@@ -212,15 +211,15 @@ int bungetc(int ch, BUFFER* buf) {
 
 int bprintf(BUFFER* restrict buf, const char* restrict fmt, ...) {
     int len; va_list args; uchar saved;
-    if (!buf || !fmt) return B_FNEG;
-    if (!b_wr_permit(buf->mode)) return B_FNEG;
+    if (!buf || !fmt) return EOB;
+    if (!b_wr_permit(buf->mode)) return EOB;
 
     va_start(args, fmt);
     len = vsnprintf(NULL, 0, fmt, args);
     va_end(args);
 
-    if (len < 0) return B_FNEG;
-    if (baddcap(buf, len)) return B_FNEG;
+    if (len < 0) return EOB;
+    if (baddcap(buf, len)) return EOB;
 
     saved = buf->data[buf->cursor + len];
     va_start(args, fmt);
@@ -235,15 +234,15 @@ int bprintf(BUFFER* restrict buf, const char* restrict fmt, ...) {
 
 int vbprintf(BUFFER* restrict buf, const char* restrict fmt, va_list args) {
     int len; va_list acpy; uchar saved;
-    if (!buf || !fmt) return B_FNEG;
-    if (!b_wr_permit(buf->mode)) return B_FNEG;
+    if (!buf || !fmt) return EOB;
+    if (!b_wr_permit(buf->mode)) return EOB;
 
     va_copy(acpy, args);
     len = vsnprintf(NULL, 0, fmt, acpy);
     va_end(acpy);
 
-    if (len < 0) return B_FNEG;
-    if (baddcap(buf, len)) return B_FNEG;
+    if (len < 0) return EOB;
+    if (baddcap(buf, len)) return EOB;
 
     saved = buf->data[buf->cursor + len];
     va_copy(acpy, args);
