@@ -61,9 +61,29 @@ static int baddcap(BUFFER* buf, size_t require) {
         return B_FAIL;
 }
 
-BUFFER* bopen(void) {
-    BUFFER* buf = malloc(sizeof *buf);
-    if (buf) memset(buf, 0, sizeof *buf);
+BUFFER* bopen(const void* restrict data, size_t size, const char* restrict mode) {
+    BUFFER* buf = NULL;
+    if (!mode || (!data && size > 0)) return NULL;
+    if (mode[0] != 'r' && mode[0] != 'w' && mode[0] != 'a') return NULL;
+    if (mode[1] != '+' && mode[1] != '\0') return NULL;
+
+    buf = calloc(1, sizeof *buf);
+    if (!buf) return buf;
+
+    buf->mode = B_WRITE;
+    if (mode[0] == 'r') buf->mode = B_READ;
+    if (mode[1] == '+') buf->mode = B_READWRITE;
+
+    if (b_rd_permit(buf->mode) || mode[0] == 'a') {
+        if (baddcap(buf, size)) {
+            free(buf); return NULL;
+        }
+        memcpy(buf->data, data, size);
+        buf->count = size;
+    }
+
+    if (mode[0] == 'a') buf->cursor = buf->count;
+
     return buf;
 }
 
