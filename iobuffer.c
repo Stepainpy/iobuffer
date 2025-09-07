@@ -11,6 +11,17 @@
 #define b_min(a, b) ((a) < (b) ? (a) : (b))
 #define b_max(a, b) ((a) > (b) ? (a) : (b))
 
+/* Operations permission
+ *    < 0         = 0           > 0
+ * read only | read/write | write only
+ */
+
+#define B_READ      (-1)
+#define B_READWRITE   0
+#define B_WRITE     (+1)
+#define b_rd_permit(mode) ((mode) <= 0)
+#define b_wr_permit(mode) ((mode) >= 0)
+
 /* taken from GMP: https://github.com/alisw/GMP/blob/master/gmp-impl.h#L305 */
 #ifndef va_copy
 #  ifdef __va_copy
@@ -20,13 +31,16 @@
 #  endif
 #endif
 
+typedef   signed char schar;
 typedef unsigned char uchar;
 typedef unsigned long ulong;
 
 struct BUFFER {
     uchar* data;
-    size_t count, capacity;
+    size_t count;
+    size_t capacity;
     bpos_t cursor;
+    schar  mode;
 };
 
 static int baddcap(BUFFER* buf, size_t require) {
@@ -107,6 +121,7 @@ void brewind(BUFFER* buf) {
 
 int bgetc(BUFFER* buf) {
     if (!buf || !buf->data) return EOB;
+    if (!b_rd_permit(buf->mode)) return EOB;
     if (buf->cursor == buf->count) return EOB;
     return buf->data[buf->cursor++];
 }
@@ -114,6 +129,7 @@ int bgetc(BUFFER* buf) {
 char* bgets(char* restrict str, int count, BUFFER* restrict buf) {
     uchar* newline; size_t minlen, offset;
     if (!buf || !buf->data || !str) return NULL;
+    if (!b_rd_permit(buf->mode)) return NULL;
 
     if (buf->count == buf->cursor) return NULL;
     if (count < 1) return NULL;
@@ -137,7 +153,7 @@ char* bgets(char* restrict str, int count, BUFFER* restrict buf) {
 }
 
 int bputc(int ch, BUFFER* buf) {
-    if (!buf) return EOB;
+    if (!buf || !b_wr_permit(buf->mode)) return EOB;
     if (baddcap(buf, 1)) return EOB;
 
     buf->data[buf->cursor++] = (uchar)ch;
@@ -149,6 +165,7 @@ int bputc(int ch, BUFFER* buf) {
 int bputs(const char* restrict str, BUFFER* restrict buf) {
     size_t len;
     if (!buf || !str) return EOB;
+    if (!b_wr_permit(buf->mode)) return EOB;
 
     len = strlen(str);
     if (baddcap(buf, len)) return EOB;
@@ -162,6 +179,7 @@ int bputs(const char* restrict str, BUFFER* restrict buf) {
 
 int bungetc(int ch, BUFFER* buf) {
     if (!buf || !buf->data) return EOB;
+    if (!b_rd_permit(buf->mode)) return EOB;
     if (ch == EOB) return EOB;
 
     if (buf->cursor == 0) return EOB;
@@ -173,6 +191,7 @@ int bungetc(int ch, BUFFER* buf) {
 int bprintf(BUFFER* restrict buf, const char* restrict fmt, ...) {
     int len; va_list args; uchar saved;
     if (!buf || !fmt) return B_FNEG;
+    if (!b_wr_permit(buf->mode)) return B_FNEG;
 
     va_start(args, fmt);
     len = vsnprintf(NULL, 0, fmt, args);
@@ -195,6 +214,7 @@ int bprintf(BUFFER* restrict buf, const char* restrict fmt, ...) {
 int vbprintf(BUFFER* restrict buf, const char* restrict fmt, va_list args) {
     int len; va_list acpy; uchar saved;
     if (!buf || !fmt) return B_FNEG;
+    if (!b_wr_permit(buf->mode)) return B_FNEG;
 
     va_copy(acpy, args);
     len = vsnprintf(NULL, 0, fmt, acpy);
@@ -217,6 +237,7 @@ int vbprintf(BUFFER* restrict buf, const char* restrict fmt, va_list args) {
 size_t bread(void* restrict data, size_t size, size_t count, BUFFER* restrict buf) {
     size_t read;
     if (!buf || !buf->data) return 0;
+    if (!b_rd_permit(buf->mode)) return 0;
     if (!data || !size) return 0;
 
     read = b_min((buf->count - buf->cursor) / size, count);
@@ -229,6 +250,7 @@ size_t bread(void* restrict data, size_t size, size_t count, BUFFER* restrict bu
 size_t bwrite(const void* restrict data, size_t size, size_t count, BUFFER* restrict buf) {
     size_t bytes = size * count;
     if (!buf || bytes == 0) return 0;
+    if (!b_wr_permit(buf->mode)) return 0;
     if (baddcap(buf, bytes)) return 0;
 
     memcpy(buf->data + buf->cursor, data, bytes);
@@ -247,12 +269,13 @@ int beob(BUFFER* buf) {
 
 int bpeek(BUFFER* buf) {
     if (!buf || !buf->data) return EOB;
+    if (!b_rd_permit(buf->mode)) return EOB;
     if (buf->cursor == buf->count) return EOB;
     return buf->data[buf->cursor];
 }
 
 void breset(BUFFER* buf) {
-    if (!buf) return;
+    if (!buf || !b_wr_permit(buf->mode)) return;
     buf->cursor = buf->count = 0;
     if (!buf->data) return;
     memset(buf->data, 0, buf->capacity);
@@ -260,6 +283,7 @@ void breset(BUFFER* buf) {
 
 void berase(BUFFER* buf, size_t count) {
     if (!buf || !buf->data) return;
+    if (!b_wr_permit(buf->mode)) return;
     count = b_min(count, buf->count - buf->cursor);
     memmove(buf->data + buf->cursor,
         buf->data + buf->cursor + count,
