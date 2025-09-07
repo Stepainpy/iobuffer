@@ -3,6 +3,15 @@
 #include <string.h>
 #include <stdio.h>
 
+/* taken from GMP: https://github.com/alisw/GMP/blob/master/gmp-impl.h#L305 */
+#ifndef va_copy
+#  ifdef __va_copy
+#    define va_copy(d, s) __va_copy(d, s)
+#  else
+#    define va_copy(d, s) do memcpy(&(d), &(s), sizeof(va_list)); while (0)
+#  endif
+#endif
+
 #define B_FAIL 1
 #define B_OKEY 0
 
@@ -19,15 +28,6 @@
 #define B_WRITE     (+1)
 #define b_rd_permit(mode) ((mode) <= 0)
 #define b_wr_permit(mode) ((mode) >= 0)
-
-/* taken from GMP: https://github.com/alisw/GMP/blob/master/gmp-impl.h#L305 */
-#ifndef va_copy
-#  ifdef __va_copy
-#    define va_copy(d, s) __va_copy(d, s)
-#  else
-#    define va_copy(d, s) do memcpy(&(d), &(s), sizeof(va_list)); while (0)
-#  endif
-#endif
 
 typedef   signed char schar;
 typedef unsigned char uchar;
