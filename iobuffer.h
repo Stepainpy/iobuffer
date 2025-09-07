@@ -47,9 +47,8 @@ void bclose(BUFFER* buffer);
 
 /* ======== Operations on buffer ========= */
 
-/* Extension. Erase 'count' bytes starting from the current position */
 void berase(BUFFER* buffer, size_t count);
-void breset(BUFFER* buffer); /* Extension */
+void breset(BUFFER* buffer);
 
 /* ========= Buffer positioning ========== */
 
@@ -69,7 +68,7 @@ size_t bwrite(const void* restrict data, size_t size, size_t count, BUFFER* rest
 /* ====== Unformatted input/output ======= */
 
 int bgetc(BUFFER* buffer);
-int bpeek(BUFFER* buffer); /* Extension */
+int bpeek(BUFFER* buffer);
 char* bgets(char* restrict str, int count, BUFFER* restrict buffer);
 
 int bputc(int byte, BUFFER* buffer);
@@ -78,12 +77,6 @@ int bputs(const char* restrict string, BUFFER* restrict buffer);
 int bungetc(int byte, BUFFER* buffer);
 
 /* ======= Formatted input/output ======== */
-
-/* Why doesn't exist bscanf/vbscanf?
- * Standard scanf return count success parsed values.
- * Not exist common way get read it characters after scanf.
- * I don't want to completely create bscanf/vbscanf.
- */
 
 int  bprintf(BUFFER* restrict buffer, const char* restrict format, ...         ) __bprintf_attr(3);
 int vbprintf(BUFFER* restrict buffer, const char* restrict format, va_list list) __bprintf_attr(0);

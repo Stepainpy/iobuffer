@@ -201,6 +201,14 @@ If `byte` does not equal `EOB`, pushes the byte `byte` (reinterpreted as `unsign
 
 ## Formatted ~~input~~/output
 
+> [!NOTE]
+> Why doesn't exist `bscanf`/`vbscanf`? Standard `scanf` return count success parsed values.  
+> Not exist common way get read it characters after `scanf`. I don't want to completely create `bscanf`/`vbscanf`.
+
+> [!WARNING]
+> In `bprintf`/`vbprintf` use funtion `snprintf`. This function "offical" available in C99, but most compilators
+> provide his in C89.
+
 ### `int bprintf(BUFFER* restrict buffer, const char* restrict format, ...)`
 
 Loads the data from the given locations, converts them to character string equivalents and writes the results to buffer `buffer`.  
