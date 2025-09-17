@@ -93,12 +93,11 @@ typedef struct BUFVIEW {
     const void* stop;
 } BUFVIEW;
 
-#define BV_FMT "%.*s"
-#define BV_ARG(view, from) \
-    (int)((char*)(view).stop - (char*)(view).from), \
-    (const char*)(view).from
-
 BUFVIEW bview(BUFFER* buffer);
+
+#define BV_FMT "%.*s"
+#define BV_ARG(view, from) (int)BV_SIZE(view, from), (const char*)(view).from
+#define BV_SIZE(view, from) ((char*)(view).stop - (char*)(view).from)
 
 #ifdef __cplusplus
 }
