@@ -41,6 +41,7 @@ int main(void) {
   - [`bpos_t`](#bpos_t)
 - [Buffer access](#buffer-access)
   - [`bopen`](#buffer-bopenconst-void-restrict-data-size_t-size-const-char-restrict-mode)
+  - [`bmemopen`](#buffer-bmemopenvoid-restrict-data-size_t-size-const-char-restrict-mode)
   - [`bclose`](#void-bclosebuffer-buffer)
 - [Operations on buffer](#operations-on-buffer)
   - [`berase`](#void-berasebuffer-buffer-size_t-count)
@@ -102,15 +103,22 @@ Non-array complete object type, capable of uniquely specifying a position in buf
 Opens a buffer from `data`/`size` and returns a pointer to the buffer. `mode` is used to determine the buffer access mode.  
 **Return value**: If successful, returns a pointer to the new buffer. On error, returns a null pointer.
 
-| Mode string | Meaning         | Explanation                    | `data != NULL`<br>`size > 0` | `data == NULL`<br>`size == 0` |
-| :---------: | :-------------- | :----------------------------- | :--------------------------- | :---------------------------- |
-|    `"r"`    | read            | open a buffer for reading      | read from start              | failure to open               |
-|    `"w"`    | write           | create a buffer for writing    | start with empty             | start with empty              |
-|    `"a"`    | append          | append to a buffer             | write to end                 | start with empty              |
-|    `"r+"`   | read extended   | open a buffer for read/write   | read from start              | start with empty              |
-|    `"w+"`   | write extended  | create a buffer for read/write | start with empty             | start with empty              |
-|    `"a+"`   | append extended | open a buffer for read/write   | start to end                 | start with empty              |
+| Mode string | Meaning         | Explanation                    | Using `data`                              |
+| :---------: | :-------------- | :----------------------------- | :---------------------------------------- |
+|    `"r"`    | read            | open a buffer for reading      | copy content from `data`, read with start |
+|    `"w"`    | write           | create a buffer for writing    | ignore, start with empty                  |
+|    `"a"`    | append          | append to a buffer             | copy content from `data`, start to end    |
+|   `"r+"`    | read extended   | open a buffer for read/write   | copy content from `data`, read with start |
+|   `"w+"`    | write extended  | create a buffer for read/write | ignore, start with empty                  |
+|   `"a+"`    | append extended | open a buffer for read/write   | copy content from `data`, start to end    |
 
+### `BUFFER* bmemopen(void* restrict data, size_t size, const char* restrict mode)`
+
+**[ EXTENSION ]** Open a buffer over `data`/`size` and returns a pointer to the buffer. `mode` is used to determine the buffer access mode.
+Using `data` as external storage with capacity equal `size`. If `data` is `NULL`, allocate memory with size `size`.
+Mode strings see [`bopen`](#buffer-bopenconst-void-restrict-data-size_t-size-const-char-restrict-mode),
+no copying content in `"r"`, `"a"`, `"r+"` and `"a+"` modes.  
+**Return value**: If successful, returns a pointer to the new buffer. On error, returns a null pointer.
 
 ### `void bclose(BUFFER* buffer)`
 
