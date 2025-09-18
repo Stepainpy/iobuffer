@@ -18,18 +18,15 @@
 #define b_min(a, b) ((a) < (b) ? (a) : (b))
 #define b_max(a, b) ((a) > (b) ? (a) : (b))
 
-/* Operations permission
- *    < 0         = 0           > 0
- * read only | read/write | write only
- */
+typedef enum {
+    B_MODE_READ  = 1 << 0,
+    B_MODE_WRITE = 1 << 1,
+    B_MODE_FIXED = 1 << 2
+} b_mode;
 
-#define B_READ      (-1)
-#define B_READWRITE   0
-#define B_WRITE     (+1)
-#define b_rd_permit(mode) ((mode) <= 0)
-#define b_wr_permit(mode) ((mode) >= 0)
+#define b_rd_permit(mode) ((mode) & B_MODE_READ )
+#define b_wr_permit(mode) ((mode) & B_MODE_WRITE)
 
-typedef   signed char schar;
 typedef unsigned char uchar;
 typedef unsigned long ulong;
 
@@ -38,7 +35,7 @@ struct BUFFER {
     size_t count;
     size_t capacity;
     bpos_t cursor;
-    schar  mode;
+    b_mode mode;
 };
 
 static int baddcap(BUFFER* buf, size_t require) {
@@ -59,25 +56,29 @@ static int baddcap(BUFFER* buf, size_t require) {
         return B_FAIL;
 }
 
+static int bparsemode(const char* mode, b_mode* dest) {
+    if (!mode) return B_FAIL;
+    if (mode[0] != 'r' && mode[0] != 'w' && mode[0] != 'a') return B_FAIL;
+    if (mode[1] != '+' && mode[1] != '\0') return B_FAIL;
+    if (mode[1] == '+' && mode[2] != '\0') return B_FAIL;
+
+    /**/ if (mode[1] == '+') *dest |= B_MODE_READ | B_MODE_WRITE;
+    else if (mode[0] == 'r') *dest |= B_MODE_READ               ;
+    else                     *dest |=               B_MODE_WRITE;
+
+    return B_OKEY;
+}
+
 BUFFER* bopen(const void* restrict data, size_t size, const char* restrict mode) {
-    BUFFER* buf = NULL;
-    if (!mode || (!data && size > 0)) return NULL;
-    if (mode[0] != 'r' && mode[0] != 'w' && mode[0] != 'a') return NULL;
-    if (mode[1] != '+' && mode[1] != '\0') return NULL;
+    BUFFER* buf = realloc(NULL, sizeof *buf);
+    if (!buf) return NULL;
 
-    if (!data && mode[0] == 'r' && mode[1] == '\0') return NULL;
-
-    buf = calloc(1, sizeof *buf);
-    if (!buf) return buf;
-
-    buf->mode = B_WRITE;
-    if (mode[0] == 'r') buf->mode = B_READ;
-    if (mode[1] == '+') buf->mode = B_READWRITE;
+    memset(buf, 0, sizeof *buf);
+    if (!data && size > 0) goto error;
+    if (bparsemode(mode, &buf->mode)) goto error;
 
     if (b_rd_permit(buf->mode) || mode[0] == 'a') {
-        if (baddcap(buf, size)) {
-            free(buf); return NULL;
-        }
+        if (baddcap(buf, size)) goto error;
         memcpy(buf->data, data, size);
         buf->count = size;
     }
@@ -86,6 +87,9 @@ BUFFER* bopen(const void* restrict data, size_t size, const char* restrict mode)
         buf->cursor = buf->count;
 
     return buf;
+error:
+    free(buf);
+    return NULL;
 }
 
 void bclose(BUFFER* buf) {
