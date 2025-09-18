@@ -299,13 +299,14 @@ size_t bread(void* restrict data, size_t size, size_t count, BUFFER* restrict bu
 }
 
 size_t bwrite(const void* restrict data, size_t size, size_t count, BUFFER* restrict buf) {
-    size_t bytes = size * count;
-    if (!buf || bytes == 0) return 0;
+    if (!buf || !size || !count) return 0;
     if (!(buf->flags & B_FLAG_WRITE)) return 0;
-    if (baddcap(buf, bytes)) return 0;
 
-    memcpy(buf->data + buf->cursor, data, bytes);
-    buf->cursor += bytes;
+    if (baddcap(buf, size * count))
+        count = (buf->capacity - buf->cursor) / size;
+
+    memcpy(buf->data + buf->cursor, data, size * count);
+    buf->cursor += size * count;
     buf->count = b_max(buf->count, buf->cursor);
 
     return count;
