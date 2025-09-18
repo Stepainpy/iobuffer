@@ -19,9 +19,10 @@
 #define b_max(a, b) ((a) > (b) ? (a) : (b))
 
 typedef enum {
-    B_MODE_READ  = 1 << 0,
-    B_MODE_WRITE = 1 << 1,
-    B_MODE_FIXED = 1 << 2
+    B_MODE_READ  = 1 << 0, /* read  permission  */
+    B_MODE_WRITE = 1 << 1, /* write permission  */
+    B_MODE_FIXED = 1 << 2, /* fixed capacity    */
+    B_MODE_ALLOC = 1 << 3, /* data is allocated */
 } b_mode;
 
 typedef unsigned char uchar;
@@ -71,6 +72,7 @@ BUFFER* bopen(const void* restrict data, size_t size, const char* restrict mode)
     if (!buf) return NULL;
 
     memset(buf, 0, sizeof *buf);
+    buf->mode = B_MODE_ALLOC;
     if (!data && size > 0) goto error;
     if (bparsemode(mode, &buf->mode)) goto error;
 
@@ -90,7 +92,8 @@ error:
 }
 
 void bclose(BUFFER* buf) {
-    if (buf) free(buf->data);
+    if (buf && buf->mode & B_MODE_ALLOC)
+        free(buf->data);
     free(buf);
 }
 
