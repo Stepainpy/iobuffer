@@ -43,6 +43,7 @@ typedef size_t bpos_t;
 /* ============ Buffer access ============ */
 
 BUFFER* bopen(const void* restrict data, size_t size, const char* restrict mode);
+BUFFER* bmemopen(void* restrict data, size_t size, const char* restrict mode);
 void bclose(BUFFER* buffer);
 
 /* ======== Operations on buffer ========= */

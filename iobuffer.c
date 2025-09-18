@@ -38,8 +38,8 @@ struct BUFFER {
 
 static int baddcap(BUFFER* buf, size_t require) {
     size_t newcap = buf->capacity; void* newplace;
-    if (buf->cursor + require <= newcap)
-        return B_OKEY;
+    if (buf->cursor + require <= newcap) return B_OKEY;
+    if (buf->flags & B_FLAG_FIXED) return B_FAIL;
 
     if (newcap == 0) newcap = 1024; /* init */
     while (buf->cursor + require > newcap)
@@ -79,6 +79,33 @@ BUFFER* bopen(const void* restrict data, size_t size, const char* restrict mode)
         if (baddcap(buf, size)) goto error;
         memcpy(buf->data, data, size);
         buf->count = size;
+    }
+
+    if (mode[0] == 'a')
+        buf->cursor = buf->count;
+
+    return buf;
+error:
+    free(buf);
+    return NULL;
+}
+
+BUFFER* bmemopen(void* restrict data, size_t size, const char* restrict mode) {
+    BUFFER* buf = realloc(NULL, sizeof *buf);
+    if (!buf) return NULL;
+
+    memset(buf, 0, sizeof *buf);
+    buf->flags = B_FLAG_FIXED;
+    if (!mode || bparsemode(mode, &buf->flags)) goto error;
+
+    buf->capacity = size;
+    if (data) {
+        buf->data = data;
+        buf->count = mode[0] == 'w' ? 0 : size;
+    } else if (size > 0) {
+        buf->flags |= B_FLAG_ALLOC;
+        buf->data = realloc(NULL, size);
+        if (!buf->data) goto error;
     }
 
     if (mode[0] == 'a')
