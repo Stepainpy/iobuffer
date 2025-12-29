@@ -28,13 +28,28 @@ typedef enum {
 typedef unsigned char uchar;
 typedef unsigned long ulong;
 
+typedef balloc_t b_allc;
+
 struct BUFFER {
     uchar* data;
     size_t count;
     size_t capacity;
     bpos_t cursor;
     b_flag flags;
+    b_allc alloc;
+    void * udata;
 };
+
+static void* bdfltalloc(void* ud, void* ptr, size_t size) {
+    if (size == 0) {
+        free(ptr); return NULL;
+    } else
+        return realloc(ptr, size);
+    (void)ud; /* no need */
+}
+
+static balloc_t balloc   = bdfltalloc; /* current allocator function */
+static void*    ballocud = NULL;       /* userdata for that */
 
 static int baddcap(BUFFER* buf, size_t require) {
     size_t newcap = buf->capacity; void* newplace;
@@ -44,7 +59,7 @@ static int baddcap(BUFFER* buf, size_t require) {
     if (newcap == 0) newcap = 1024; /* init */
     while (buf->cursor + require > newcap)
         newcap += newcap / 2; /* + 50% */
-    newplace = realloc(buf->data, newcap);
+    newplace = buf->alloc(buf->udata, buf->data, newcap);
 
     if (newplace) {
         buf->data = newplace;
@@ -66,11 +81,20 @@ static int bparsemode(const char* mode, b_flag* dest) {
     return B_OKEY;
 }
 
+int bsetalloc(balloc_t func, void* udata) {
+    if (!func) return B_FAIL;
+    balloc = func;
+    ballocud = udata;
+    return B_OKEY;
+}
+
 BUFFER* bopen(const void* restrict data, size_t size, const char* restrict mode) {
-    BUFFER* buf = realloc(NULL, sizeof *buf);
+    BUFFER* buf = balloc(ballocud, NULL, sizeof *buf);
     if (!buf) return NULL;
 
     memset(buf, 0, sizeof *buf);
+    buf->alloc = balloc;
+    buf->udata = ballocud;
     buf->flags = B_FLAG_ALLOC;
     if (!data && size > 0) goto error;
     if (!mode || bparsemode(mode, &buf->flags)) goto error;
@@ -86,15 +110,17 @@ BUFFER* bopen(const void* restrict data, size_t size, const char* restrict mode)
 
     return buf;
 error:
-    free(buf);
+    balloc(ballocud, buf, 0);
     return NULL;
 }
 
 BUFFER* bmemopen(void* restrict data, size_t size, const char* restrict mode) {
-    BUFFER* buf = realloc(NULL, sizeof *buf);
+    BUFFER* buf = balloc(ballocud, NULL, sizeof *buf);
     if (!buf) return NULL;
 
     memset(buf, 0, sizeof *buf);
+    buf->alloc = balloc;
+    buf->udata = ballocud;
     buf->flags = B_FLAG_FIXED;
     if (!mode || bparsemode(mode, &buf->flags)) goto error;
 
@@ -104,7 +130,7 @@ BUFFER* bmemopen(void* restrict data, size_t size, const char* restrict mode) {
         buf->count = mode[0] == 'w' ? 0 : size;
     } else if (size > 0) {
         buf->flags |= B_FLAG_ALLOC;
-        buf->data = realloc(NULL, size);
+        buf->data = buf->alloc(buf->udata, NULL, size);
         if (!buf->data) goto error;
     }
 
@@ -113,14 +139,14 @@ BUFFER* bmemopen(void* restrict data, size_t size, const char* restrict mode) {
 
     return buf;
 error:
-    free(buf);
+    balloc(ballocud, buf, 0);
     return NULL;
 }
 
 void bclose(BUFFER* buf) {
     if (buf && buf->flags & B_FLAG_ALLOC)
-        free(buf->data);
-    free(buf);
+        buf->alloc(buf->udata, buf->data, 0);
+    balloc(ballocud, buf, 0);
 }
 
 int bgetpos(BUFFER* restrict buf, bpos_t* restrict pos) {

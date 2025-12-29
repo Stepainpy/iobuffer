@@ -39,6 +39,11 @@ extern "C" {
 
 typedef struct BUFFER BUFFER;
 typedef size_t bpos_t;
+typedef void* (*balloc_t)(void*, void*, size_t);
+
+/* ============= Allocation ============== */
+
+int bsetalloc(balloc_t alloc_func, void* userdata);
 
 /* ============ Buffer access ============ */
 
