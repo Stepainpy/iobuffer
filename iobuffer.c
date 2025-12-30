@@ -145,7 +145,8 @@ error:
 }
 
 void bclose(BUFFER* buf) {
-    if (buf && buf->flags & B_FLAG_ALLOC)
+    if (!buf) return;
+    if (buf->flags & B_FLAG_ALLOC)
         buf->alloc(buf->udata, buf->data, 0);
     buf->alloc(buf->udata, buf, 0);
 }
