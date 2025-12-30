@@ -110,7 +110,7 @@ BUFFER* bopen(const void* restrict data, size_t size, const char* restrict mode)
 
     return buf;
 error:
-    balloc(ballocud, buf, 0);
+    buf->alloc(buf->udata, buf, 0);
     return NULL;
 }
 
@@ -139,14 +139,14 @@ BUFFER* bmemopen(void* restrict data, size_t size, const char* restrict mode) {
 
     return buf;
 error:
-    balloc(ballocud, buf, 0);
+    buf->alloc(buf->udata, buf, 0);
     return NULL;
 }
 
 void bclose(BUFFER* buf) {
     if (buf && buf->flags & B_FLAG_ALLOC)
         buf->alloc(buf->udata, buf->data, 0);
-    balloc(ballocud, buf, 0);
+    buf->alloc(buf->udata, buf, 0);
 }
 
 int bgetpos(BUFFER* restrict buf, bpos_t* restrict pos) {
