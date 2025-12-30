@@ -39,6 +39,9 @@ int main(void) {
 - [Types](#types)
   - [`BUFFER`](#buffer)
   - [`bpos_t`](#bpos_t)
+  - [`balloc_t`](#balloc_t)
+- [Allocation](#allocation)
+  - [`bsetalloc`](#int-bsetallocballoc_t-alloc_func-void-userdata)
 - [Buffer access](#buffer-access)
   - [`bopen`](#buffer-bopenconst-void-restrict-data-size_t-size-const-char-restrict-mode)
   - [`bmemopen`](#buffer-bmemopenvoid-restrict-data-size_t-size-const-char-restrict-mode)
@@ -95,6 +98,22 @@ Object type, capable of holding all information needed to control a buffer.
 
 ### `bpos_t`
 Non-array complete object type, capable of uniquely specifying a position in buffer.
+
+### `balloc_t`
+Function type for memory allocation in `BUFFER`.
+First parameter is userdata pointer, second and third as well as `realloc`.  
+|     `ptr`     |  `size`  | Behaviour                       | Return value                 |
+| :-----------: | :------: | :------------------------------ | :--------------------------- |
+|   is `NULL`   | non zero | Equivalent to calling `malloc`  | Allocated memory or `NULL`   |
+|  non `NULL`   | non zero | Equivalent to calling `realloc` | Reallocated memory or `NULL` |
+| is/non `NULL` |  is zero | Equivalent to calling `free`    | `NULL`                       |
+
+## Allocation
+
+### `int bsetalloc(balloc_t alloc_func, void* userdata)`
+
+**[ EXTENSION ]** Set allocator with userdata (as opaque pointer) for subsequent calls `bopen` and `bmemopen`.  
+**Return value**: `0` upon success, nonzero value otherwise.
 
 ## Buffer access
 
