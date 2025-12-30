@@ -27,7 +27,6 @@ typedef enum {
 
 typedef unsigned char uchar;
 typedef unsigned long ulong;
-
 typedef balloc_t b_allc;
 
 struct BUFFER {
@@ -96,6 +95,7 @@ BUFFER* bopen(const void* restrict data, size_t size, const char* restrict mode)
     buf->alloc = balloc;
     buf->udata = ballocud;
     buf->flags = B_FLAG_ALLOC;
+
     if (!data && size > 0) goto error;
     if (!mode || bparsemode(mode, &buf->flags)) goto error;
 
@@ -122,6 +122,7 @@ BUFFER* bmemopen(void* restrict data, size_t size, const char* restrict mode) {
     buf->alloc = balloc;
     buf->udata = ballocud;
     buf->flags = B_FLAG_FIXED;
+
     if (!mode || bparsemode(mode, &buf->flags)) goto error;
 
     buf->capacity = size;

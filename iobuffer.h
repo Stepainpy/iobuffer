@@ -47,8 +47,8 @@ int bsetalloc(balloc_t alloc_func, void* userdata);
 
 /* ============ Buffer access ============ */
 
-BUFFER* bopen(const void* restrict data, size_t size, const char* restrict mode);
-BUFFER* bmemopen(void* restrict data, size_t size, const char* restrict mode);
+BUFFER* bopen   (const void* restrict data, size_t size, const char* restrict mode);
+BUFFER* bmemopen(      void* restrict data, size_t size, const char* restrict mode);
 void bclose(BUFFER* buffer);
 
 /* ======== Operations on buffer ========= */
