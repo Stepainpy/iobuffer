@@ -3,6 +3,14 @@
 #include <string.h>
 #include <stdio.h>
 
+#if __STDC_VERSION__ >= 199901L
+#  include <stdbool.h>
+#else
+typedef unsigned char bool;
+#  define false ((bool)0)
+#  define true  ((bool)1)
+#endif
+
 /* taken from GMP: https://github.com/alisw/GMP/blob/master/gmp-impl.h#L305 */
 #ifndef va_copy
 #  ifdef __va_copy
@@ -12,19 +20,11 @@
 #  endif
 #endif
 
-#define B_FAIL 1
-#define B_OKEY 0
-
 #define b_min(a, b) ((a) < (b) ? (a) : (b))
 #define b_max(a, b) ((a) > (b) ? (a) : (b))
 
-#if __STDC_VERSION__ >= 199901L
-#  include <stdbool.h>
-#else
-typedef unsigned char bool;
-#  define false ((bool)0)
-#  define true  ((bool)1)
-#endif
+#define B_FAIL 1
+#define B_OKEY 0
 
 typedef unsigned char uchar;
 typedef unsigned long ulong;
