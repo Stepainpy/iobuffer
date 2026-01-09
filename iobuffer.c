@@ -18,25 +18,30 @@
 #define b_min(a, b) ((a) < (b) ? (a) : (b))
 #define b_max(a, b) ((a) > (b) ? (a) : (b))
 
-typedef enum {
-    B_FLAG_READ  = 1 << 0, /* read  permission  */
-    B_FLAG_WRITE = 1 << 1, /* write permission  */
-    B_FLAG_FIXED = 1 << 2, /* fixed capacity    */
-    B_FLAG_ALLOC = 1 << 3, /* data is allocated */
-} b_flag;
+#if __STDC_VERSION__ >= 199901L
+#  include <stdbool.h>
+#else
+typedef unsigned char bool;
+#  define false ((bool)0)
+#  define true  ((bool)1)
+#endif
 
 typedef unsigned char uchar;
 typedef unsigned long ulong;
-typedef balloc_t b_allc;
 
 struct BUFFER {
     uchar* data;
     size_t count;
     size_t capacity;
     bpos_t cursor;
-    b_flag flags;
-    b_allc alloc;
-    void * udata;
+
+    balloc_t alloc;
+    void*    udata;
+
+    bool readable;
+    bool writable;
+    bool allocated;
+    bool fixed;
 };
 
 static void* bdfltalloc(void* ud, void* ptr, size_t size) {
@@ -53,7 +58,7 @@ static void*    ballocud = NULL;       /* userdata for that */
 static int baddcap(BUFFER* buf, size_t require) {
     size_t newcap = buf->capacity; void* newplace;
     if (buf->cursor + require <= newcap) return B_OKEY;
-    if (buf->flags & B_FLAG_FIXED) return B_FAIL;
+    if (buf->fixed) return B_FAIL;
 
     if (newcap == 0) newcap = 1024; /* init */
     while (buf->cursor + require > newcap)
@@ -68,14 +73,14 @@ static int baddcap(BUFFER* buf, size_t require) {
         return B_FAIL;
 }
 
-static int bparsemode(const char* mode, b_flag* dest) {
+static int bparsemode(const char* mode, BUFFER* buf) {
     if (mode[0] != 'r' && mode[0] != 'w' && mode[0] != 'a') return B_FAIL;
     if (mode[1] != '+' && mode[1] != '\0') return B_FAIL;
     if (mode[1] == '+' && mode[2] != '\0') return B_FAIL;
 
-    /**/ if (mode[1] == '+') *dest |= B_FLAG_READ | B_FLAG_WRITE;
-    else if (mode[0] == 'r') *dest |= B_FLAG_READ               ;
-    else                     *dest |=               B_FLAG_WRITE;
+    /**/ if (mode[1] == '+') buf->readable = buf->writable = true;
+    else if (mode[0] == 'r') buf->readable                 = true;
+    else                                     buf->writable = true;
 
     return B_OKEY;
 }
@@ -94,12 +99,12 @@ BUFFER* bopen(const void* restrict data, size_t size, const char* restrict mode)
     memset(buf, 0, sizeof *buf);
     buf->alloc = balloc;
     buf->udata = ballocud;
-    buf->flags = B_FLAG_ALLOC;
+    buf->allocated = true;
 
     if (!data && size > 0) goto error;
-    if (!mode || bparsemode(mode, &buf->flags)) goto error;
+    if (!mode || bparsemode(mode, buf)) goto error;
 
-    if (buf->flags & B_FLAG_READ || mode[0] == 'a') {
+    if (buf->readable || mode[0] == 'a') {
         if (baddcap(buf, size)) goto error;
         memcpy(buf->data, data, size);
         buf->count = size;
@@ -121,18 +126,18 @@ BUFFER* bmemopen(void* restrict data, size_t size, const char* restrict mode) {
     memset(buf, 0, sizeof *buf);
     buf->alloc = balloc;
     buf->udata = ballocud;
-    buf->flags = B_FLAG_FIXED;
+    buf->fixed = true;
 
-    if (!mode || bparsemode(mode, &buf->flags)) goto error;
+    if (!mode || bparsemode(mode, buf)) goto error;
 
     buf->capacity = size;
     if (data) {
         buf->data = data;
         buf->count = mode[0] == 'w' ? 0 : size;
     } else if (size > 0) {
-        buf->flags |= B_FLAG_ALLOC;
         buf->data = buf->alloc(buf->udata, NULL, size);
         if (!buf->data) goto error;
+        buf->allocated = true;
     }
 
     if (mode[0] == 'a')
@@ -146,7 +151,7 @@ error:
 
 void bclose(BUFFER* buf) {
     if (!buf) return;
-    if (buf->flags & B_FLAG_ALLOC)
+    if (buf->allocated)
         buf->alloc(buf->udata, buf->data, 0);
     buf->alloc(buf->udata, buf, 0);
 }
@@ -199,8 +204,7 @@ void brewind(BUFFER* buf) {
 }
 
 int bgetc(BUFFER* buf) {
-    if (!buf || !buf->data) return EOB;
-    if (!(buf->flags & B_FLAG_READ)) return EOB;
+    if (!buf || !buf->data || !buf->readable) return EOB;
     if (buf->cursor == buf->count) return EOB;
     return buf->data[buf->cursor++];
 }
@@ -208,7 +212,7 @@ int bgetc(BUFFER* buf) {
 char* bgets(char* restrict str, int count, BUFFER* restrict buf) {
     uchar* newline; size_t minlen, offset;
     if (!buf || !buf->data || !str) return NULL;
-    if (!(buf->flags & B_FLAG_READ)) return NULL;
+    if (!buf->readable) return NULL;
 
     if (buf->count == buf->cursor) return NULL;
     if (count < 1) return NULL;
@@ -232,7 +236,7 @@ char* bgets(char* restrict str, int count, BUFFER* restrict buf) {
 }
 
 int bputc(int ch, BUFFER* buf) {
-    if (!buf || !(buf->flags & B_FLAG_WRITE)) return EOB;
+    if (!buf || !buf->writable) return EOB;
     if (baddcap(buf, 1)) return EOB;
 
     buf->data[buf->cursor++] = (uchar)ch;
@@ -243,8 +247,7 @@ int bputc(int ch, BUFFER* buf) {
 
 int bputs(const char* restrict str, BUFFER* restrict buf) {
     size_t len;
-    if (!buf || !str) return EOB;
-    if (!(buf->flags & B_FLAG_WRITE)) return EOB;
+    if (!buf || !str || !buf->writable) return EOB;
 
     len = strlen(str);
     if (baddcap(buf, len)) return EOB;
@@ -258,7 +261,7 @@ int bputs(const char* restrict str, BUFFER* restrict buf) {
 
 int bungetc(int ch, BUFFER* buf) {
     if (!buf || !buf->data) return EOB;
-    if (!(buf->flags & B_FLAG_READ)) return EOB;
+    if (!buf->readable) return EOB;
     if (ch == EOB) return EOB;
 
     if (buf->cursor == 0) return EOB;
@@ -269,8 +272,7 @@ int bungetc(int ch, BUFFER* buf) {
 
 int bprintf(BUFFER* restrict buf, const char* restrict fmt, ...) {
     int len; va_list args; uchar saved;
-    if (!buf || !fmt) return EOB;
-    if (!(buf->flags & B_FLAG_WRITE)) return EOB;
+    if (!buf || !fmt || !buf->writable) return EOB;
 
     va_start(args, fmt);
     len = vsnprintf(NULL, 0, fmt, args);
@@ -292,8 +294,7 @@ int bprintf(BUFFER* restrict buf, const char* restrict fmt, ...) {
 
 int vbprintf(BUFFER* restrict buf, const char* restrict fmt, va_list args) {
     int len; va_list acpy; uchar saved;
-    if (!buf || !fmt) return EOB;
-    if (!(buf->flags & B_FLAG_WRITE)) return EOB;
+    if (!buf || !fmt || !buf->writable) return EOB;
 
     va_copy(acpy, args);
     len = vsnprintf(NULL, 0, fmt, acpy);
@@ -315,8 +316,7 @@ int vbprintf(BUFFER* restrict buf, const char* restrict fmt, va_list args) {
 
 size_t bread(void* restrict data, size_t size, size_t count, BUFFER* restrict buf) {
     size_t read;
-    if (!buf || !buf->data) return 0;
-    if (!(buf->flags & B_FLAG_READ)) return 0;
+    if (!buf || !buf->data || !buf->readable) return 0;
     if (!data || !size || !count) return 0;
 
     read = b_min((buf->count - buf->cursor) / size, count);
@@ -327,8 +327,7 @@ size_t bread(void* restrict data, size_t size, size_t count, BUFFER* restrict bu
 }
 
 size_t bwrite(const void* restrict data, size_t size, size_t count, BUFFER* restrict buf) {
-    if (!buf || !size || !count) return 0;
-    if (!(buf->flags & B_FLAG_WRITE)) return 0;
+    if (!buf || !size || !count || !buf->writable) return 0;
 
     if (baddcap(buf, size * count))
         count = (buf->capacity - buf->cursor) / size;
@@ -348,22 +347,20 @@ int beob(BUFFER* buf) {
 /* API extension */
 
 int bpeek(BUFFER* buf) {
-    if (!buf || !buf->data) return EOB;
-    if (!(buf->flags & B_FLAG_READ)) return EOB;
+    if (!buf || !buf->data || !buf->readable) return EOB;
     if (buf->cursor == buf->count) return EOB;
     return buf->data[buf->cursor];
 }
 
 void breset(BUFFER* buf) {
-    if (!buf || !(buf->flags & B_FLAG_WRITE)) return;
+    if (!buf || !buf->writable) return;
     buf->cursor = buf->count = 0;
     if (!buf->data) return;
     memset(buf->data, 0, buf->capacity);
 }
 
 void berase(BUFFER* buf, size_t count) {
-    if (!buf || !buf->data) return;
-    if (!(buf->flags & B_FLAG_WRITE)) return;
+    if (!buf || !buf->data || !buf->writable) return;
     count = b_min(count, buf->count - buf->cursor);
     memmove(buf->data + buf->cursor,
         buf->data + buf->cursor + count,
