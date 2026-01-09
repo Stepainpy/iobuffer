@@ -112,7 +112,8 @@ First parameter is userdata pointer, second and third as well as `realloc`.
 
 ### `int bsetalloc(balloc_t alloc_func, void* userdata)`
 
-**[ EXTENSION ]** Set allocator with userdata (as opaque pointer) for subsequent calls `bopen` and `bmemopen`.  
+**[ EXTENSION ]** Set allocator with userdata (as opaque pointer) for subsequent calls `bopen` and `bmemopen`.
+If both pointers is `NULL`, then set default allocator.  
 **Return value**: `0` upon success, nonzero value otherwise.
 
 ## Buffer access

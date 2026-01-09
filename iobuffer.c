@@ -86,10 +86,16 @@ static int bparsemode(const char* mode, BUFFER* buf) {
 }
 
 int bsetalloc(balloc_t func, void* udata) {
-    if (!func) return B_FAIL;
-    balloc = func;
-    ballocud = udata;
-    return B_OKEY;
+    /*  */ if (func) {
+        balloc   =  func;
+        ballocud = udata;
+        return B_OKEY;
+    } else if (!udata) {
+        balloc   = bdfltalloc;
+        ballocud = NULL;
+        return B_OKEY;
+    } else
+        return B_FAIL;
 }
 
 BUFFER* bopen(const void* restrict data, size_t size, const char* restrict mode) {
