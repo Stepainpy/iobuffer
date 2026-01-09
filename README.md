@@ -123,14 +123,14 @@ If both pointers is `NULL`, then set default allocator.
 Opens a buffer from `data`/`size` and returns a pointer to the buffer. `mode` is used to determine the buffer access mode.  
 **Return value**: If successful, returns a pointer to the new buffer. On error, returns a null pointer.
 
-| Mode string | Meaning         | Explanation                    | Using `data`                              |
-| :---------: | :-------------- | :----------------------------- | :---------------------------------------- |
-|    `"r"`    | read            | open a buffer for reading      | copy content from `data`, read with start |
-|    `"w"`    | write           | create a buffer for writing    | ignore, start with empty                  |
-|    `"a"`    | append          | append to a buffer             | copy content from `data`, start to end    |
-|   `"r+"`    | read extended   | open a buffer for read/write   | copy content from `data`, read with start |
-|   `"w+"`    | write extended  | create a buffer for read/write | ignore, start with empty                  |
-|   `"a+"`    | append extended | open a buffer for read/write   | copy content from `data`, start to end    |
+| Mode string | Meaning         | Explanation                    | Using `data`             | Position         |
+| :---------: | :-------------- | :----------------------------- | :----------------------- | :--------------- |
+|    `"r"`    | read            | open a buffer for reading      | copy content from `data` | read with start  |
+|    `"w"`    | write           | create a buffer for writing    | ignore                   | start with empty |
+|    `"a"`    | append          | append to a buffer             | copy content from `data` | start to end     |
+|    `"r+"`   | read extended   | open a buffer for read/write   | copy content from `data` | read with start  |
+|    `"w+"`   | write extended  | create a buffer for read/write | ignore                   | start with empty |
+|    `"a+"`   | append extended | open a buffer for read/write   | copy content from `data` | start to end     |
 
 ### `BUFFER* bmemopen(void* restrict data, size_t size, const char* restrict mode)`
 
