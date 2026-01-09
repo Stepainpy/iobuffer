@@ -284,10 +284,9 @@ int bprintf(BUFFER* restrict buf, const char* restrict fmt, ...) {
     len = vsnprintf(NULL, 0, fmt, args);
     va_end(args);
 
-    if (len < 0) return EOB;
-    if (baddcap(buf, len)) return EOB;
-
+    if (len < 0 || baddcap(buf, len + 1)) return EOB;
     saved = buf->data[buf->cursor + len];
+
     va_start(args, fmt);
     vsprintf((char*)buf->data + buf->cursor, fmt, args);
     va_end(args);
@@ -306,10 +305,9 @@ int vbprintf(BUFFER* restrict buf, const char* restrict fmt, va_list args) {
     len = vsnprintf(NULL, 0, fmt, acpy);
     va_end(acpy);
 
-    if (len < 0) return EOB;
-    if (baddcap(buf, len)) return EOB;
-
+    if (len < 0 || baddcap(buf, len + 1)) return EOB;
     saved = buf->data[buf->cursor + len];
+
     va_copy(acpy, args);
     vsprintf((char*)buf->data + buf->cursor, fmt, acpy);
     va_end(acpy);
