@@ -62,15 +62,15 @@ static int birequire(BUFFER* buf, size_t require) {
 
     if (newcap == 0) newcap = 1024; /* init */
     while (buf->cursor + require > newcap)
-        newcap += newcap / 2; /* + 50% */
-    newplace = buf->alloc(buf->udata, buf->data, newcap);
+        /* growth by law 'new = ceil(old * phi)', phi ~ 207/128 */
+        newcap = (newcap * 207 >> 7) + !!(newcap * 207 & 0x40);
 
-    if (newplace) {
-        buf->data = newplace;
-        buf->capacity = newcap;
-        return B_OKEY;
-    } else
-        return B_FAIL;
+    newplace = buf->alloc(buf->udata, buf->data, newcap);
+    if (!newplace) return B_FAIL;
+
+    buf->data = newplace;
+    buf->capacity = newcap;
+    return B_OKEY;
 }
 
 static int biparsemode(const char* mode, BUFFER* buf) {
