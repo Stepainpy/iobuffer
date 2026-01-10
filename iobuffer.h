@@ -24,6 +24,16 @@
 #  define __bprintf_attr(...)
 #endif
 
+#ifdef IOBUFFER_AS_DLL
+#  ifdef IOBUFFER_SOURCE
+#    define IOBUFFER_API __declspec(dllexport)
+#  else
+#    define IOBUFFER_API __declspec(dllimport)
+#  endif
+#else
+#  define IOBUFFER_API extern
+#endif
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -43,53 +53,53 @@ typedef void* (*balloc_t)(void*, void*, size_t);
 
 /* ============= Allocation ============== */
 
-int bsetalloc(balloc_t alloc_func, void* userdata);
+IOBUFFER_API int bsetalloc(balloc_t alloc_func, void* userdata);
 
 /* ============ Buffer access ============ */
 
-BUFFER* bopen   (const void* restrict data, size_t size, const char* restrict mode);
-BUFFER* bmemopen(      void* restrict data, size_t size, const char* restrict mode);
-void bclose(BUFFER* buffer);
+IOBUFFER_API BUFFER* bopen   (const void* restrict data, size_t size, const char* restrict mode);
+IOBUFFER_API BUFFER* bmemopen(      void* restrict data, size_t size, const char* restrict mode);
+IOBUFFER_API void bclose(BUFFER* buffer);
 
 /* ======== Operations on buffer ========= */
 
-void berase(BUFFER* buffer, size_t count);
-void breset(BUFFER* buffer);
+IOBUFFER_API void berase(BUFFER* buffer, size_t count);
+IOBUFFER_API void breset(BUFFER* buffer);
 
 /* ========= Buffer positioning ========== */
 
-int bgetpos(BUFFER* restrict buffer,       bpos_t* restrict pos);
-int bsetpos(BUFFER*          buffer, const bpos_t*          pos);
+IOBUFFER_API int bgetpos(BUFFER* restrict buffer,       bpos_t* restrict pos);
+IOBUFFER_API int bsetpos(BUFFER*          buffer, const bpos_t*          pos);
 
-long btell(BUFFER* buffer);
-int  bseek(BUFFER* buffer, long offset, int origin);
+IOBUFFER_API long btell(BUFFER* buffer);
+IOBUFFER_API int  bseek(BUFFER* buffer, long offset, int origin);
 
-void brewind(BUFFER* buffer);
+IOBUFFER_API void brewind(BUFFER* buffer);
 
 /* ========= Direct input/output ========= */
 
-size_t bread (      void* restrict data, size_t size, size_t count, BUFFER* restrict buffer);
-size_t bwrite(const void* restrict data, size_t size, size_t count, BUFFER* restrict buffer);
+IOBUFFER_API size_t bread (      void* restrict data, size_t size, size_t count, BUFFER* restrict buffer);
+IOBUFFER_API size_t bwrite(const void* restrict data, size_t size, size_t count, BUFFER* restrict buffer);
 
 /* ====== Unformatted input/output ======= */
 
-int bgetc(BUFFER* buffer);
-int bpeek(BUFFER* buffer);
-char* bgets(char* restrict str, int count, BUFFER* restrict buffer);
+IOBUFFER_API int bgetc(BUFFER* buffer);
+IOBUFFER_API int bpeek(BUFFER* buffer);
+IOBUFFER_API char* bgets(char* restrict str, int count, BUFFER* restrict buffer);
 
-int bputc(int byte, BUFFER* buffer);
-int bputs(const char* restrict string, BUFFER* restrict buffer);
+IOBUFFER_API int bputc(int byte, BUFFER* buffer);
+IOBUFFER_API int bputs(const char* restrict string, BUFFER* restrict buffer);
 
-int bungetc(int byte, BUFFER* buffer);
+IOBUFFER_API int bungetc(int byte, BUFFER* buffer);
 
 /* ======= Formatted input/output ======== */
 
-int  bprintf(BUFFER* restrict buffer, const char* restrict format, ...         ) __bprintf_attr(3);
-int vbprintf(BUFFER* restrict buffer, const char* restrict format, va_list list) __bprintf_attr(0);
+IOBUFFER_API int  bprintf(BUFFER* restrict buffer, const char* restrict format, ...         ) __bprintf_attr(3);
+IOBUFFER_API int vbprintf(BUFFER* restrict buffer, const char* restrict format, va_list list) __bprintf_attr(0);
 
 /* =========== Error handling ============ */
 
-int beob(BUFFER* buffer);
+IOBUFFER_API int beob(BUFFER* buffer);
 
 /* =========== View extension ============ */
 
@@ -99,7 +109,7 @@ typedef struct BUFVIEW {
     const void* stop;
 } BUFVIEW;
 
-BUFVIEW bview(BUFFER* buffer);
+IOBUFFER_API BUFVIEW bview(BUFFER* buffer);
 
 #define BV_FMT "%.*s"
 #define BV_ARG(view, from) (int)BV_SIZE(view, from), (const char*)(view).from

@@ -1,4 +1,6 @@
+#define IOBUFFER_SOURCE
 #include "iobuffer.h"
+
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
@@ -85,7 +87,7 @@ static int biparsemode(const char* mode, BUFFER* buf) {
     return B_OKEY;
 }
 
-int bsetalloc(balloc_t func, void* udata) {
+IOBUFFER_API int bsetalloc(balloc_t func, void* udata) {
     /*  */ if (func) {
         bialloc = func;
         biudata = udata;
@@ -98,7 +100,7 @@ int bsetalloc(balloc_t func, void* udata) {
         return B_FAIL;
 }
 
-BUFFER* bopen(const void* restrict data, size_t size, const char* restrict mode) {
+IOBUFFER_API BUFFER* bopen(const void* restrict data, size_t size, const char* restrict mode) {
     BUFFER* buf = bialloc(biudata, NULL, sizeof *buf);
     if (!buf) return NULL;
 
@@ -125,7 +127,7 @@ error:
     return NULL;
 }
 
-BUFFER* bmemopen(void* restrict data, size_t size, const char* restrict mode) {
+IOBUFFER_API BUFFER* bmemopen(void* restrict data, size_t size, const char* restrict mode) {
     BUFFER* buf = bialloc(biudata, NULL, sizeof *buf);
     if (!buf) return NULL;
 
@@ -155,33 +157,33 @@ error:
     return NULL;
 }
 
-void bclose(BUFFER* buf) {
+IOBUFFER_API void bclose(BUFFER* buf) {
     if (!buf) return;
     if (buf->allocated)
         buf->alloc(buf->udata, buf->data, 0);
     buf->alloc(buf->udata, buf, 0);
 }
 
-int bgetpos(BUFFER* restrict buf, bpos_t* restrict pos) {
+IOBUFFER_API int bgetpos(BUFFER* restrict buf, bpos_t* restrict pos) {
     if (!buf || !buf->data || !pos) return B_FAIL;
     *pos = buf->cursor;
     return B_OKEY;
 }
 
-int bsetpos(BUFFER* buf, const bpos_t* pos) {
+IOBUFFER_API int bsetpos(BUFFER* buf, const bpos_t* pos) {
     if (!buf || !buf->data || !pos) return B_FAIL;
     if (*pos > buf->count) return B_FAIL;
     buf->cursor = *pos;
     return B_OKEY;
 }
 
-long btell(BUFFER* buf) {
+IOBUFFER_API long btell(BUFFER* buf) {
     if (!buf || !buf->data) return -1L;
     if (buf->cursor > (~0UL >> 1)) return -1L;
     return buf->cursor;
 }
 
-int bseek(BUFFER* buf, long off, int org) {
+IOBUFFER_API int bseek(BUFFER* buf, long off, int org) {
     if (!buf || !buf->data) return B_FAIL;
 
     switch (org) {
@@ -205,18 +207,18 @@ int bseek(BUFFER* buf, long off, int org) {
     return B_OKEY;
 }
 
-void brewind(BUFFER* buf) {
+IOBUFFER_API void brewind(BUFFER* buf) {
     if (!buf) return;
     buf->cursor = 0;
 }
 
-int bgetc(BUFFER* buf) {
+IOBUFFER_API int bgetc(BUFFER* buf) {
     if (!buf || !buf->data || !buf->readable) return EOB;
     if (buf->cursor == buf->count) return EOB;
     return buf->data[buf->cursor++];
 }
 
-char* bgets(char* restrict str, int count, BUFFER* restrict buf) {
+IOBUFFER_API char* bgets(char* restrict str, int count, BUFFER* restrict buf) {
     uchar* newline; size_t minlen, offset;
     if (!buf || !buf->data || !str) return NULL;
     if (!buf->readable) return NULL;
@@ -242,7 +244,7 @@ char* bgets(char* restrict str, int count, BUFFER* restrict buf) {
     return str;
 }
 
-int bputc(int ch, BUFFER* buf) {
+IOBUFFER_API int bputc(int ch, BUFFER* buf) {
     if (!buf || !buf->writable) return EOB;
     if (birequire(buf, 1)) return EOB;
 
@@ -252,7 +254,7 @@ int bputc(int ch, BUFFER* buf) {
     return ch;
 }
 
-int bputs(const char* restrict str, BUFFER* restrict buf) {
+IOBUFFER_API int bputs(const char* restrict str, BUFFER* restrict buf) {
     size_t len;
     if (!buf || !str || !buf->writable) return EOB;
 
@@ -265,7 +267,7 @@ int bputs(const char* restrict str, BUFFER* restrict buf) {
     return B_OKEY;
 }
 
-int bungetc(int ch, BUFFER* buf) {
+IOBUFFER_API int bungetc(int ch, BUFFER* buf) {
     if (!buf || !buf->data) return EOB;
     if (!buf->readable) return EOB;
     if (ch == EOB) return EOB;
@@ -276,7 +278,7 @@ int bungetc(int ch, BUFFER* buf) {
     return ch;
 }
 
-int bprintf(BUFFER* restrict buf, const char* restrict fmt, ...) {
+IOBUFFER_API int bprintf(BUFFER* restrict buf, const char* restrict fmt, ...) {
     int len; va_list args; uchar saved;
     if (!buf || !fmt || !buf->writable) return EOB;
 
@@ -297,7 +299,7 @@ int bprintf(BUFFER* restrict buf, const char* restrict fmt, ...) {
     return len;
 }
 
-int vbprintf(BUFFER* restrict buf, const char* restrict fmt, va_list args) {
+IOBUFFER_API int vbprintf(BUFFER* restrict buf, const char* restrict fmt, va_list args) {
     int len; va_list acpy; uchar saved;
     if (!buf || !fmt || !buf->writable) return EOB;
 
@@ -318,7 +320,7 @@ int vbprintf(BUFFER* restrict buf, const char* restrict fmt, va_list args) {
     return len;
 }
 
-size_t bread(void* restrict data, size_t size, size_t count, BUFFER* restrict buf) {
+IOBUFFER_API size_t bread(void* restrict data, size_t size, size_t count, BUFFER* restrict buf) {
     size_t read;
     if (!buf || !buf->data || !buf->readable) return 0;
     if (!data || !size || !count) return 0;
@@ -330,7 +332,7 @@ size_t bread(void* restrict data, size_t size, size_t count, BUFFER* restrict bu
     return read;
 }
 
-size_t bwrite(const void* restrict data, size_t size, size_t count, BUFFER* restrict buf) {
+IOBUFFER_API size_t bwrite(const void* restrict data, size_t size, size_t count, BUFFER* restrict buf) {
     if (!buf || !size || !count || !buf->writable) return 0;
 
     if (birequire(buf, size * count))
@@ -342,27 +344,27 @@ size_t bwrite(const void* restrict data, size_t size, size_t count, BUFFER* rest
     return count;
 }
 
-int beob(BUFFER* buf) {
+IOBUFFER_API int beob(BUFFER* buf) {
     if (!buf || !buf->data) return 0;
     return buf->cursor == buf->count;
 }
 
 /* API extension */
 
-int bpeek(BUFFER* buf) {
+IOBUFFER_API int bpeek(BUFFER* buf) {
     if (!buf || !buf->data || !buf->readable) return EOB;
     if (buf->cursor == buf->count) return EOB;
     return buf->data[buf->cursor];
 }
 
-void breset(BUFFER* buf) {
+IOBUFFER_API void breset(BUFFER* buf) {
     if (!buf || !buf->writable) return;
     buf->cursor = buf->count = 0;
     if (!buf->data) return;
     memset(buf->data, 0, buf->capacity);
 }
 
-void berase(BUFFER* buf, size_t count) {
+IOBUFFER_API void berase(BUFFER* buf, size_t count) {
     if (!buf || !buf->data || !buf->writable) return;
     count = bimin(count, buf->count - buf->cursor);
     memmove(buf->data + buf->cursor,
@@ -373,7 +375,7 @@ void berase(BUFFER* buf, size_t count) {
 
 /* View extension */
 
-BUFVIEW bview(BUFFER* buf) {
+IOBUFFER_API BUFVIEW bview(BUFFER* buf) {
     BUFVIEW view = {0};
     if (buf && buf->data) {
         view.base = buf->data;
