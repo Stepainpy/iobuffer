@@ -183,22 +183,23 @@ long btell(BUFFER* buf) {
 
 int bseek(BUFFER* buf, long off, int org) {
     if (!buf || !buf->data) return B_FAIL;
-    if (org > BSEEK_END || org < BSEEK_SET) return B_FAIL;
 
     switch (org) {
-        case BSEEK_SET: {
+        case BSEEK_SET:
             if (off < 0 || (ulong) off > buf->count) return B_FAIL;
             buf->cursor = off;
-        } break;
-        case BSEEK_CUR: {
+            break;
+        case BSEEK_CUR:
             if (off > 0 && (ulong) off > buf->count - buf->cursor) return B_FAIL;
-            if (off < 0 && (ulong)-off > buf->cursor) return B_FAIL;
+            if (off < 0 && (ulong)-off >              buf->cursor) return B_FAIL;
             buf->cursor += off;
-        } break;
-        case BSEEK_END: {
+            break;
+        case BSEEK_END:
             if (off > 0 || (ulong)-off > buf->count) return B_FAIL;
             buf->cursor = buf->count + off;
-        } break;
+            break;
+        default:
+            return B_FAIL;
     }
 
     return B_OKEY;
