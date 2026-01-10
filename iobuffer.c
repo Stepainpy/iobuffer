@@ -20,9 +20,6 @@ typedef unsigned char bool;
 #  endif
 #endif
 
-#define b_min(a, b) ((a) < (b) ? (a) : (b))
-#define b_max(a, b) ((a) > (b) ? (a) : (b))
-
 #define B_FAIL 1
 #define B_OKEY 0
 
@@ -43,6 +40,9 @@ struct BUFFER {
     bool allocated;
     bool fixed;
 };
+
+static size_t bimin(size_t a, size_t b) { return a < b ? a : b; }
+static size_t bimax(size_t a, size_t b) { return a > b ? a : b; }
 
 static void* bidfltalloc(void* ud, void* ptr, size_t size) {
     if (size == 0) {
@@ -230,9 +230,9 @@ char* bgets(char* restrict str, int count, BUFFER* restrict buf) {
     newline = memchr(buf->data + buf->cursor, '\n', buf->count - buf->cursor);
     if (newline) {
         offset = newline - buf->data - buf->cursor;
-        minlen = b_min(offset + 1, (size_t)(count - 1));
+        minlen = bimin(offset + 1, count - 1);
     } else
-        minlen = b_min(buf->count - buf->cursor, (size_t)(count - 1));
+        minlen = bimin(buf->count - buf->cursor, count - 1);
 
     memcpy(str, buf->data + buf->cursor, minlen);
     buf->cursor += minlen;
@@ -246,7 +246,7 @@ int bputc(int ch, BUFFER* buf) {
     if (birequire(buf, 1)) return EOB;
 
     buf->data[buf->cursor++] = (uchar)ch;
-    buf->count = b_max(buf->count, buf->cursor);
+    buf->count = bimax(buf->count, buf->cursor);
 
     return ch;
 }
@@ -259,8 +259,7 @@ int bputs(const char* restrict str, BUFFER* restrict buf) {
     if (birequire(buf, len)) return EOB;
 
     memcpy(buf->data + buf->cursor, str, len);
-    buf->cursor += len;
-    buf->count = b_max(buf->count, buf->cursor);
+    buf->count = bimax(buf->count, buf->cursor += len);
 
     return B_OKEY;
 }
@@ -292,7 +291,7 @@ int bprintf(BUFFER* restrict buf, const char* restrict fmt, ...) {
     va_end(args);
 
     buf->data[buf->cursor += len] = saved;
-    buf->count = b_max(buf->count, buf->cursor);
+    buf->count = bimax(buf->count, buf->cursor);
 
     return len;
 }
@@ -313,7 +312,7 @@ int vbprintf(BUFFER* restrict buf, const char* restrict fmt, va_list args) {
     va_end(acpy);
 
     buf->data[buf->cursor += len] = saved;
-    buf->count = b_max(buf->count, buf->cursor);
+    buf->count = bimax(buf->count, buf->cursor);
 
     return len;
 }
@@ -323,7 +322,7 @@ size_t bread(void* restrict data, size_t size, size_t count, BUFFER* restrict bu
     if (!buf || !buf->data || !buf->readable) return 0;
     if (!data || !size || !count) return 0;
 
-    read = b_min((buf->count - buf->cursor) / size, count);
+    read = bimin((buf->count - buf->cursor) / size, count);
     memcpy(data, buf->data + buf->cursor, read * size);
     buf->cursor += read * size;
 
@@ -337,8 +336,7 @@ size_t bwrite(const void* restrict data, size_t size, size_t count, BUFFER* rest
         count = (buf->capacity - buf->cursor) / size;
 
     memcpy(buf->data + buf->cursor, data, size * count);
-    buf->cursor += size * count;
-    buf->count = b_max(buf->count, buf->cursor);
+    buf->count = bimax(buf->count, buf->cursor += size * count);
 
     return count;
 }
@@ -365,7 +363,7 @@ void breset(BUFFER* buf) {
 
 void berase(BUFFER* buf, size_t count) {
     if (!buf || !buf->data || !buf->writable) return;
-    count = b_min(count, buf->count - buf->cursor);
+    count = bimin(count, buf->count - buf->cursor);
     memmove(buf->data + buf->cursor,
         buf->data + buf->cursor + count,
         buf->count - count - buf->cursor);
