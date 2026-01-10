@@ -31,6 +31,9 @@ int main(void) {
 
 ### Table of content
 
+- [Configuration macros](#configuration-macros)
+  - [`IOBUFFER_API`](#iobuffer_api)
+  - [`IOBUFFER_AS_DLL`](#iobuffer_as_dll)
 - [Macro constants](#macro-constants)
   - [`EOB`](#eob)
   - [`BSEEK_SET`](#bseek_set)
@@ -76,6 +79,14 @@ int main(void) {
   - [`BV_FMT`](#bv_fmt)
   - [`BV_ARG`](#bv_argview-from)
   - [`BV_SIZE`](#bv_sizeview-from)
+
+## Configuration macros
+
+### `IOBUFFER_API`
+Macro for library function declarations.
+
+### `IOBUFFER_AS_DLL`
+If defined, then `IOBUFFER_API` expand to `__declspec` with need setting.
 
 ## Macro constants
 
