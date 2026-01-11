@@ -59,7 +59,7 @@ IOBUFFER_API int bsetalloc(balloc_t allocator, void* userdata);
 
 IOBUFFER_API BUFFER* bopen   (const void* restrict data, size_t size, const char* restrict mode);
 IOBUFFER_API BUFFER* bmemopen(      void* restrict data, size_t size, const char* restrict mode);
-IOBUFFER_API void bclose(BUFFER* buffer);
+IOBUFFER_API int bclose(BUFFER* buffer);
 
 /* ======== Operations on buffer ========= */
 

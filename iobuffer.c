@@ -155,11 +155,12 @@ error:
     return NULL;
 }
 
-IOBUFFER_API void bclose(BUFFER* buf) {
-    if (!buf) return;
+IOBUFFER_API int bclose(BUFFER* buf) {
+    if (!buf) return EOB;
     if (buf->allocated)
         buf->alloc(buf->data, 0, buf->udata);
     buf->alloc(buf, 0, buf->udata);
+    return B_OKEY;
 }
 
 IOBUFFER_API int bgetpos(BUFFER* restrict buf, bpos_t* restrict pos) {

@@ -48,7 +48,7 @@ int main(void) {
 - [Buffer access](#buffer-access)
   - [`bopen`](#buffer-bopenconst-void-restrict-data-size_t-size-const-char-restrict-mode)
   - [`bmemopen`](#buffer-bmemopenvoid-restrict-data-size_t-size-const-char-restrict-mode)
-  - [`bclose`](#void-bclosebuffer-buffer)
+  - [`bclose`](#int-bclosebuffer-buffer)
 - [Operations on buffer](#operations-on-buffer)
   - [`berase`](#void-berasebuffer-buffer-size_t-count)
   - [`breset`](#void-bresetbuffer-buffer)
@@ -151,10 +151,10 @@ Mode strings see [`bopen`](#buffer-bopenconst-void-restrict-data-size_t-size-con
 no copying content in `"r"`, `"a"`, `"r+"` and `"a+"` modes.  
 **Return value**: If successful, returns a pointer to the new buffer. On error, returns a null pointer.
 
-### `void bclose(BUFFER* buffer)`
+### `int bclose(BUFFER* buffer)`
 
 Closes the given buffer.  
-**Return value**: *none*
+**Return value**: `0` upon success, `EOB` value otherwise.
 
 ## Operations on buffer
 
