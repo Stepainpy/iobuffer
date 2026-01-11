@@ -19,9 +19,9 @@
 #endif
 
 #ifdef __GNUC__
-#  define __bprintf_attr(ftc) __attribute__((format(printf, 2, ftc)))
+#  define __bgnuattr(arg) __attribute__((arg))
 #else
-#  define __bprintf_attr(...)
+#  define __bgnuattr(...)
 #endif
 
 #ifdef IOBUFFER_AS_DLL
@@ -94,8 +94,8 @@ IOBUFFER_API int bungetc(int byte, BUFFER* buffer);
 
 /* ======= Formatted input/output ======== */
 
-IOBUFFER_API int  bprintf(BUFFER* restrict buffer, const char* restrict format, ...         ) __bprintf_attr(3);
-IOBUFFER_API int vbprintf(BUFFER* restrict buffer, const char* restrict format, va_list list) __bprintf_attr(0);
+IOBUFFER_API int  bprintf(BUFFER* restrict buffer, const char* restrict format, ...         ) __bgnuattr(format(printf, 2, 3));
+IOBUFFER_API int vbprintf(BUFFER* restrict buffer, const char* restrict format, va_list list) __bgnuattr(format(printf, 2, 0));
 
 /* =========== Error handling ============ */
 
