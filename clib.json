@@ -1,6 +1,6 @@
 {
     "name": "iobuffer",
-    "version": "1.4.0",
+    "version": "2.0.0",
     "repo": "Stepainpy/iobuffer",
     "license": "MIT",
     "description": "Dynamic buffer with API like as std IO",
