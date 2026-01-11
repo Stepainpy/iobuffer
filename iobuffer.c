@@ -46,12 +46,10 @@ struct BUFFER {
 static size_t bimin(size_t a, size_t b) { return a < b ? a : b; }
 static size_t bimax(size_t a, size_t b) { return a > b ? a : b; }
 
-static void* bidfltalloc(void* ud, void* ptr, size_t size) {
-    if (size == 0) {
-        free(ptr); return NULL;
-    } else
-        return realloc(ptr, size);
-    (void)ud; /* no need */
+static void* bidfltalloc(void* ptr, size_t size, void* ud) {
+    if (size) return realloc(ptr, size);
+    free(ptr); (void)ud;
+    return NULL;
 }
 
 static balloc_t bialloc = bidfltalloc; /* current allocator function */
@@ -67,7 +65,7 @@ static int birequire(BUFFER* buf, size_t require) {
         /* growth by law 'new = ceil(old * phi)', phi ~ 207/128 */
         newcap = (newcap * 207 >> 7) + !!(newcap * 207 & 0x40);
 
-    newplace = buf->alloc(buf->udata, buf->data, newcap);
+    newplace = buf->alloc(buf->data, newcap, buf->udata);
     if (!newplace) return B_FAIL;
 
     buf->data = newplace;
@@ -87,9 +85,9 @@ static int biparsemode(const char* mode, BUFFER* buf) {
     return B_OKEY;
 }
 
-IOBUFFER_API int bsetalloc(balloc_t func, void* udata) {
-    /*  */ if (func) {
-        bialloc = func;
+IOBUFFER_API int bsetalloc(balloc_t alloc, void* udata) {
+    /*  */ if (alloc) {
+        bialloc = alloc;
         biudata = udata;
         return B_OKEY;
     } else if (!udata) {
@@ -101,7 +99,7 @@ IOBUFFER_API int bsetalloc(balloc_t func, void* udata) {
 }
 
 IOBUFFER_API BUFFER* bopen(const void* restrict data, size_t size, const char* restrict mode) {
-    BUFFER* buf = bialloc(biudata, NULL, sizeof *buf);
+    BUFFER* buf = bialloc(NULL, sizeof *buf, biudata);
     if (!buf) return NULL;
 
     memset(buf, 0, sizeof *buf);
@@ -123,12 +121,12 @@ IOBUFFER_API BUFFER* bopen(const void* restrict data, size_t size, const char* r
 
     return buf;
 error:
-    buf->alloc(buf->udata, buf, 0);
+    buf->alloc(buf, 0, buf->udata);
     return NULL;
 }
 
 IOBUFFER_API BUFFER* bmemopen(void* restrict data, size_t size, const char* restrict mode) {
-    BUFFER* buf = bialloc(biudata, NULL, sizeof *buf);
+    BUFFER* buf = bialloc(NULL, sizeof *buf, biudata);
     if (!buf) return NULL;
 
     memset(buf, 0, sizeof *buf);
@@ -143,7 +141,7 @@ IOBUFFER_API BUFFER* bmemopen(void* restrict data, size_t size, const char* rest
         buf->data = data;
         buf->count = mode[0] == 'w' ? 0 : size;
     } else if (size > 0) {
-        buf->data = buf->alloc(buf->udata, NULL, size);
+        buf->data = buf->alloc(NULL, size, buf->udata);
         if (!buf->data) goto error;
         buf->allocated = true;
     }
@@ -153,15 +151,15 @@ IOBUFFER_API BUFFER* bmemopen(void* restrict data, size_t size, const char* rest
 
     return buf;
 error:
-    buf->alloc(buf->udata, buf, 0);
+    buf->alloc(buf, 0, buf->udata);
     return NULL;
 }
 
 IOBUFFER_API void bclose(BUFFER* buf) {
     if (!buf) return;
     if (buf->allocated)
-        buf->alloc(buf->udata, buf->data, 0);
-    buf->alloc(buf->udata, buf, 0);
+        buf->alloc(buf->data, 0, buf->udata);
+    buf->alloc(buf, 0, buf->udata);
 }
 
 IOBUFFER_API int bgetpos(BUFFER* restrict buf, bpos_t* restrict pos) {

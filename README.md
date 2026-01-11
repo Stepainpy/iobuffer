@@ -44,7 +44,7 @@ int main(void) {
   - [`bpos_t`](#bpos_t)
   - [`balloc_t`](#balloc_t)
 - [Allocation](#allocation)
-  - [`bsetalloc`](#int-bsetallocballoc_t-alloc_func-void-userdata)
+  - [`bsetalloc`](#int-bsetallocballoc_t-allocator-void-userdata)
 - [Buffer access](#buffer-access)
   - [`bopen`](#buffer-bopenconst-void-restrict-data-size_t-size-const-char-restrict-mode)
   - [`bmemopen`](#buffer-bmemopenvoid-restrict-data-size_t-size-const-char-restrict-mode)
@@ -112,16 +112,16 @@ Non-array complete object type, capable of uniquely specifying a position in buf
 
 ### `balloc_t`
 Function type for memory allocation in `BUFFER`.
-First parameter is userdata pointer, second and third as well as `realloc`.  
-|     `ptr`     |  `size`  | Behaviour                       | Return value                 |
-| :-----------: | :------: | :------------------------------ | :--------------------------- |
-|   is `NULL`   | non zero | Equivalent to calling `malloc`  | Allocated memory or `NULL`   |
-|  non `NULL`   | non zero | Equivalent to calling `realloc` | Reallocated memory or `NULL` |
-| is/non `NULL` |  is zero | Equivalent to calling `free`    | `NULL`                       |
+First and second parameters as well as `realloc`, third is userdata pointer.  
+|     `ptr`     |  `size`  | Behaviour    | Return value                 |
+| :-----------: | :------: | :----------- | :--------------------------- |
+|   is `NULL`   | non zero | as `malloc`  |   allocated memory or `NULL` |
+|  non `NULL`   | non zero | as `realloc` | reallocated memory or `NULL` |
+| is/non `NULL` |  is zero | as `free`    | `NULL`                       |
 
 ## Allocation
 
-### `int bsetalloc(balloc_t alloc_func, void* userdata)`
+### `int bsetalloc(balloc_t allocator, void* userdata)`
 
 **[ EXTENSION ]** Set allocator with userdata (as opaque pointer) for subsequent calls `bopen` and `bmemopen`.
 If both pointers is `NULL`, then set default allocator.  

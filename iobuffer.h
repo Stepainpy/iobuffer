@@ -49,11 +49,11 @@ extern "C" {
 
 typedef struct BUFFER BUFFER;
 typedef size_t bpos_t;
-typedef void* (*balloc_t)(void*, void*, size_t);
+typedef void* (*balloc_t)(void* ptr, size_t size, void* userdata);
 
 /* ============= Allocation ============== */
 
-IOBUFFER_API int bsetalloc(balloc_t alloc_func, void* userdata);
+IOBUFFER_API int bsetalloc(balloc_t allocator, void* userdata);
 
 /* ============ Buffer access ============ */
 
