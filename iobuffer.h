@@ -112,8 +112,8 @@ typedef struct BUFVIEW {
 IOBUFFER_API BUFVIEW bview(BUFFER* buffer);
 
 #define BV_FMT "%.*s"
-#define BV_ARG(view, from) (int)BV_SIZE(view, from), (const char*)(view).from
-#define BV_SIZE(view, from) ((char*)(view).stop - (char*)(view).from)
+#define BV_ARG( view, begin, end) (int)BV_SIZE(view, begin, end), (const char*)(view).begin
+#define BV_SIZE(view, begin, end) ((char*)(view).end - (char*)(view).begin)
 
 #ifdef __cplusplus
 }

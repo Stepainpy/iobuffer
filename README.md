@@ -77,8 +77,8 @@ int main(void) {
   - [`BUFVIEW`](#bufview)
   - [`bview`](#bufview-bviewbuffer-buffer)
   - [`BV_FMT`](#bv_fmt)
-  - [`BV_ARG`](#bv_argview-from)
-  - [`BV_SIZE`](#bv_sizeview-from)
+  - [`BV_ARG`](#bv_argview-begin-end)
+  - [`BV_SIZE`](#bv_sizeview-begin-end)
 
 ## Configuration macros
 
@@ -271,6 +271,13 @@ Checks if the end of the given buffer has been reached.
 ### `BUFVIEW`
 Complete object type with fields `base`, `head`, `stop` with type `const void*`.
 
+Valid spans for use in `BV_SIZE` and `BV_ARG`:
+| `begin` | `end`  | Description of span |
+| :-----: | :----: | :------------------ |
+| `base`  | `stop` | all available       |
+| `head`  | `stop` | before read/write   |
+| `base`  | `head` |  after read/write   |
+
 ### `BUFVIEW bview(BUFFER* buffer)`
 
 Create new view object from buffer `buffer`.  
@@ -279,8 +286,8 @@ Create new view object from buffer `buffer`.
 ### `BV_FMT`
 Macro-constant string literal of format specifier for `BUFVIEW`.
 
-### `BV_ARG(view, from)`
-Macro-function for create arguments to `printf`'s functions. Valid value of `from`: `base`, `head`.
+### `BV_ARG(view, begin, end)`
+Macro-function for create arguments to `printf`'s functions.
 
-### `BV_SIZE(view, from)`
-Macro-function get count bytes in view between parameter `from` and `stop`.
+### `BV_SIZE(view, begin, end)`
+Macro-function get count bytes in view between parameter `begin` and `end`.
