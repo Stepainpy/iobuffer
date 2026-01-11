@@ -356,20 +356,21 @@ IOBUFFER_API int bpeek(BUFFER* buf) {
     return buf->data[buf->cursor];
 }
 
-IOBUFFER_API void breset(BUFFER* buf) {
-    if (!buf || !buf->writable) return;
-    buf->cursor = buf->count = 0;
-    if (!buf->data) return;
-    memset(buf->data, 0, buf->capacity);
+IOBUFFER_API int berase(BUFFER* buf, size_t count) {
+    if (!buf || !buf->data || !buf->writable) return B_FAIL;
+    count = bimin(count, buf->count - buf->cursor);
+    memmove(buf->data  + buf->cursor,
+            buf->data  + buf->cursor + count,
+            buf->count - buf->cursor - count);
+    buf->count -= count;
+    return B_OKEY;
 }
 
-IOBUFFER_API void berase(BUFFER* buf, size_t count) {
-    if (!buf || !buf->data || !buf->writable) return;
-    count = bimin(count, buf->count - buf->cursor);
-    memmove(buf->data + buf->cursor,
-        buf->data + buf->cursor + count,
-        buf->count - count - buf->cursor);
-    buf->count -= count;
+IOBUFFER_API int breset(BUFFER* buf) {
+    if (!buf || !buf->data || !buf->writable) return B_FAIL;
+    memset(buf->data, 0, buf->capacity);
+    buf->cursor = buf->count = 0;
+    return B_OKEY;
 }
 
 /* View extension */

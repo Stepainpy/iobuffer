@@ -63,8 +63,8 @@ IOBUFFER_API int bclose(BUFFER* buffer);
 
 /* ======== Operations on buffer ========= */
 
-IOBUFFER_API void berase(BUFFER* buffer, size_t count);
-IOBUFFER_API void breset(BUFFER* buffer);
+IOBUFFER_API int berase(BUFFER* buffer, size_t count);
+IOBUFFER_API int breset(BUFFER* buffer);
 
 /* ========= Buffer positioning ========== */
 

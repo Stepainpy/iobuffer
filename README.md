@@ -50,8 +50,8 @@ int main(void) {
   - [`bmemopen`](#buffer-bmemopenvoid-restrict-data-size_t-size-const-char-restrict-mode)
   - [`bclose`](#int-bclosebuffer-buffer)
 - [Operations on buffer](#operations-on-buffer)
-  - [`berase`](#void-berasebuffer-buffer-size_t-count)
-  - [`breset`](#void-bresetbuffer-buffer)
+  - [`berase`](#int-berasebuffer-buffer-size_t-count)
+  - [`breset`](#int-bresetbuffer-buffer)
 - [Buffer positioning](#buffer-positioning)
   - [`bgetpos`](#int-bgetposbuffer-restrict-buffer-bpos_t-restrict-pos)
   - [`bsetpos`](#int-bsetposbuffer-buffer-const-bpos_t-pos)
@@ -158,15 +158,15 @@ Closes the given buffer.
 
 ## Operations on buffer
 
-### `void berase(BUFFER* buffer, size_t count)`
+### `int berase(BUFFER* buffer, size_t count)`
 
 **[ EXTENSION ]** Erase `count` bytes starting from the current position.  
-**Return value**: *none*
+**Return value**: `0` upon success, nonzero value otherwise.
 
-### `void breset(BUFFER* buffer)`
+### `int breset(BUFFER* buffer)`
 
 **[ EXTENSION ]** Deleting all data in buffer.  
-**Return value**: *none*
+**Return value**: `0` upon success, nonzero value otherwise.
 
 ## Buffer positioning
 
