@@ -32,6 +32,10 @@ int main(void) {
 ### Table of content
 
 - [Configuration macros](#configuration-macros)
+  - [`IOBUFFER_VERSION`](#iobuffer_version)
+  - [`IOBUFFER_VERSION_MAJOR`](#iobuffer_version_major)
+  - [`IOBUFFER_VERSION_MINOR`](#iobuffer_version_minor)
+  - [`IOBUFFER_VERSION_PATCH`](#iobuffer_version_patch)
   - [`IOBUFFER_API`](#iobuffer_api)
   - [`IOBUFFER_AS_DLL`](#iobuffer_as_dll)
 - [Macro constants](#macro-constants)
@@ -81,6 +85,18 @@ int main(void) {
   - [`BV_SIZE`](#bv_sizeview-begin-end)
 
 ## Configuration macros
+
+### `IOBUFFER_VERSION`
+Macro expanded to string with current version in format `major.minor.patch`.
+
+### `IOBUFFER_VERSION_MAJOR`
+Macro expanded to integer with major part of version.
+
+### `IOBUFFER_VERSION_MINOR`
+Macro expanded to integer with minor part of version.
+
+### `IOBUFFER_VERSION_PATCH`
+Macro expanded to integer with patch part of version.
 
 ### `IOBUFFER_API`
 Macro for library function declarations.

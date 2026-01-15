@@ -12,6 +12,19 @@
 #include <stdarg.h>
 #include <stddef.h>
 
+/* =========== Version macros ============ */
+
+#define __btostr_(x) # x
+#define __btostr(x) __btostr_(x)
+
+#define IOBUFFER_VERSION_MAJOR 2
+#define IOBUFFER_VERSION_MINOR 0
+#define IOBUFFER_VERSION_PATCH 0
+#define IOBUFFER_VERSION \
+    __btostr(IOBUFFER_VERSION_MAJOR) "." \
+    __btostr(IOBUFFER_VERSION_MINOR) "." \
+    __btostr(IOBUFFER_VERSION_PATCH)
+
 /* ======= Preprocessor conditions ======= */
 
 #if __STDC_VERSION__ < 199901L
