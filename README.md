@@ -4,20 +4,50 @@
 
 Dynamic buffer with API like standard C files. Support standard C89 (ANSI C).
 
-## Example
+## Examples
 
+Simple read loop:
 ``` c
 #include <stdio.h>
 #include "iobuffer.h"
 
 int main(void) {
     BUFFER* bd; int ch;
-    bd = bopen("Hello, ", 7, "a+");
+    bd = bopen("Hello, world!", 13, "r");
     if (!bd) return 1;
 
-    bputs("Alex", bd);
+    while ((ch = bgetc(bd)) != EOB)
+        putchar(ch);
+    putchar('\n');
+
+    bclose(bd);
+    return 0;
+}
+```
+
+Global read and write:
+``` c
+#include <stdio.h>
+#include "iobuffer.h"
+
+int main(void) {
+    BUFFER* bd; int ch;
+    bd = bopen(NULL, 0, "w+");
+    if (!bd) return 1;
+
+    bprintf(bd, "%s.", "abcdefghijklmnopqrstuvwxyz");
+    brewind(bd);
+
+    while ((ch = bgetc(bd)) != EOB && ch != '.') {
+        long pos = btell(bd);
+        bseek(bd, 0, BSEEK_END);
+        bputc(ch - ('a' - 'A'), bd);
+        bputc(ch, bd);
+        bseek(bd, pos, BSEEK_SET);
+    }
 
     brewind(bd);
+    berase(bd, 27);
     while ((ch = bgetc(bd)) != EOB)
         putchar(ch);
     putchar('\n');
