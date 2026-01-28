@@ -32,9 +32,15 @@
 #endif
 
 #ifdef __GNUC__
-#  define __bgnuattr(arg) __attribute__((arg))
+#  define __battrformat(va_i) __attribute__((format(printf, 2, va_i)))
+#  ifdef __clang__
+#    define __battrmalloc __attribute__((malloc))
+#  else
+#    define __battrmalloc __attribute__((malloc, malloc(bclose, 1)))
+#  endif
 #else
-#  define __bgnuattr(...)
+#  define __battrformat(va_i)
+#  define __battrmalloc
 #endif
 
 #ifdef IOBUFFER_AS_DLL
@@ -70,9 +76,9 @@ IOBUFFER_API int bsetalloc(balloc_t allocator, void* userdata);
 
 /* ============ Buffer access ============ */
 
-IOBUFFER_API BUFFER* bopen   (const void* restrict data, size_t size, const char* restrict mode);
-IOBUFFER_API BUFFER* bmemopen(      void* restrict data, size_t size, const char* restrict mode);
 IOBUFFER_API int bclose(BUFFER* buffer);
+IOBUFFER_API BUFFER* bopen   (const void* restrict data, size_t size, const char* restrict mode) __battrmalloc;
+IOBUFFER_API BUFFER* bmemopen(      void* restrict data, size_t size, const char* restrict mode) __battrmalloc;
 
 /* ======== Operations on buffer ========= */
 
@@ -107,8 +113,8 @@ IOBUFFER_API int bungetc(int byte, BUFFER* buffer);
 
 /* ======= Formatted input/output ======== */
 
-IOBUFFER_API int  bprintf(BUFFER* restrict buffer, const char* restrict format, ...         ) __bgnuattr(format(printf, 2, 3));
-IOBUFFER_API int vbprintf(BUFFER* restrict buffer, const char* restrict format, va_list list) __bgnuattr(format(printf, 2, 0));
+IOBUFFER_API int  bprintf(BUFFER* restrict buffer, const char* restrict format, ...         ) __battrformat(3);
+IOBUFFER_API int vbprintf(BUFFER* restrict buffer, const char* restrict format, va_list list) __battrformat(0);
 
 /* =========== Error handling ============ */
 
