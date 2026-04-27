@@ -1,4 +1,2 @@
-# files fast testing
-makefile
-main.c
-*.exe
+build/
+lib/
