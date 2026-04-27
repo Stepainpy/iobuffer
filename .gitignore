@@ -1,2 +1,7 @@
 build/
-lib/
+*.a
+
+# temporary file for debug
+Makefile
+main.c
+tp*
