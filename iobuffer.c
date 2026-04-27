@@ -13,6 +13,18 @@ typedef unsigned char bool;
 #  define true  ((bool)1)
 #endif
 
+/* ignore warning with function 'snprintf' in C89 */
+#if defined(__GNUC__) && __STDC_VERSION__ < 199901L
+#  define __bnowarnbegin \
+    _Pragma("GCC diagnostic push") \
+    _Pragma("GCC diagnostic ignored \"-Wimplicit-function-declaration\"")
+#  define __bnowarnend \
+    _Pragma("GCC diagnostic pop")
+#else
+#  define __bnowarnbegin
+#  define __bnowarnend
+#endif
+
 /* taken from GMP: https://github.com/alisw/GMP/blob/master/gmp-impl.h#L305 */
 #ifndef va_copy
 #  ifdef __va_copy
@@ -282,7 +294,9 @@ IOBUFFER_API int bprintf(BUFFER* restrict buf, const char* restrict fmt, ...) {
     if (!buf || !fmt || !buf->writable) return EOB;
 
     va_start(args, fmt);
+    __bnowarnbegin
     len = vsnprintf(NULL, 0, fmt, args);
+    __bnowarnend
     va_end(args);
 
     if (len < 0 || birequire(buf, len + 1)) return EOB;
@@ -303,7 +317,9 @@ IOBUFFER_API int vbprintf(BUFFER* restrict buf, const char* restrict fmt, va_lis
     if (!buf || !fmt || !buf->writable) return EOB;
 
     va_copy(acpy, args);
+    __bnowarnbegin
     len = vsnprintf(NULL, 0, fmt, acpy);
+    __bnowarnend
     va_end(acpy);
 
     if (len < 0 || birequire(buf, len + 1)) return EOB;
