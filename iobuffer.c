@@ -290,26 +290,11 @@ IOBUFFER_API int bungetc(int ch, BUFFER* buf) {
 }
 
 IOBUFFER_API int bprintf(BUFFER* restrict buf, const char* restrict fmt, ...) {
-    int len; va_list args; uchar saved;
-    if (!buf || !fmt || !buf->writable) return EOB;
-
+    int ret; va_list args;
     va_start(args, fmt);
-    __bnowarnbegin
-    len = vsnprintf(NULL, 0, fmt, args);
-    __bnowarnend
+    ret = vbprintf(buf, fmt, args);
     va_end(args);
-
-    if (len < 0 || birequire(buf, len + 1)) return EOB;
-    saved = buf->data[buf->cursor + len];
-
-    va_start(args, fmt);
-    vsprintf((char*)buf->data + buf->cursor, fmt, args);
-    va_end(args);
-
-    buf->data[buf->cursor += len] = saved;
-    buf->count = bimax(buf->count, buf->cursor);
-
-    return len;
+    return ret;
 }
 
 IOBUFFER_API int vbprintf(BUFFER* restrict buf, const char* restrict fmt, va_list args) {
