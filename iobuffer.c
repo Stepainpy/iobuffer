@@ -296,6 +296,21 @@ IOBUFFER_API int bprintf(BUFFER* restrict buf, const char* restrict fmt, ...) {
     return ret;
 }
 
+typedef enum {
+    BLM_NONE = 0,
+    BLM_H,
+    BLM_L,
+    BLM_L_UPPER
+#if __STDC_VERSION__ >= 199901L
+    /* BLM_L_UPPER */,
+    BLM_HH,
+    BLM_LL,
+    BLM_J,
+    BLM_Z,
+    BLM_T
+#endif
+} bilenmod_t;
+
 IOBUFFER_API int vbprintf(BUFFER* restrict buf, const char* restrict fmt, va_list args) {
     int total_len = 0;
     if (!buf || !fmt || !buf->writable) return EOB;
@@ -313,17 +328,83 @@ IOBUFFER_API int vbprintf(BUFFER* restrict buf, const char* restrict fmt, va_lis
         if (percent) {
             const char* fmtstr = percent + 1;
             if (*fmtstr == '%') {
-                if (birequire(buf, 1)) break;
+                if (birequire(buf, 1)) goto error;
                 buf->data[buf->cursor++] = '%';
                 buf->count = bimax(buf->count, buf->cursor);
+                total_len += 1;
             } else {
-                /* Not implemented */
+                /* Flags */
+                bool lead_zero = false;
+                bool left_just = false;
+                bool  alt_form = false;
+                int    signing = -1;
+                /* < 0  =>  print only minus
+                 * = 0  =>  print with space
+                 * > 0  =>  print with plus
+                 */
+                /* Width, precision and length mod. */
+                int fld_width =  0;
+                int precision = -1;
+                bilenmod_t lenmod = BLM_NONE;
+
+                while (*fmtstr == ' ' || *fmtstr == '-' || *fmtstr == '+' ||
+                       *fmtstr == '0' || *fmtstr == '#')
+                    switch (*fmtstr++) {
+                        case '0': lead_zero = true; break;
+                        case '-': left_just = true; break;
+                        case '#':  alt_form = true; break;
+                        case '+':   signing = 1;    break;
+                        case ' ':
+                            if (signing < 0) signing = 0;
+                            break;
+                    }
+
+                if ('1' <= *fmtstr && *fmtstr <= '9') {
+                    fld_width = atoi(fmtstr);
+                    if (fld_width == 0) goto error;
+                    while ('0' <= *fmtstr && *fmtstr <= '9') ++fmtstr;
+                }
+
+                if (fmtstr[0] == '.' && '1' <= fmtstr[1] && fmtstr[1] <= '9') {
+                    precision = atoi(++fmtstr);
+                    if (precision == 0) goto error;
+                    while ('0' <= *fmtstr && *fmtstr <= '9') ++fmtstr;
+                }
+
+                switch (*fmtstr) {
+                    case 'h':
+                        lenmod = BLM_H; ++fmtstr;
+#if __STDC_VERSION__ >= 199901L
+                        if (*fmtstr != 'h') break;
+                        lenmod = BLM_HH; ++fmtstr;
+#endif
+                        break;
+                    case 'l':
+                        lenmod = BLM_L; ++fmtstr;
+#if __STDC_VERSION__ >= 199901L
+                        if (*fmtstr != 'l') break;
+                        lenmod = BLM_LL; ++fmtstr;
+#endif
+                        break;
+                    case 'L': lenmod = BLM_L_UPPER; ++fmtstr; break;
+#if __STDC_VERSION__ >= 199901L
+                    case 'j': lenmod = BLM_J; ++fmtstr; break;
+                    case 'z': lenmod = BLM_Z; ++fmtstr; break;
+                    case 't': lenmod = BLM_T; ++fmtstr; break;
+#endif
+                }
+
+                switch (*fmtstr) {
+                    /* Cases of specifier */
+                    default: goto error;
+                }
             }
             fmt = fmtstr + 1;
         } else
             break;
     }
 
+error:
     return total_len;
 }
 
