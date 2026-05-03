@@ -3,7 +3,6 @@
 
 #include <stdlib.h>
 #include <string.h>
-#include <stdio.h>
 
 #if __STDC_VERSION__ >= 199901L
 #  include <stdbool.h>
@@ -298,26 +297,34 @@ IOBUFFER_API int bprintf(BUFFER* restrict buf, const char* restrict fmt, ...) {
 }
 
 IOBUFFER_API int vbprintf(BUFFER* restrict buf, const char* restrict fmt, va_list args) {
-    int len; va_list acpy; uchar saved;
+    int total_len = 0;
     if (!buf || !fmt || !buf->writable) return EOB;
 
-    va_copy(acpy, args);
-    __bnowarnbegin
-    len = vsnprintf(NULL, 0, fmt, acpy);
-    __bnowarnend
-    va_end(acpy);
+    while (true) {
+        const char* percent = strchr(fmt, '%');
+        size_t len = percent ? (size_t)(percent - fmt) : strlen(fmt);
 
-    if (len < 0 || birequire(buf, len + 1)) return EOB;
-    saved = buf->data[buf->cursor + len];
+        if (birequire(buf, len))
+            len = buf->capacity - buf->cursor;
+        memcpy(buf->data + buf->cursor, fmt, len);
+        buf->count = bimax(buf->count, buf->cursor += len);
+        total_len += len;
 
-    va_copy(acpy, args);
-    vsprintf((char*)buf->data + buf->cursor, fmt, acpy);
-    va_end(acpy);
+        if (percent) {
+            const char* fmtstr = percent + 1;
+            if (*fmtstr == '%') {
+                if (birequire(buf, 1)) break;
+                buf->data[buf->cursor++] = '%';
+                buf->count = bimax(buf->count, buf->cursor);
+            } else {
+                /* Not implemented */
+            }
+            fmt = fmtstr + 1;
+        } else
+            break;
+    }
 
-    buf->data[buf->cursor += len] = saved;
-    buf->count = bimax(buf->count, buf->cursor);
-
-    return len;
+    return total_len;
 }
 
 IOBUFFER_API size_t bread(void* restrict data, size_t size, size_t count, BUFFER* restrict buf) {
