@@ -311,6 +311,13 @@ typedef enum {
 #endif
 } bilenmod_t;
 
+static int biimmputc(int ch, BUFFER* buf) {
+    if (birequire(buf, 1)) return B_FAIL;
+    buf->data[buf->cursor++] = (uchar)ch;
+    buf->count = bimax(buf->count, buf->cursor);
+    return B_OKEY;
+}
+
 IOBUFFER_API int vbprintf(BUFFER* restrict buf, const char* restrict fmt, va_list args) {
     int total_len = 0;
     if (!buf || !fmt || !buf->writable) return EOB;
@@ -328,9 +335,7 @@ IOBUFFER_API int vbprintf(BUFFER* restrict buf, const char* restrict fmt, va_lis
         if (percent) {
             const char* fmtstr = percent + 1;
             if (*fmtstr == '%') {
-                if (birequire(buf, 1)) goto error;
-                buf->data[buf->cursor++] = '%';
-                buf->count = bimax(buf->count, buf->cursor);
+                if (biimmputc('%', buf)) goto error;
                 total_len += 1;
             } else {
                 bilenmod_t lenmod = BLM_NONE;
@@ -407,6 +412,18 @@ IOBUFFER_API int vbprintf(BUFFER* restrict buf, const char* restrict fmt, va_lis
 
                 switch (*fmtstr) {
                     /* Cases of specifier */
+                    case 'c': {
+                        int received = va_arg(args, int);
+                        if ( left_just) { if (biimmputc(received, buf)) goto error; else ++total_len; }
+                        if (fld_width > 1) {
+                            int padding = fld_width - 1;
+                            if (birequire(buf, padding)) goto error;
+                            memset(buf->data + buf->cursor, ' ', padding);
+                            buf->count = bimax(buf->count, buf->cursor += padding);
+                            total_len += padding;
+                        }
+                        if (!left_just) { if (biimmputc(received, buf)) goto error; else ++total_len; }
+                    } break;
                     default: goto error;
                 }
             }
