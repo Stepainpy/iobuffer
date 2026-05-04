@@ -363,12 +363,23 @@ IOBUFFER_API int vbprintf(BUFFER* restrict buf, const char* restrict fmt, va_lis
                     fld_width = atoi(fmtstr);
                     if (fld_width == 0) goto error;
                     while ('0' <= *fmtstr && *fmtstr <= '9') ++fmtstr;
+                } else if (*fmtstr == '*') {
+                    int received = va_arg(args, int);
+                    if (received < 0) {
+                        received = -received;
+                        left_just = true;
+                    }
+                    fld_width = received;
+                    fmtstr += 1;
                 }
 
                 if (fmtstr[0] == '.' && '1' <= fmtstr[1] && fmtstr[1] <= '9') {
                     precision = atoi(++fmtstr);
                     if (precision == 0) goto error;
                     while ('0' <= *fmtstr && *fmtstr <= '9') ++fmtstr;
+                } else if (fmtstr[0] == '.' && fmtstr[1] == '*') {
+                    precision = va_arg(args, int);
+                    fmtstr += 2;
                 }
 
                 switch (*fmtstr) {
