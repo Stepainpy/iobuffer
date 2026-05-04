@@ -424,6 +424,35 @@ IOBUFFER_API int vbprintf(BUFFER* restrict buf, const char* restrict fmt, va_lis
                         }
                         if (!left_just) { if (biimmputc(received, buf)) goto error; else ++total_len; }
                     } break;
+                    case 's': {
+                        const char* received = va_arg(args, const char*);
+                        int len, maxlen;
+
+                        if (!received) goto error;
+                        len = strlen(received);
+                        if (precision < 0) precision = len;
+                        precision = bimin(precision, len);
+                        maxlen = bimax(fld_width, precision);
+
+                        if (birequire(buf, maxlen)) goto error;
+
+                        if ( left_just) {
+                            memcpy(buf->data + buf->cursor, received, precision);
+                            buf->count = bimax(buf->count, buf->cursor += precision);
+                            total_len += precision;
+                        }
+                        if (precision < maxlen) {
+                            int padding = maxlen - precision;
+                            memset(buf->data + buf->cursor, ' ', padding);
+                            buf->count = bimax(buf->count, buf->cursor += padding);
+                            total_len += padding;
+                        }
+                        if (!left_just) {
+                            memcpy(buf->data + buf->cursor, received, precision);
+                            buf->count = bimax(buf->count, buf->cursor += precision);
+                            total_len += precision;
+                        }
+                    } break;
                     default: goto error;
                 }
             }
