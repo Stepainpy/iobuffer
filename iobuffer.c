@@ -333,19 +333,19 @@ IOBUFFER_API int vbprintf(BUFFER* restrict buf, const char* restrict fmt, va_lis
                 buf->count = bimax(buf->count, buf->cursor);
                 total_len += 1;
             } else {
-                /* Flags */
+                bilenmod_t lenmod = BLM_NONE;
                 bool lead_zero = false;
                 bool left_just = false;
                 bool  alt_form = false;
+                int  fld_width =  0;
+                int  precision = -1;
                 int    signing = -1;
-                /* < 0  =>  print only minus
+
+                /* signing values:
+                 * < 0  =>  print only minus
                  * = 0  =>  print with space
                  * > 0  =>  print with plus
                  */
-                /* Width, precision and length mod. */
-                int fld_width =  0;
-                int precision = -1;
-                bilenmod_t lenmod = BLM_NONE;
 
                 while (*fmtstr == ' ' || *fmtstr == '-' || *fmtstr == '+' ||
                        *fmtstr == '0' || *fmtstr == '#')
