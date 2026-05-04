@@ -412,7 +412,9 @@ IOBUFFER_API int vbprintf(BUFFER* restrict buf, const char* restrict fmt, va_lis
 
                 switch (*fmtstr) {
                     /* Cases of specifier */
-                    case 'c': {
+                    case 'c':
+                    if (lenmod != BLM_NONE) goto error;
+                    {
                         int received = va_arg(args, int);
                         if ( left_just) { if (biimmputc(received, buf)) goto error; else ++total_len; }
                         if (fld_width > 1) {
@@ -424,7 +426,9 @@ IOBUFFER_API int vbprintf(BUFFER* restrict buf, const char* restrict fmt, va_lis
                         }
                         if (!left_just) { if (biimmputc(received, buf)) goto error; else ++total_len; }
                     } break;
-                    case 's': {
+                    case 's':
+                    if (lenmod != BLM_NONE) goto error;
+                    {
                         const char* received = va_arg(args, const char*);
                         int len, maxlen;
 
