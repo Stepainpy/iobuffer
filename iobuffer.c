@@ -323,10 +323,10 @@ static int biimmputc(int ch, BUFFER* buf) {
     return B_OKEY;
 }
 
-static void biprinti(intmax_t number, int base, char* outbuf, const char* alphabet) {
+static void biprinti(intmax_t number, char* outbuf) {
     char* end = outbuf;
-    if (number < 0) do *end++ = alphabet[-(number % base)]; while (number /= base);
-    else            do *end++ = alphabet[  number % base ]; while (number /= base);
+    if (number < 0) do *end++ = '0' - number % 10; while (number /= 10);
+    else            do *end++ = '0' + number % 10; while (number /= 10);
     *end = '\0';
     for (--end; outbuf < end; outbuf++, end--) {
         char tmp = *outbuf; *outbuf = *end; *end = tmp;
@@ -483,7 +483,7 @@ IOBUFFER_API int vbprintf(BUFFER* restrict buf, const char* restrict fmt, va_lis
                             case BLM_L_UPPER: goto error;
                         }
 
-                        biprinti(received, 10, tmpbuf, "0123456789");
+                        biprinti(received, tmpbuf);
                         is_neg = received < 0;
                         len = strlen(tmpbuf);
 
