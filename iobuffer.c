@@ -1,6 +1,7 @@
 #define IOBUFFER_SOURCE
 #include "iobuffer.h"
 
+#include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -16,7 +17,7 @@ typedef unsigned char bool;
 #if defined(__GNUC__) && __STDC_VERSION__ < 199901L
 #  define __bnowarnbegin \
     _Pragma("GCC diagnostic push") \
-    _Pragma("GCC diagnostic ignored \"-Wimplicit-function-declaration\"")
+    _Pragma("GCC diagnostic ignored \"-Wlong-long\"")
 #  define __bnowarnend \
     _Pragma("GCC diagnostic pop")
 #else
@@ -36,8 +37,15 @@ typedef unsigned char bool;
 #define B_FAIL 1
 #define B_OKEY 0
 
+typedef signed char  schar;
+typedef signed short sshort;
+
 typedef unsigned char uchar;
 typedef unsigned long ulong;
+
+__bnowarnbegin
+typedef signed long long sllong;
+__bnowarnend
 
 struct BUFFER {
     uchar* data;
@@ -300,15 +308,12 @@ typedef enum {
     BLM_NONE = 0,
     BLM_H,
     BLM_L,
-    BLM_L_UPPER
-#if __STDC_VERSION__ >= 199901L
-    /* BLM_L_UPPER */,
+    BLM_L_UPPER,
     BLM_HH,
     BLM_LL,
     BLM_J,
     BLM_Z,
     BLM_T
-#endif
 } bilenmod_t;
 
 static int biimmputc(int ch, BUFFER* buf) {
@@ -316,6 +321,16 @@ static int biimmputc(int ch, BUFFER* buf) {
     buf->data[buf->cursor++] = (uchar)ch;
     buf->count = bimax(buf->count, buf->cursor);
     return B_OKEY;
+}
+
+static void biprinti(intmax_t number, int base, char* outbuf, const char* alphabet) {
+    char* end = outbuf;
+    if (number < 0) do *end++ = alphabet[-(number % base)]; while (number /= base);
+    else            do *end++ = alphabet[  number % base ]; while (number /= base);
+    *end = '\0';
+    for (--end; outbuf < end; outbuf++, end--) {
+        char tmp = *outbuf; *outbuf = *end; *end = tmp;
+    }
 }
 
 IOBUFFER_API int vbprintf(BUFFER* restrict buf, const char* restrict fmt, va_list args) {
@@ -390,24 +405,18 @@ IOBUFFER_API int vbprintf(BUFFER* restrict buf, const char* restrict fmt, va_lis
                 switch (*fmtstr) {
                     case 'h':
                         lenmod = BLM_H; ++fmtstr;
-#if __STDC_VERSION__ >= 199901L
                         if (*fmtstr != 'h') break;
                         lenmod = BLM_HH; ++fmtstr;
-#endif
                         break;
                     case 'l':
                         lenmod = BLM_L; ++fmtstr;
-#if __STDC_VERSION__ >= 199901L
                         if (*fmtstr != 'l') break;
                         lenmod = BLM_LL; ++fmtstr;
-#endif
                         break;
-                    case 'L': lenmod = BLM_L_UPPER; ++fmtstr; break;
-#if __STDC_VERSION__ >= 199901L
                     case 'j': lenmod = BLM_J; ++fmtstr; break;
                     case 'z': lenmod = BLM_Z; ++fmtstr; break;
                     case 't': lenmod = BLM_T; ++fmtstr; break;
-#endif
+                    case 'L': lenmod = BLM_L_UPPER; ++fmtstr; break;
                 }
 
                 switch (*fmtstr) {
@@ -455,6 +464,71 @@ IOBUFFER_API int vbprintf(BUFFER* restrict buf, const char* restrict fmt, va_lis
                             memcpy(buf->data + buf->cursor, received, precision);
                             buf->count = bimax(buf->count, buf->cursor += precision);
                             total_len += precision;
+                        }
+                    } break;
+                    case 'd': case 'i': {
+                        char tmpbuf[24] = {0};
+                        bool is_neg; int len;
+                        intmax_t received;
+
+                        switch (lenmod) {
+                            case BLM_NONE: received =         va_arg(args, signed int ); break;
+                            case BLM_HH  : received = (schar) va_arg(args, signed int ); break;
+                            case BLM_H   : received = (sshort)va_arg(args, signed int ); break;
+                            case BLM_L   : received =         va_arg(args, signed long); break;
+                            case BLM_LL  : received = va_arg(args,    sllong); break;
+                            case BLM_J   : received = va_arg(args,  intmax_t); break;
+                            case BLM_Z   : received = va_arg(args,    size_t); break;
+                            case BLM_T   : received = va_arg(args, ptrdiff_t); break;
+                            case BLM_L_UPPER: goto error;
+                        }
+
+                        biprinti(received, 10, tmpbuf, "0123456789");
+                        is_neg = received < 0;
+                        len = strlen(tmpbuf);
+
+                        if (precision < 0) {
+                            if (lead_zero && !left_just)
+                                precision = bimax(1, fld_width) - (signing >= 0 || is_neg);
+                            else
+                                precision = 1;
+                        }
+
+                        if (!left_just && (fld_width > (int)bimax(precision, len) + (signing >= 0 || is_neg))) {
+                            size_t padding = fld_width - bimax(precision, len) - (signing >= 0 || is_neg);
+                            if (birequire(buf, padding)) goto error;
+                            memset(buf->data + buf->cursor, ' ', padding);
+                            buf->count = bimax(buf->count, buf->cursor += padding);
+                            total_len += padding;
+                        }
+
+                        if (is_neg) {
+                            if (biimmputc('-', buf)) goto error;
+                            total_len += 1;
+                        } else if (signing >= 0) {
+                            if (biimmputc(signing > 0 ? '+' : ' ', buf)) goto error;
+                            total_len += 1;
+                        }
+
+                        if (precision > len) {
+                            size_t padding = precision - len;
+                            if (birequire(buf, padding)) goto error;
+                            memset(buf->data + buf->cursor, '0', padding);
+                            buf->count = bimax(buf->count, buf->cursor += padding);
+                            total_len += padding;
+                        }
+
+                        if (birequire(buf, len)) goto error;
+                        memcpy(buf->data + buf->cursor, tmpbuf, len);
+                        buf->count = bimax(buf->count, buf->cursor += len);
+                        total_len += len;
+
+                        if (left_just && (fld_width > (int)bimax(precision, len) + (signing >= 0 || is_neg))) {
+                            size_t padding = fld_width - bimax(precision, len) - (signing >= 0 || is_neg);
+                            if (birequire(buf, padding)) goto error;
+                            memset(buf->data + buf->cursor, ' ', padding);
+                            buf->count = bimax(buf->count, buf->cursor += padding);
+                            total_len += padding;
                         }
                     } break;
                     default: goto error;
