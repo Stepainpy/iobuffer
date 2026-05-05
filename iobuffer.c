@@ -40,11 +40,13 @@ typedef unsigned char bool;
 typedef signed char  schar;
 typedef signed short sshort;
 
-typedef unsigned char uchar;
-typedef unsigned long ulong;
+typedef unsigned char  uchar;
+typedef unsigned short ushort;
+typedef unsigned long  ulong;
 
 __bnowarnbegin
-typedef signed long long sllong;
+typedef   signed long long sllong;
+typedef unsigned long long ullong;
 __bnowarnend
 
 struct BUFFER {
@@ -340,6 +342,16 @@ static void biprinti(intmax_t number, char* outbuf) {
     }
 }
 
+static void biprintu(uintmax_t number, char* outbuf, int base, bool up) {
+    const char* alphabet = up ? "0123456789ABCDEF" : "0123456789abcdef";
+    char* end = outbuf;
+    do *end++ = alphabet[number % base]; while (number /= base);
+    *end = '\0';
+    for (--end; outbuf < end; outbuf++, end--) {
+        char tmp = *outbuf; *outbuf = *end; *end = tmp;
+    }
+}
+
 IOBUFFER_API int vbprintf(BUFFER* restrict buf, const char* restrict fmt, va_list args) {
     int total_len = 0;
     if (!buf || !fmt || !buf->writable) return EOB;
@@ -529,6 +541,69 @@ IOBUFFER_API int vbprintf(BUFFER* restrict buf, const char* restrict fmt, va_lis
 
                         if (left_just && (fld_width > (int)bimax(precision, len) + (signing >= 0 || is_neg))) {
                             size_t padding = fld_width - bimax(precision, len) - (signing >= 0 || is_neg);
+                            if (biimmrepc(' ', padding, buf)) goto error;
+                            total_len += padding;
+                        }
+                    } break;
+                    case 'u': case 'o': case 'x': case 'X': {
+                        char tmpbuf[24] = {0};
+                        int len, prefix_size;
+                        uintmax_t received;
+                        bool is_dec = *fmtstr == 'u';
+                        bool is_oct = *fmtstr == 'o';
+                        bool is_hex = *fmtstr == 'x';
+                        bool is_HEX = *fmtstr == 'X';
+
+                        switch (lenmod) {
+                            case BLM_NONE: received =         va_arg(args, unsigned int ); break;
+                            case BLM_HH  : received = (uchar) va_arg(args, unsigned int ); break;
+                            case BLM_H   : received = (ushort)va_arg(args, unsigned int ); break;
+                            case BLM_L   : received =         va_arg(args, unsigned long); break;
+                            case BLM_LL  : received = va_arg(args,    ullong); break;
+                            case BLM_J   : received = va_arg(args, uintmax_t); break;
+                            case BLM_Z   : received = va_arg(args,    size_t); break;
+                            case BLM_T   : received = va_arg(args, ptrdiff_t); break;
+                            case BLM_L_UPPER: goto error;
+                        }
+
+                        biprintu(received, tmpbuf, is_dec ? 10 : is_oct ? 8 : 16, is_HEX);
+                        prefix_size = alt_form && received > 0 && (is_hex || is_HEX) ? 2 : 0;
+                        len = strlen(tmpbuf);
+
+                        if (precision < 0) {
+                            if (lead_zero && !left_just)
+                                precision = bimax(1 + (alt_form && (is_hex || is_HEX)), fld_width) - prefix_size;
+                            else
+                                precision = 1;
+                        }
+                        if (is_oct && received > 0 && precision <= len)
+                            precision = len + 1;
+
+                        if (!left_just && (fld_width > (int)bimax(precision, len) + prefix_size)) {
+                            size_t padding = fld_width - bimax(precision, len) - prefix_size;
+                            if (biimmrepc(' ', padding, buf)) goto error;
+                            total_len += padding;
+                        }
+
+                        if ((is_hex || is_HEX) && received > 0) {
+                            if (biimmputc('0', buf)) goto error;
+                            total_len += 1;
+                            if (biimmputc(is_hex ? 'x' : 'X', buf)) goto error;
+                            total_len += 1;
+                        }
+
+                        if (precision > len) {
+                            if (biimmrepc('0', precision - len, buf)) goto error;
+                            total_len += precision - len;
+                        }
+
+                        if (birequire(buf, len)) goto error;
+                        memcpy(buf->data + buf->cursor, tmpbuf, len);
+                        buf->count = bimax(buf->count, buf->cursor += len);
+                        total_len += len;
+
+                        if (left_just && (fld_width > (int)bimax(precision, len) + prefix_size)) {
+                            size_t padding = fld_width - bimax(precision, len) - prefix_size;
                             if (biimmrepc(' ', padding, buf)) goto error;
                             total_len += padding;
                         }
