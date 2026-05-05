@@ -323,6 +323,13 @@ static int biimmputc(int ch, BUFFER* buf) {
     return B_OKEY;
 }
 
+static int biimmrepc(int ch, size_t count, BUFFER* buf) {
+    if (birequire(buf, count)) return B_FAIL;
+    memset(buf->data + buf->cursor, ch, count);
+    buf->count = bimax(buf->count, buf->cursor += count);
+    return B_OKEY;
+}
+
 static void biprinti(intmax_t number, char* outbuf) {
     char* end = outbuf;
     if (number < 0) do *end++ = '0' - number % 10; while (number /= 10);
@@ -425,15 +432,18 @@ IOBUFFER_API int vbprintf(BUFFER* restrict buf, const char* restrict fmt, va_lis
                     if (lenmod != BLM_NONE) goto error;
                     {
                         int received = va_arg(args, int);
-                        if ( left_just) { if (biimmputc(received, buf)) goto error; else ++total_len; }
-                        if (fld_width > 1) {
-                            int padding = fld_width - 1;
-                            if (birequire(buf, padding)) goto error;
-                            memset(buf->data + buf->cursor, ' ', padding);
-                            buf->count = bimax(buf->count, buf->cursor += padding);
-                            total_len += padding;
+                        if ( left_just) {
+                            if (biimmputc(received, buf)) goto error;
+                            ++total_len;
                         }
-                        if (!left_just) { if (biimmputc(received, buf)) goto error; else ++total_len; }
+                        if (fld_width > 1) {
+                            if (biimmrepc(' ', fld_width - 1, buf)) goto error;
+                            total_len += fld_width - 1;
+                        }
+                        if (!left_just) {
+                            if (biimmputc(received, buf)) goto error;
+                            ++total_len;
+                        }
                     } break;
                     case 's':
                     if (lenmod != BLM_NONE) goto error;
@@ -456,8 +466,7 @@ IOBUFFER_API int vbprintf(BUFFER* restrict buf, const char* restrict fmt, va_lis
                         }
                         if (precision < maxlen) {
                             int padding = maxlen - precision;
-                            memset(buf->data + buf->cursor, ' ', padding);
-                            buf->count = bimax(buf->count, buf->cursor += padding);
+                            if (biimmrepc(' ', padding, buf)) goto error;
                             total_len += padding;
                         }
                         if (!left_just) {
@@ -496,9 +505,7 @@ IOBUFFER_API int vbprintf(BUFFER* restrict buf, const char* restrict fmt, va_lis
 
                         if (!left_just && (fld_width > (int)bimax(precision, len) + (signing >= 0 || is_neg))) {
                             size_t padding = fld_width - bimax(precision, len) - (signing >= 0 || is_neg);
-                            if (birequire(buf, padding)) goto error;
-                            memset(buf->data + buf->cursor, ' ', padding);
-                            buf->count = bimax(buf->count, buf->cursor += padding);
+                            if (biimmrepc(' ', padding, buf)) goto error;
                             total_len += padding;
                         }
 
@@ -511,11 +518,8 @@ IOBUFFER_API int vbprintf(BUFFER* restrict buf, const char* restrict fmt, va_lis
                         }
 
                         if (precision > len) {
-                            size_t padding = precision - len;
-                            if (birequire(buf, padding)) goto error;
-                            memset(buf->data + buf->cursor, '0', padding);
-                            buf->count = bimax(buf->count, buf->cursor += padding);
-                            total_len += padding;
+                            if (biimmrepc('0', precision - len, buf)) goto error;
+                            total_len += precision - len;
                         }
 
                         if (birequire(buf, len)) goto error;
@@ -525,9 +529,7 @@ IOBUFFER_API int vbprintf(BUFFER* restrict buf, const char* restrict fmt, va_lis
 
                         if (left_just && (fld_width > (int)bimax(precision, len) + (signing >= 0 || is_neg))) {
                             size_t padding = fld_width - bimax(precision, len) - (signing >= 0 || is_neg);
-                            if (birequire(buf, padding)) goto error;
-                            memset(buf->data + buf->cursor, ' ', padding);
-                            buf->count = bimax(buf->count, buf->cursor += padding);
+                            if (biimmrepc(' ', padding, buf)) goto error;
                             total_len += padding;
                         }
                     } break;
