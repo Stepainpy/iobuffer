@@ -641,6 +641,18 @@ IOBUFFER_API int vbprintf(BUFFER* restrict buf, const char* restrict fmt, va_lis
                             total_len += padding;
                         }
                     } break;
+                    case 'n':
+                    switch (lenmod) {
+                        case BLM_NONE: *va_arg(args, signed int  *) = total_len; break;
+                        case BLM_HH  : *va_arg(args, signed char *) = total_len; break;
+                        case BLM_H   : *va_arg(args, signed short*) = total_len; break;
+                        case BLM_L   : *va_arg(args, signed long *) = total_len; break;
+                        case BLM_LL  : *va_arg(args,       sllong*) = total_len; break;
+                        case BLM_J   : *va_arg(args,     intmax_t*) = total_len; break;
+                        case BLM_Z   : *va_arg(args,       size_t*) = total_len; break;
+                        case BLM_T   : *va_arg(args,    ptrdiff_t*) = total_len; break;
+                        case BLM_L_UPPER: goto error;
+                    } break;
                     default: goto error;
                 }
             }
