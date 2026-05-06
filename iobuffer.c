@@ -608,6 +608,39 @@ IOBUFFER_API int vbprintf(BUFFER* restrict buf, const char* restrict fmt, va_lis
                             total_len += padding;
                         }
                     } break;
+                    case 'p':
+                    if (lenmod != BLM_NONE) goto error;
+                    if (precision >= 0) goto error;
+                    {
+                        char tmpbuf[24] = {0}; int len;
+                        uintptr_t received = (uintptr_t)va_arg(args, void*);
+
+                        biprintu(received, tmpbuf, 16, false);
+                        len = strlen(tmpbuf);
+                        memmove(tmpbuf + 2 * sizeof received - len, tmpbuf, len + 1);
+                        memset(tmpbuf, '0', 2 * sizeof received - len);
+                        len = 2 * sizeof received;
+
+                        if (!left_just && (fld_width > len + 2)) {
+                            size_t padding = fld_width - len - 2;
+                            if (biimmrepc(' ', padding, buf)) goto error;
+                            total_len += padding;
+                        }
+
+                        if (biimmputc('0', buf)) goto error; else total_len += 1;
+                        if (biimmputc('x', buf)) goto error; else total_len += 1;
+
+                        if (birequire(buf, len)) goto error;
+                        memcpy(buf->data + buf->cursor, tmpbuf, len);
+                        buf->count = bimax(buf->count, buf->cursor += len);
+                        total_len += len;
+
+                        if (left_just && (fld_width > len + 2)) {
+                            size_t padding = fld_width - len - 2;
+                            if (biimmrepc(' ', padding, buf)) goto error;
+                            total_len += padding;
+                        }
+                    } break;
                     default: goto error;
                 }
             }
