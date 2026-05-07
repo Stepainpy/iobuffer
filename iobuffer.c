@@ -428,6 +428,69 @@ static void biprintu(uintmax_t number, char* outbuf, int base, bool up) {
     }
 }
 
+static int biputfmt_di(BUFFER* buf, va_list args, bifmtspec_t* fmt, int* total) {
+    char tmpbuf[24] = {0};
+    bool is_neg; int len, inttl;
+    intmax_t received;
+
+    switch (fmt->lenmod) {
+        case BLM_NONE: received =        va_arg(args, int ); break;
+        case BLM_HH  : received = (schar)va_arg(args, int ); break;
+        case BLM_H   : received = (short)va_arg(args, int ); break;
+        case BLM_L   : received =        va_arg(args, long); break;
+        case BLM_LL  : received = va_arg(args,    sllong); break;
+        case BLM_J   : received = va_arg(args,  intmax_t); break;
+        case BLM_Z   : received = va_arg(args,    size_t); break;
+        case BLM_T   : received = va_arg(args, ptrdiff_t); break;
+        case BLM_L_UPPER: return B_FAIL;
+    }
+
+    biprinti(received, tmpbuf);
+    is_neg = received < 0;
+    len = strlen(tmpbuf);
+
+    if (fmt->precision < 0) {
+        if (fmt->lead_zero && !fmt->left_just)
+            fmt->precision = bimax(1, fmt->fieldwidth) - (fmt->signing >= 0 || is_neg);
+        else
+            fmt->precision = 1;
+    }
+
+    inttl = (int)bimax(fmt->precision, len) + (fmt->signing >= 0 || is_neg);
+
+    if (!fmt->left_just && fmt->fieldwidth > inttl) {
+        size_t padding = fmt->fieldwidth - inttl;
+        if (biimmrepc(' ', padding, buf)) return B_FAIL;
+        *total += padding;
+    }
+
+    if (is_neg) {
+        if (biimmputc('-', buf)) return B_FAIL;
+        *total += 1;
+    } else if (fmt->signing >= 0) {
+        if (biimmputc(fmt->signing > 0 ? '+' : ' ', buf)) return B_FAIL;
+        *total += 1;
+    }
+
+    if (fmt->precision > len) {
+        if (biimmrepc('0', fmt->precision - len, buf)) return B_FAIL;
+        *total += fmt->precision - len;
+    }
+
+    if (birequire(buf, len)) return B_FAIL;
+    memcpy(buf->data + buf->cursor, tmpbuf, len);
+    buf->count = bimax(buf->count, buf->cursor += len);
+    *total += len;
+
+    if ( fmt->left_just && fmt->fieldwidth > inttl) {
+        size_t padding = fmt->fieldwidth - inttl;
+        if (biimmrepc(' ', padding, buf)) return B_FAIL;
+        *total += padding;
+    }
+
+    return B_OKEY;
+}
+
 IOBUFFER_API int vbprintf(BUFFER* restrict buf, const char* restrict fmt, va_list args) {
     int total_len = 0;
     if (!buf || !fmt || !buf->writable) return EOB;
@@ -553,64 +616,9 @@ IOBUFFER_API int vbprintf(BUFFER* restrict buf, const char* restrict fmt, va_lis
                             total_len += fmt.precision;
                         }
                     } break;
-                    case 'd': case 'i': {
-                        char tmpbuf[24] = {0};
-                        bool is_neg; int len;
-                        intmax_t received;
-
-                        switch (fmt.lenmod) {
-                            case BLM_NONE: received =        va_arg(args, int ); break;
-                            case BLM_HH  : received = (schar)va_arg(args, int ); break;
-                            case BLM_H   : received = (short)va_arg(args, int ); break;
-                            case BLM_L   : received =        va_arg(args, long); break;
-                            case BLM_LL  : received = va_arg(args,    sllong); break;
-                            case BLM_J   : received = va_arg(args,  intmax_t); break;
-                            case BLM_Z   : received = va_arg(args,    size_t); break;
-                            case BLM_T   : received = va_arg(args, ptrdiff_t); break;
-                            case BLM_L_UPPER: goto error;
-                        }
-
-                        biprinti(received, tmpbuf);
-                        is_neg = received < 0;
-                        len = strlen(tmpbuf);
-
-                        if (fmt.precision < 0) {
-                            if (fmt.lead_zero && !fmt.left_just)
-                                fmt.precision = bimax(1, fmt.fieldwidth) - (fmt.signing >= 0 || is_neg);
-                            else
-                                fmt.precision = 1;
-                        }
-
-                        if (!fmt.left_just && (fmt.fieldwidth > (int)bimax(fmt.precision, len) + (fmt.signing >= 0 || is_neg))) {
-                            size_t padding = fmt.fieldwidth - bimax(fmt.precision, len) - (fmt.signing >= 0 || is_neg);
-                            if (biimmrepc(' ', padding, buf)) goto error;
-                            total_len += padding;
-                        }
-
-                        if (is_neg) {
-                            if (biimmputc('-', buf)) goto error;
-                            total_len += 1;
-                        } else if (fmt.signing >= 0) {
-                            if (biimmputc(fmt.signing > 0 ? '+' : ' ', buf)) goto error;
-                            total_len += 1;
-                        }
-
-                        if (fmt.precision > len) {
-                            if (biimmrepc('0', fmt.precision - len, buf)) goto error;
-                            total_len += fmt.precision - len;
-                        }
-
-                        if (birequire(buf, len)) goto error;
-                        memcpy(buf->data + buf->cursor, tmpbuf, len);
-                        buf->count = bimax(buf->count, buf->cursor += len);
-                        total_len += len;
-
-                        if ( fmt.left_just && (fmt.fieldwidth > (int)bimax(fmt.precision, len) + (fmt.signing >= 0 || is_neg))) {
-                            size_t padding = fmt.fieldwidth - bimax(fmt.precision, len) - (fmt.signing >= 0 || is_neg);
-                            if (biimmrepc(' ', padding, buf)) goto error;
-                            total_len += padding;
-                        }
-                    } break;
+                    case 'd': case 'i':
+                        if (biputfmt_di(buf, args, &fmt, &total_len)) goto error;
+                        break;
                     case 'u': case 'o': case 'x': case 'X': {
                         char tmpbuf[24] = {0};
                         int len, prefix_size;
