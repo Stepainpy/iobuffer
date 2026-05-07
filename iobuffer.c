@@ -306,6 +306,74 @@ IOBUFFER_API int bprintf(BUFFER* restrict buf, const char* restrict fmt, ...) {
     return ret;
 }
 
+IOBUFFER_API size_t bread(void* restrict data, size_t size, size_t count, BUFFER* restrict buf) {
+    size_t read;
+    if (!buf || !buf->data || !buf->readable) return 0;
+    if (!data || !size || !count) return 0;
+
+    read = bimin((buf->count - buf->cursor) / size, count);
+    memcpy(data, buf->data + buf->cursor, read * size);
+    buf->cursor += read * size;
+
+    return read;
+}
+
+IOBUFFER_API size_t bwrite(const void* restrict data, size_t size, size_t count, BUFFER* restrict buf) {
+    if (!buf || !size || !count || !buf->writable) return 0;
+
+    if (birequire(buf, size * count))
+        count = (buf->capacity - buf->cursor) / size;
+
+    memcpy(buf->data + buf->cursor, data, size * count);
+    buf->count = bimax(buf->count, buf->cursor += size * count);
+
+    return count;
+}
+
+IOBUFFER_API int beob(BUFFER* buf) {
+    if (!buf || !buf->data) return 0;
+    return buf->cursor == buf->count;
+}
+
+/* API extension */
+
+IOBUFFER_API int bpeek(BUFFER* buf) {
+    if (!buf || !buf->data || !buf->readable) return EOB;
+    if (buf->cursor == buf->count) return EOB;
+    return buf->data[buf->cursor];
+}
+
+IOBUFFER_API int berase(BUFFER* buf, size_t count) {
+    if (!buf || !buf->data || !buf->writable) return B_FAIL;
+    count = bimin(count, buf->count - buf->cursor);
+    memmove(buf->data  + buf->cursor,
+            buf->data  + buf->cursor + count,
+            buf->count - buf->cursor - count);
+    buf->count -= count;
+    return B_OKEY;
+}
+
+IOBUFFER_API int breset(BUFFER* buf) {
+    if (!buf || !buf->data || !buf->writable) return B_FAIL;
+    memset(buf->data, 0, buf->capacity);
+    buf->cursor = buf->count = 0;
+    return B_OKEY;
+}
+
+/* View extension */
+
+IOBUFFER_API BUFVIEW bview(BUFFER* buf) {
+    BUFVIEW view = {0};
+    if (buf && buf->data) {
+        view.base = buf->data;
+        view.head = buf->data + buf->cursor;
+        view.stop = buf->data + buf->count;
+    }
+    return view;
+}
+
+/* Implementation of vbprintf */
+
 typedef enum {
     BLM_NONE = 0,
     BLM_H,
@@ -663,70 +731,4 @@ IOBUFFER_API int vbprintf(BUFFER* restrict buf, const char* restrict fmt, va_lis
 
 error:
     return total_len;
-}
-
-IOBUFFER_API size_t bread(void* restrict data, size_t size, size_t count, BUFFER* restrict buf) {
-    size_t read;
-    if (!buf || !buf->data || !buf->readable) return 0;
-    if (!data || !size || !count) return 0;
-
-    read = bimin((buf->count - buf->cursor) / size, count);
-    memcpy(data, buf->data + buf->cursor, read * size);
-    buf->cursor += read * size;
-
-    return read;
-}
-
-IOBUFFER_API size_t bwrite(const void* restrict data, size_t size, size_t count, BUFFER* restrict buf) {
-    if (!buf || !size || !count || !buf->writable) return 0;
-
-    if (birequire(buf, size * count))
-        count = (buf->capacity - buf->cursor) / size;
-
-    memcpy(buf->data + buf->cursor, data, size * count);
-    buf->count = bimax(buf->count, buf->cursor += size * count);
-
-    return count;
-}
-
-IOBUFFER_API int beob(BUFFER* buf) {
-    if (!buf || !buf->data) return 0;
-    return buf->cursor == buf->count;
-}
-
-/* API extension */
-
-IOBUFFER_API int bpeek(BUFFER* buf) {
-    if (!buf || !buf->data || !buf->readable) return EOB;
-    if (buf->cursor == buf->count) return EOB;
-    return buf->data[buf->cursor];
-}
-
-IOBUFFER_API int berase(BUFFER* buf, size_t count) {
-    if (!buf || !buf->data || !buf->writable) return B_FAIL;
-    count = bimin(count, buf->count - buf->cursor);
-    memmove(buf->data  + buf->cursor,
-            buf->data  + buf->cursor + count,
-            buf->count - buf->cursor - count);
-    buf->count -= count;
-    return B_OKEY;
-}
-
-IOBUFFER_API int breset(BUFFER* buf) {
-    if (!buf || !buf->data || !buf->writable) return B_FAIL;
-    memset(buf->data, 0, buf->capacity);
-    buf->cursor = buf->count = 0;
-    return B_OKEY;
-}
-
-/* View extension */
-
-IOBUFFER_API BUFVIEW bview(BUFFER* buf) {
-    BUFVIEW view = {0};
-    if (buf && buf->data) {
-        view.base = buf->data;
-        view.head = buf->data + buf->cursor;
-        view.stop = buf->data + buf->count;
-    }
-    return view;
 }
