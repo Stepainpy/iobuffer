@@ -634,7 +634,18 @@ IOBUFFER_API int vbprintf(BUFFER* restrict buf, const char* restrict fmt, va_lis
                 }
 
                 switch (*fmtstr) {
-                    /* Cases of specifier */
+                    case 'n':
+                    switch (fmt.lenmod) {
+                        case BLM_NONE: *va_arg(args,       int*) = total_len; break;
+                        case BLM_HH  : *va_arg(args,     schar*) = total_len; break;
+                        case BLM_H   : *va_arg(args,     short*) = total_len; break;
+                        case BLM_L   : *va_arg(args,      long*) = total_len; break;
+                        case BLM_LL  : *va_arg(args,    sllong*) = total_len; break;
+                        case BLM_J   : *va_arg(args,  intmax_t*) = total_len; break;
+                        case BLM_Z   : *va_arg(args,    size_t*) = total_len; break;
+                        case BLM_T   : *va_arg(args, ptrdiff_t*) = total_len; break;
+                        case BLM_L_UPPER: goto error;
+                    } break;
                     case 'c':
                     if (fmt.lenmod != BLM_NONE) goto error;
                     {
@@ -720,18 +731,6 @@ IOBUFFER_API int vbprintf(BUFFER* restrict buf, const char* restrict fmt, va_lis
                             if (biimmrepc(' ', padding, buf)) goto error;
                             total_len += padding;
                         }
-                    } break;
-                    case 'n':
-                    switch (fmt.lenmod) {
-                        case BLM_NONE: *va_arg(args,       int*) = total_len; break;
-                        case BLM_HH  : *va_arg(args,     schar*) = total_len; break;
-                        case BLM_H   : *va_arg(args,     short*) = total_len; break;
-                        case BLM_L   : *va_arg(args,      long*) = total_len; break;
-                        case BLM_LL  : *va_arg(args,    sllong*) = total_len; break;
-                        case BLM_J   : *va_arg(args,  intmax_t*) = total_len; break;
-                        case BLM_Z   : *va_arg(args,    size_t*) = total_len; break;
-                        case BLM_T   : *va_arg(args, ptrdiff_t*) = total_len; break;
-                        case BLM_L_UPPER: goto error;
                     } break;
                     default: goto error;
                 }
