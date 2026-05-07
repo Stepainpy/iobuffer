@@ -378,6 +378,22 @@ typedef enum {
     BLM_T
 } bilenmod_t;
 
+/* signing values:
+ * < 0  =>  print only minus
+ * = 0  =>  print with space
+ * > 0  =>  print with plus
+ */
+
+typedef struct {
+    bilenmod_t lenmod;
+    int fieldwidth;
+    int  precision;
+    int    signing;
+    bool lead_zero;
+    bool  alt_form;
+    bool left_just;
+} bifmtspec_t;
+
 static int biimmputc(int ch, BUFFER* buf) {
     if (birequire(buf, 1)) return B_FAIL;
     buf->data[buf->cursor++] = (uchar)ch;
@@ -432,119 +448,109 @@ IOBUFFER_API int vbprintf(BUFFER* restrict buf, const char* restrict fmt, va_lis
                 if (biimmputc('%', buf)) goto error;
                 total_len += 1;
             } else {
-                bilenmod_t lenmod = BLM_NONE;
-                bool lead_zero = false;
-                bool left_just = false;
-                bool  alt_form = false;
-                int  fld_width =  0;
-                int  precision = -1;
-                int    signing = -1;
-
-                /* signing values:
-                 * < 0  =>  print only minus
-                 * = 0  =>  print with space
-                 * > 0  =>  print with plus
-                 */
+                bifmtspec_t fmt = {0};
+                fmt.precision = -1;
+                fmt.signing   = -1;
 
                 while (*fmtstr == ' ' || *fmtstr == '-' || *fmtstr == '+' ||
                        *fmtstr == '0' || *fmtstr == '#')
                     switch (*fmtstr++) {
-                        case '0': lead_zero = true; break;
-                        case '-': left_just = true; break;
-                        case '#':  alt_form = true; break;
-                        case '+':   signing = 1;    break;
+                        case '0': fmt.lead_zero = true; break;
+                        case '-': fmt.left_just = true; break;
+                        case '#': fmt.alt_form  = true; break;
+                        case '+': fmt.signing   = 1;    break;
                         case ' ':
-                            if (signing < 0) signing = 0;
+                            if (fmt.signing < 0) fmt.signing = 0;
                             break;
                     }
 
                 if ('1' <= *fmtstr && *fmtstr <= '9') {
-                    fld_width = atoi(fmtstr);
-                    if (fld_width == 0) goto error;
+                    fmt.fieldwidth = atoi(fmtstr);
+                    if (fmt.fieldwidth == 0) goto error;
                     while ('0' <= *fmtstr && *fmtstr <= '9') ++fmtstr;
                 } else if (*fmtstr == '*') {
                     int received = va_arg(args, int);
                     if (received < 0) {
                         received = -received;
-                        left_just = true;
+                        fmt.left_just = true;
                     }
-                    fld_width = received;
+                    fmt.fieldwidth = received;
                     fmtstr += 1;
                 }
 
                 if (fmtstr[0] == '.' && '1' <= fmtstr[1] && fmtstr[1] <= '9') {
-                    precision = atoi(++fmtstr);
-                    if (precision == 0) goto error;
+                    fmt.precision = atoi(++fmtstr);
+                    if (fmt.precision == 0) goto error;
                     while ('0' <= *fmtstr && *fmtstr <= '9') ++fmtstr;
                 } else if (fmtstr[0] == '.' && fmtstr[1] == '*') {
-                    precision = va_arg(args, int);
+                    fmt.precision = va_arg(args, int);
                     fmtstr += 2;
                 }
 
                 switch (*fmtstr) {
                     case 'h':
-                        lenmod = BLM_H; ++fmtstr;
+                        fmt.lenmod = BLM_H; ++fmtstr;
                         if (*fmtstr != 'h') break;
-                        lenmod = BLM_HH; ++fmtstr;
+                        fmt.lenmod = BLM_HH; ++fmtstr;
                         break;
                     case 'l':
-                        lenmod = BLM_L; ++fmtstr;
+                        fmt.lenmod = BLM_L; ++fmtstr;
                         if (*fmtstr != 'l') break;
-                        lenmod = BLM_LL; ++fmtstr;
+                        fmt.lenmod = BLM_LL; ++fmtstr;
                         break;
-                    case 'j': lenmod = BLM_J; ++fmtstr; break;
-                    case 'z': lenmod = BLM_Z; ++fmtstr; break;
-                    case 't': lenmod = BLM_T; ++fmtstr; break;
-                    case 'L': lenmod = BLM_L_UPPER; ++fmtstr; break;
+                    case 'j': fmt.lenmod = BLM_J; ++fmtstr; break;
+                    case 'z': fmt.lenmod = BLM_Z; ++fmtstr; break;
+                    case 't': fmt.lenmod = BLM_T; ++fmtstr; break;
+                    case 'L': fmt.lenmod = BLM_L_UPPER; ++fmtstr; break;
                 }
 
                 switch (*fmtstr) {
                     /* Cases of specifier */
                     case 'c':
-                    if (lenmod != BLM_NONE) goto error;
+                    if (fmt.lenmod != BLM_NONE) goto error;
                     {
                         int received = va_arg(args, int);
-                        if ( left_just) {
+                        if ( fmt.left_just) {
                             if (biimmputc(received, buf)) goto error;
                             ++total_len;
                         }
-                        if (fld_width > 1) {
-                            if (biimmrepc(' ', fld_width - 1, buf)) goto error;
-                            total_len += fld_width - 1;
+                        if (fmt.fieldwidth > 1) {
+                            if (biimmrepc(' ', fmt.fieldwidth - 1, buf)) goto error;
+                            total_len += fmt.fieldwidth - 1;
                         }
-                        if (!left_just) {
+                        if (!fmt.left_just) {
                             if (biimmputc(received, buf)) goto error;
                             ++total_len;
                         }
                     } break;
                     case 's':
-                    if (lenmod != BLM_NONE) goto error;
+                    if (fmt.lenmod != BLM_NONE) goto error;
                     {
                         const char* received = va_arg(args, const char*);
                         int len, maxlen;
 
                         if (!received) goto error;
                         len = strlen(received);
-                        if (precision < 0) precision = len;
-                        precision = bimin(precision, len);
-                        maxlen = bimax(fld_width, precision);
+                        if (fmt.precision < 0) fmt.precision = len;
+                        fmt.precision = bimin(fmt.precision, len);
+                        maxlen = bimax(fmt.fieldwidth, fmt.precision);
 
                         if (birequire(buf, maxlen)) goto error;
 
-                        if ( left_just) {
-                            memcpy(buf->data + buf->cursor, received, precision);
-                            buf->count = bimax(buf->count, buf->cursor += precision);
-                            total_len += precision;
+                        if ( fmt.left_just) {
+                            memcpy(buf->data + buf->cursor, received, fmt.precision);
+                            buf->count = bimax(buf->count, buf->cursor += fmt.precision);
+                            total_len += fmt.precision;
                         }
-                        if (precision < maxlen) {
-                            int padding = maxlen - precision;
+                        if (fmt.precision < maxlen) {
+                            int padding = maxlen - fmt.precision;
                             if (biimmrepc(' ', padding, buf)) goto error;
                             total_len += padding;
                         }
-                        if (!left_just) {
-                            memcpy(buf->data + buf->cursor, received, precision);
-                            buf->count = bimax(buf->count, buf->cursor += precision);
-                            total_len += precision;
+                        if (!fmt.left_just) {
+                            memcpy(buf->data + buf->cursor, received, fmt.precision);
+                            buf->count = bimax(buf->count, buf->cursor += fmt.precision);
+                            total_len += fmt.precision;
                         }
                     } break;
                     case 'd': case 'i': {
@@ -552,7 +558,7 @@ IOBUFFER_API int vbprintf(BUFFER* restrict buf, const char* restrict fmt, va_lis
                         bool is_neg; int len;
                         intmax_t received;
 
-                        switch (lenmod) {
+                        switch (fmt.lenmod) {
                             case BLM_NONE: received =        va_arg(args, int ); break;
                             case BLM_HH  : received = (schar)va_arg(args, int ); break;
                             case BLM_H   : received = (short)va_arg(args, int ); break;
@@ -568,15 +574,15 @@ IOBUFFER_API int vbprintf(BUFFER* restrict buf, const char* restrict fmt, va_lis
                         is_neg = received < 0;
                         len = strlen(tmpbuf);
 
-                        if (precision < 0) {
-                            if (lead_zero && !left_just)
-                                precision = bimax(1, fld_width) - (signing >= 0 || is_neg);
+                        if (fmt.precision < 0) {
+                            if (fmt.lead_zero && !fmt.left_just)
+                                fmt.precision = bimax(1, fmt.fieldwidth) - (fmt.signing >= 0 || is_neg);
                             else
-                                precision = 1;
+                                fmt.precision = 1;
                         }
 
-                        if (!left_just && (fld_width > (int)bimax(precision, len) + (signing >= 0 || is_neg))) {
-                            size_t padding = fld_width - bimax(precision, len) - (signing >= 0 || is_neg);
+                        if (!fmt.left_just && (fmt.fieldwidth > (int)bimax(fmt.precision, len) + (fmt.signing >= 0 || is_neg))) {
+                            size_t padding = fmt.fieldwidth - bimax(fmt.precision, len) - (fmt.signing >= 0 || is_neg);
                             if (biimmrepc(' ', padding, buf)) goto error;
                             total_len += padding;
                         }
@@ -584,14 +590,14 @@ IOBUFFER_API int vbprintf(BUFFER* restrict buf, const char* restrict fmt, va_lis
                         if (is_neg) {
                             if (biimmputc('-', buf)) goto error;
                             total_len += 1;
-                        } else if (signing >= 0) {
-                            if (biimmputc(signing > 0 ? '+' : ' ', buf)) goto error;
+                        } else if (fmt.signing >= 0) {
+                            if (biimmputc(fmt.signing > 0 ? '+' : ' ', buf)) goto error;
                             total_len += 1;
                         }
 
-                        if (precision > len) {
-                            if (biimmrepc('0', precision - len, buf)) goto error;
-                            total_len += precision - len;
+                        if (fmt.precision > len) {
+                            if (biimmrepc('0', fmt.precision - len, buf)) goto error;
+                            total_len += fmt.precision - len;
                         }
 
                         if (birequire(buf, len)) goto error;
@@ -599,8 +605,8 @@ IOBUFFER_API int vbprintf(BUFFER* restrict buf, const char* restrict fmt, va_lis
                         buf->count = bimax(buf->count, buf->cursor += len);
                         total_len += len;
 
-                        if (left_just && (fld_width > (int)bimax(precision, len) + (signing >= 0 || is_neg))) {
-                            size_t padding = fld_width - bimax(precision, len) - (signing >= 0 || is_neg);
+                        if ( fmt.left_just && (fmt.fieldwidth > (int)bimax(fmt.precision, len) + (fmt.signing >= 0 || is_neg))) {
+                            size_t padding = fmt.fieldwidth - bimax(fmt.precision, len) - (fmt.signing >= 0 || is_neg);
                             if (biimmrepc(' ', padding, buf)) goto error;
                             total_len += padding;
                         }
@@ -614,7 +620,7 @@ IOBUFFER_API int vbprintf(BUFFER* restrict buf, const char* restrict fmt, va_lis
                         bool is_hex = *fmtstr == 'x';
                         bool is_HEX = *fmtstr == 'X';
 
-                        switch (lenmod) {
+                        switch (fmt.lenmod) {
                             case BLM_NONE: received =         va_arg(args, uint ); break;
                             case BLM_HH  : received = (uchar) va_arg(args, uint ); break;
                             case BLM_H   : received = (ushort)va_arg(args, uint ); break;
@@ -627,20 +633,20 @@ IOBUFFER_API int vbprintf(BUFFER* restrict buf, const char* restrict fmt, va_lis
                         }
 
                         biprintu(received, tmpbuf, is_dec ? 10 : is_oct ? 8 : 16, is_HEX);
-                        prefix_size = alt_form && received > 0 && (is_hex || is_HEX) ? 2 : 0;
+                        prefix_size = fmt.alt_form && received > 0 && (is_hex || is_HEX) ? 2 : 0;
                         len = strlen(tmpbuf);
 
-                        if (precision < 0) {
-                            if (lead_zero && !left_just)
-                                precision = bimax(1 + (alt_form && (is_hex || is_HEX)), fld_width) - prefix_size;
+                        if (fmt.precision < 0) {
+                            if (fmt.lead_zero && !fmt.left_just)
+                                fmt.precision = bimax(1 + (fmt.alt_form && (is_hex || is_HEX)), fmt.fieldwidth) - prefix_size;
                             else
-                                precision = 1;
+                                fmt.precision = 1;
                         }
-                        if (is_oct && received > 0 && precision <= len)
-                            precision = len + 1;
+                        if (is_oct && received > 0 && fmt.precision <= len)
+                            fmt.precision = len + 1;
 
-                        if (!left_just && (fld_width > (int)bimax(precision, len) + prefix_size)) {
-                            size_t padding = fld_width - bimax(precision, len) - prefix_size;
+                        if (!fmt.left_just && (fmt.fieldwidth > (int)bimax(fmt.precision, len) + prefix_size)) {
+                            size_t padding = fmt.fieldwidth - bimax(fmt.precision, len) - prefix_size;
                             if (biimmrepc(' ', padding, buf)) goto error;
                             total_len += padding;
                         }
@@ -652,9 +658,9 @@ IOBUFFER_API int vbprintf(BUFFER* restrict buf, const char* restrict fmt, va_lis
                             total_len += 1;
                         }
 
-                        if (precision > len) {
-                            if (biimmrepc('0', precision - len, buf)) goto error;
-                            total_len += precision - len;
+                        if (fmt.precision > len) {
+                            if (biimmrepc('0', fmt.precision - len, buf)) goto error;
+                            total_len += fmt.precision - len;
                         }
 
                         if (birequire(buf, len)) goto error;
@@ -662,15 +668,15 @@ IOBUFFER_API int vbprintf(BUFFER* restrict buf, const char* restrict fmt, va_lis
                         buf->count = bimax(buf->count, buf->cursor += len);
                         total_len += len;
 
-                        if (left_just && (fld_width > (int)bimax(precision, len) + prefix_size)) {
-                            size_t padding = fld_width - bimax(precision, len) - prefix_size;
+                        if ( fmt.left_just && (fmt.fieldwidth > (int)bimax(fmt.precision, len) + prefix_size)) {
+                            size_t padding = fmt.fieldwidth - bimax(fmt.precision, len) - prefix_size;
                             if (biimmrepc(' ', padding, buf)) goto error;
                             total_len += padding;
                         }
                     } break;
                     case 'p':
-                    if (lenmod != BLM_NONE) goto error;
-                    if (precision >= 0) goto error;
+                    if (fmt.lenmod != BLM_NONE) goto error;
+                    if (fmt.precision >= 0) goto error;
                     {
                         char tmpbuf[24] = {0}; int len;
                         uintptr_t received = (uintptr_t)va_arg(args, void*);
@@ -681,8 +687,8 @@ IOBUFFER_API int vbprintf(BUFFER* restrict buf, const char* restrict fmt, va_lis
                         memset(tmpbuf, '0', 2 * sizeof received - len);
                         len = 2 * sizeof received;
 
-                        if (!left_just && (fld_width > len + 2)) {
-                            size_t padding = fld_width - len - 2;
+                        if (!fmt.left_just && (fmt.fieldwidth > len + 2)) {
+                            size_t padding = fmt.fieldwidth - len - 2;
                             if (biimmrepc(' ', padding, buf)) goto error;
                             total_len += padding;
                         }
@@ -695,14 +701,14 @@ IOBUFFER_API int vbprintf(BUFFER* restrict buf, const char* restrict fmt, va_lis
                         buf->count = bimax(buf->count, buf->cursor += len);
                         total_len += len;
 
-                        if (left_just && (fld_width > len + 2)) {
-                            size_t padding = fld_width - len - 2;
+                        if (fmt.left_just && (fmt.fieldwidth > len + 2)) {
+                            size_t padding = fmt.fieldwidth - len - 2;
                             if (biimmrepc(' ', padding, buf)) goto error;
                             total_len += padding;
                         }
                     } break;
                     case 'n':
-                    switch (lenmod) {
+                    switch (fmt.lenmod) {
                         case BLM_NONE: *va_arg(args,       int*) = total_len; break;
                         case BLM_HH  : *va_arg(args,     schar*) = total_len; break;
                         case BLM_H   : *va_arg(args,     short*) = total_len; break;
