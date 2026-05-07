@@ -700,38 +700,13 @@ IOBUFFER_API int vbprintf(BUFFER* restrict buf, const char* restrict fmt, va_lis
                         if (biputfmt_uox(buf, args, &fmt, &total_len, *fmtstr)) goto error;
                         break;
                     case 'p':
-                    if (fmt.lenmod != BLM_NONE) goto error;
-                    if (fmt.precision >= 0) goto error;
-                    {
-                        char tmpbuf[24] = {0}; int len;
-                        uintptr_t received = (uintptr_t)va_arg(args, void*);
-
-                        biprintu(received, tmpbuf, 16, false);
-                        len = strlen(tmpbuf);
-                        memmove(tmpbuf + 2 * sizeof received - len, tmpbuf, len + 1);
-                        memset(tmpbuf, '0', 2 * sizeof received - len);
-                        len = 2 * sizeof received;
-
-                        if (!fmt.left_just && (fmt.fieldwidth > len + 2)) {
-                            size_t padding = fmt.fieldwidth - len - 2;
-                            if (biimmrepc(' ', padding, buf)) goto error;
-                            total_len += padding;
-                        }
-
-                        if (biimmputc('0', buf)) goto error; else total_len += 1;
-                        if (biimmputc('x', buf)) goto error; else total_len += 1;
-
-                        if (birequire(buf, len)) goto error;
-                        memcpy(buf->data + buf->cursor, tmpbuf, len);
-                        buf->count = bimax(buf->count, buf->cursor += len);
-                        total_len += len;
-
-                        if (fmt.left_just && (fmt.fieldwidth > len + 2)) {
-                            size_t padding = fmt.fieldwidth - len - 2;
-                            if (biimmrepc(' ', padding, buf)) goto error;
-                            total_len += padding;
-                        }
-                    } break;
+                        if (fmt.lenmod != BLM_NONE) goto error;
+                        if (fmt.precision >= 0) goto error;
+                        fmt.lenmod = BLM_Z; /* use size_t as uintptr_t */
+                        fmt.precision = 2 * sizeof(void*);
+                        fmt.alt_form = true;
+                        if (biputfmt_uox(buf, args, &fmt, &total_len, 'x')) goto error;
+                        break;
                     default: goto error;
                 }
             }
