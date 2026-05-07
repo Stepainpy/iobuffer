@@ -13,18 +13,6 @@ typedef unsigned char bool;
 #  define true  ((bool)1)
 #endif
 
-/* ignore warning with function 'snprintf' in C89 */
-#if defined(__GNUC__) && __STDC_VERSION__ < 199901L
-#  define __bnowarnbegin \
-    _Pragma("GCC diagnostic push") \
-    _Pragma("GCC diagnostic ignored \"-Wlong-long\"")
-#  define __bnowarnend \
-    _Pragma("GCC diagnostic pop")
-#else
-#  define __bnowarnbegin
-#  define __bnowarnend
-#endif
-
 /* taken from GMP: https://github.com/alisw/GMP/blob/master/gmp-impl.h#L305 */
 #ifndef va_copy
 #  ifdef __va_copy
@@ -37,17 +25,21 @@ typedef unsigned char bool;
 #define B_FAIL 1
 #define B_OKEY 0
 
-typedef signed char  schar;
-typedef signed short sshort;
-
+typedef   signed char  schar;
 typedef unsigned char  uchar;
 typedef unsigned short ushort;
+typedef unsigned int   uint;
 typedef unsigned long  ulong;
 
-__bnowarnbegin
+#if defined(__GNUC__) && __STDC_VERSION__ < 199901L
+#  pragma GCC diagnostic push
+#  pragma GCC diagnostic ignored "-Wlong-long"
+#endif
 typedef   signed long long sllong;
 typedef unsigned long long ullong;
-__bnowarnend
+#if defined(__GNUC__) && __STDC_VERSION__ < 199901L
+#  pragma GCC diagnostic pop
+#endif
 
 struct BUFFER {
     uchar* data;
@@ -561,10 +553,10 @@ IOBUFFER_API int vbprintf(BUFFER* restrict buf, const char* restrict fmt, va_lis
                         intmax_t received;
 
                         switch (lenmod) {
-                            case BLM_NONE: received =         va_arg(args, signed int ); break;
-                            case BLM_HH  : received = (schar) va_arg(args, signed int ); break;
-                            case BLM_H   : received = (sshort)va_arg(args, signed int ); break;
-                            case BLM_L   : received =         va_arg(args, signed long); break;
+                            case BLM_NONE: received =        va_arg(args, int ); break;
+                            case BLM_HH  : received = (schar)va_arg(args, int ); break;
+                            case BLM_H   : received = (short)va_arg(args, int ); break;
+                            case BLM_L   : received =        va_arg(args, long); break;
                             case BLM_LL  : received = va_arg(args,    sllong); break;
                             case BLM_J   : received = va_arg(args,  intmax_t); break;
                             case BLM_Z   : received = va_arg(args,    size_t); break;
@@ -623,10 +615,10 @@ IOBUFFER_API int vbprintf(BUFFER* restrict buf, const char* restrict fmt, va_lis
                         bool is_HEX = *fmtstr == 'X';
 
                         switch (lenmod) {
-                            case BLM_NONE: received =         va_arg(args, unsigned int ); break;
-                            case BLM_HH  : received = (uchar) va_arg(args, unsigned int ); break;
-                            case BLM_H   : received = (ushort)va_arg(args, unsigned int ); break;
-                            case BLM_L   : received =         va_arg(args, unsigned long); break;
+                            case BLM_NONE: received =         va_arg(args, uint ); break;
+                            case BLM_HH  : received = (uchar) va_arg(args, uint ); break;
+                            case BLM_H   : received = (ushort)va_arg(args, uint ); break;
+                            case BLM_L   : received =         va_arg(args, ulong); break;
                             case BLM_LL  : received = va_arg(args,    ullong); break;
                             case BLM_J   : received = va_arg(args, uintmax_t); break;
                             case BLM_Z   : received = va_arg(args,    size_t); break;
@@ -711,14 +703,14 @@ IOBUFFER_API int vbprintf(BUFFER* restrict buf, const char* restrict fmt, va_lis
                     } break;
                     case 'n':
                     switch (lenmod) {
-                        case BLM_NONE: *va_arg(args, signed int  *) = total_len; break;
-                        case BLM_HH  : *va_arg(args, signed char *) = total_len; break;
-                        case BLM_H   : *va_arg(args, signed short*) = total_len; break;
-                        case BLM_L   : *va_arg(args, signed long *) = total_len; break;
-                        case BLM_LL  : *va_arg(args,       sllong*) = total_len; break;
-                        case BLM_J   : *va_arg(args,     intmax_t*) = total_len; break;
-                        case BLM_Z   : *va_arg(args,       size_t*) = total_len; break;
-                        case BLM_T   : *va_arg(args,    ptrdiff_t*) = total_len; break;
+                        case BLM_NONE: *va_arg(args,       int*) = total_len; break;
+                        case BLM_HH  : *va_arg(args,     schar*) = total_len; break;
+                        case BLM_H   : *va_arg(args,     short*) = total_len; break;
+                        case BLM_L   : *va_arg(args,      long*) = total_len; break;
+                        case BLM_LL  : *va_arg(args,    sllong*) = total_len; break;
+                        case BLM_J   : *va_arg(args,  intmax_t*) = total_len; break;
+                        case BLM_Z   : *va_arg(args,    size_t*) = total_len; break;
+                        case BLM_T   : *va_arg(args, ptrdiff_t*) = total_len; break;
                         case BLM_L_UPPER: goto error;
                     } break;
                     default: goto error;
