@@ -707,9 +707,7 @@ IOBUFFER_API int vbprintf(BUFFER* restrict buf, const char* restrict fmt, va_lis
                         break;
                     case 'p':
                         if (fmt.lenmod != BLM_NONE) goto error;
-                        if (fmt.precision >= 0) goto error;
                         fmt.lenmod = BLM_Z; /* use size_t as uintptr_t */
-                        fmt.precision = 2 * sizeof(void*);
                         fmt.alt_form = true;
                         if (biputfmt_uox(buf, args, &fmt, &total_len, 'x')) goto error;
                         break;
