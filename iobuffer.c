@@ -442,7 +442,10 @@ static int biputfmt_di(BUFFER* buf, va_list args, bifmtspec_t* fmt, int* total) 
         case BLM_J   : received = va_arg(args,  intmax_t); break;
         case BLM_Z   : received = va_arg(args,    size_t); break;
         case BLM_T   : received = va_arg(args, ptrdiff_t); break;
-        case BLM_L_UPPER: return B_FAIL;
+
+        case BLM_L_UPPER:
+        default:
+            return B_FAIL;
     }
 
     biprinti(received, tmpbuf);
@@ -509,7 +512,10 @@ static int biputfmt_uox(BUFFER* buf, va_list args, bifmtspec_t* fmt, int* total,
         case BLM_J   : received = va_arg(args, uintmax_t); break;
         case BLM_Z   : received = va_arg(args,    size_t); break;
         case BLM_T   : received = va_arg(args, ptrdiff_t); break;
-        case BLM_L_UPPER: return B_FAIL;
+
+        case BLM_L_UPPER:
+        default:
+            return B_FAIL;
     }
 
     biprintu(received, tmpbuf, is_dec ? 10 : is_oct ? 8 : 16, is_HEX);
