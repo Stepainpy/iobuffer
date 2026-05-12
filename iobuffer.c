@@ -404,6 +404,13 @@ static int biimmputc(int ch, BUFFER* buf) {
     return B_OKEY;
 }
 
+static void biimmputs(const char* str, size_t len, BUFFER* buf, int* accumulator) {
+    if (birequire(buf, len)) len = buf->capacity - buf->cursor;
+    memcpy(buf->data + buf->cursor, str, len);
+    buf->count = bimax(buf->count, buf->cursor += len);
+    if (accumulator) *accumulator += len;
+}
+
 static int biimmrepc(int ch, size_t count, BUFFER* buf) {
     if (birequire(buf, count)) return B_FAIL;
     memset(buf->data + buf->cursor, ch, count);
@@ -483,10 +490,7 @@ static int biputfmt_di(BUFFER* buf, va_list args, bifmtspec_t* fmt, int* total) 
         *total += fmt->precision - len;
     }
 
-    if (birequire(buf, len)) return B_FAIL;
-    memcpy(buf->data + buf->cursor, tmpbuf, len);
-    buf->count = bimax(buf->count, buf->cursor += len);
-    *total += len;
+    biimmputs(tmpbuf, len, buf, total);
 
     if ( fmt->left_just && fmt->fieldwidth > inttl) {
         size_t padding = fmt->fieldwidth - inttl;
@@ -552,10 +556,7 @@ static int biputfmt_uox(BUFFER* buf, va_list args, bifmtspec_t* fmt, int* total,
         *total += fmt->precision - len;
     }
 
-    if (birequire(buf, len)) return B_FAIL;
-    memcpy(buf->data + buf->cursor, tmpbuf, len);
-    buf->count = bimax(buf->count, buf->cursor += len);
-    *total += len;
+    biimmputs(tmpbuf, len, buf, total);
 
     if ( fmt->left_just && (fmt->fieldwidth > (int)bimax(fmt->precision, len) + prefix_size)) {
         size_t padding = fmt->fieldwidth - bimax(fmt->precision, len) - prefix_size;
@@ -659,35 +660,23 @@ static int biputfmt_f(BUFFER* buf, va_list args, bifmtspec_t* fmt, int* total, b
         *total += padding;
     }
 
-    if (birequire(buf, ilen)) return B_FAIL;
-    memcpy(buf->data + buf->cursor, intpart, ilen);
-    buf->count += bimax(buf->count, buf->cursor += ilen);
-    *total += ilen;
+    biimmputs(intpart, ilen, buf, total);
 
     if (normal) {
         if (biimmputc('.', buf)) return B_FAIL;
         *total += 1;
 
         if (flen < fmt->precision) {
-            if (birequire(buf, flen)) return B_FAIL;
-
-            memcpy(buf->data + buf->cursor, frcpart, flen);
-            buf->count = bimax(buf->count, buf->cursor += flen);
-            *total += flen;
-
+            biimmputs(frcpart, flen, buf, total);
             if (biimmrepc('0', fmt->precision - flen, buf)) return B_FAIL;
             *total += fmt->precision - flen;
         } else {
-            if (birequire(buf, fmt->precision)) return B_FAIL;
-
-            memcpy(buf->data + buf->cursor, frcpart, fmt->precision - 1);
-            buf->count = bimax(buf->count, buf->cursor += fmt->precision - 1);
-
+            biimmputs(frcpart, fmt->precision - 1, buf, total);
+            if (birequire(buf, 1)) return B_FAIL;
             buf->data[buf->cursor++] = biroundeddigit(
                 frcpart[fmt->precision - 1], frcpart[fmt->precision]);
             buf->count = bimax(buf->count, buf->cursor);
-
-            *total += fmt->precision;
+            *total += 1;
         }
     }
 
@@ -707,11 +696,7 @@ IOBUFFER_API int vbprintf(BUFFER* restrict buf, const char* restrict fmt, va_lis
         const char* percent = strchr(fmt, '%');
         size_t len = percent ? (size_t)(percent - fmt) : strlen(fmt);
 
-        if (birequire(buf, len))
-            len = buf->capacity - buf->cursor;
-        memcpy(buf->data + buf->cursor, fmt, len);
-        buf->count = bimax(buf->count, buf->cursor += len);
-        total_len += len;
+        biimmputs(fmt, len, buf, &total_len);
 
         if (percent) {
             const char* fmtstr = percent + 1;
@@ -818,23 +803,13 @@ IOBUFFER_API int vbprintf(BUFFER* restrict buf, const char* restrict fmt, va_lis
                         fmt.precision = bimin(fmt.precision, len);
                         maxlen = bimax(fmt.fieldwidth, fmt.precision);
 
-                        if (birequire(buf, maxlen)) goto error;
-
-                        if ( fmt.left_just) {
-                            memcpy(buf->data + buf->cursor, received, fmt.precision);
-                            buf->count = bimax(buf->count, buf->cursor += fmt.precision);
-                            total_len += fmt.precision;
-                        }
+                        if ( fmt.left_just) biimmputs(received, fmt.precision, buf, &total_len);
                         if (fmt.precision < maxlen) {
                             int padding = maxlen - fmt.precision;
                             if (biimmrepc(' ', padding, buf)) goto error;
                             total_len += padding;
                         }
-                        if (!fmt.left_just) {
-                            memcpy(buf->data + buf->cursor, received, fmt.precision);
-                            buf->count = bimax(buf->count, buf->cursor += fmt.precision);
-                            total_len += fmt.precision;
-                        }
+                        if (!fmt.left_just) biimmputs(received, fmt.precision, buf, &total_len);
                     } break;
                     case 'd': case 'i':
                         if (biputfmt_di(buf, args, &fmt, &total_len)) goto error;
