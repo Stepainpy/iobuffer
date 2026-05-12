@@ -5,6 +5,9 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include <float.h>
+#include <math.h>
+
 #if __STDC_VERSION__ >= 199901L
 #  include <stdbool.h>
 #else
@@ -563,6 +566,139 @@ static int biputfmt_uox(BUFFER* buf, va_list args, bifmtspec_t* fmt, int* total,
     return B_OKEY;
 }
 
+#define B_FLTBUF_CAPACITY 512
+
+static void biprintd(double number, char* outint, char* frcout) {
+    double intp, frcp;
+    size_t count, i = 0;
+
+    frcp = modf(number < 0 ? -number : number, &intp);
+
+    do {
+        double digit = fmod(intp, 10.0);
+        outint[i++] = '0' + (int)digit;
+        intp = (intp - digit) / 10.0;
+    } while (intp && i < B_FLTBUF_CAPACITY - 1);
+    outint[i] = '\0';
+    for (count = i, i = 0; i < count / 2; i++) {
+        char tmp = outint[i];
+        outint[i] = outint[count - i - 1];
+        outint[count - i - 1] = tmp;
+    }
+
+    for (i = 0; frcp && i < B_FLTBUF_CAPACITY - 1;) {
+        double digit;
+        modf(frcp *= 10.0, &digit);
+        frcout[i++] = '0' + (int)digit;
+        frcp -= digit;
+    }
+    frcout[i] = '\0';
+}
+
+static int biroundeddigit(char digit, char next) {
+    if (next >= '5' && digit != '9') return digit + 1;
+    return digit;
+}
+
+static int bisign(long double num) {
+    if (num != num) return 0;
+    if (num < 0) return 1;
+    return 0;
+}
+
+static int biputfmt_f(BUFFER* buf, va_list args, bifmtspec_t* fmt, int* total, bool up) {
+    static char intpart[B_FLTBUF_CAPACITY];
+    static char frcpart[B_FLTBUF_CAPACITY];
+    long double received;
+    bool normal = false;
+    int ilen, flen;
+    int padding;
+
+    switch (fmt->lenmod) {
+        case BLM_NONE   : received = va_arg(args,      double); break;
+        case BLM_L_UPPER: received = va_arg(args, long double); break;
+
+        default: return B_FAIL;
+    }
+
+    if (received != received) {
+        strcpy(intpart, up ? "NAN" : "nan");
+        frcpart[0] = '\0';
+    } else if (
+        (fmt->lenmod == BLM_NONE    && (received < - DBL_MAX ||  DBL_MAX < received)) ||
+        (fmt->lenmod == BLM_L_UPPER && (received < -LDBL_MAX || LDBL_MAX < received))
+    ) {
+        strcpy(intpart, up ? "INF" : "inf");
+        frcpart[0] = '\0';
+    } else {
+        biprintd(received, intpart, frcpart);
+        normal = true;
+    }
+    ilen = strlen(intpart);
+    flen = strlen(frcpart);
+
+    padding = fmt->fieldwidth - ilen - fmt->precision - 1
+        - (bisign(received) || fmt->signing >= 0);
+    padding = padding < 0 ? 0 : padding;
+
+    if (!fmt->lead_zero && !fmt->left_just && padding) {
+        if (biimmrepc(' ', padding, buf)) return B_FAIL;
+        *total += padding;
+    }
+
+    if (bisign(received)) {
+        if (biimmputc('-', buf)) return B_FAIL;
+        *total += 1;
+    } else if (fmt->signing >= 0) {
+        if (biimmputc(fmt->signing > 0 ? '+' : ' ', buf)) return B_FAIL;
+        *total += 1;
+    }
+
+    if (fmt->lead_zero && !fmt->left_just && padding) {
+        if (biimmrepc('0', padding, buf)) return B_FAIL;
+        *total += padding;
+    }
+
+    if (birequire(buf, ilen)) return B_FAIL;
+    memcpy(buf->data + buf->cursor, intpart, ilen);
+    buf->count += bimax(buf->count, buf->cursor += ilen);
+    *total += ilen;
+
+    if (normal) {
+        if (biimmputc('.', buf)) return B_FAIL;
+        *total += 1;
+
+        if (flen < fmt->precision) {
+            if (birequire(buf, flen)) return B_FAIL;
+
+            memcpy(buf->data + buf->cursor, frcpart, flen);
+            buf->count = bimax(buf->count, buf->cursor += flen);
+            *total += flen;
+
+            if (biimmrepc('0', fmt->precision - flen, buf)) return B_FAIL;
+            *total += fmt->precision - flen;
+        } else {
+            if (birequire(buf, fmt->precision)) return B_FAIL;
+
+            memcpy(buf->data + buf->cursor, frcpart, fmt->precision - 1);
+            buf->count = bimax(buf->count, buf->cursor += fmt->precision - 1);
+
+            buf->data[buf->cursor++] = biroundeddigit(
+                frcpart[fmt->precision - 1], frcpart[fmt->precision]);
+            buf->count = bimax(buf->count, buf->cursor);
+
+            *total += fmt->precision;
+        }
+    }
+
+    if (fmt->left_just && padding) {
+        if (biimmrepc(' ', padding, buf)) return B_FAIL;
+        *total += padding;
+    }
+
+    return B_OKEY;
+}
+
 IOBUFFER_API int vbprintf(BUFFER* restrict buf, const char* restrict fmt, va_list args) {
     int total_len = 0;
     if (!buf || !fmt || !buf->writable) return EOB;
@@ -619,6 +755,7 @@ IOBUFFER_API int vbprintf(BUFFER* restrict buf, const char* restrict fmt, va_lis
                     while ('0' <= *fmtstr && *fmtstr <= '9') ++fmtstr;
                 } else if (fmtstr[0] == '.' && fmtstr[1] == '*') {
                     fmt.precision = va_arg(args, int);
+                    if (fmt.precision <= 0) goto error;
                     fmtstr += 2;
                 }
 
@@ -710,6 +847,10 @@ IOBUFFER_API int vbprintf(BUFFER* restrict buf, const char* restrict fmt, va_lis
                         fmt.lenmod = BLM_Z; /* use size_t as uintptr_t */
                         fmt.alt_form = true;
                         if (biputfmt_uox(buf, args, &fmt, &total_len, 'x')) goto error;
+                        break;
+                    case 'f': case 'F':
+                        if (fmt.precision < 0) fmt.precision = 6;
+                        if (biputfmt_f(buf, args, &fmt, &total_len, *fmtstr == 'F')) goto error;
                         break;
                     default: goto error;
                 }
