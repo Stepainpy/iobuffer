@@ -425,7 +425,7 @@ static int biimmrepc(int ch, size_t count, BUFFER* buf, int* accumulator) {
     return rc;
 }
 
-static void biprinti(intmax_t number, char* outbuf) {
+static void biinttostr(intmax_t number, char* outbuf) {
     char* end = outbuf;
     if (number < 0) do *end++ = '0' - number % 10; while (number /= 10);
     else            do *end++ = '0' + number % 10; while (number /= 10);
@@ -435,7 +435,7 @@ static void biprinti(intmax_t number, char* outbuf) {
     }
 }
 
-static void biprintu(uintmax_t number, char* outbuf, int base, bool up) {
+static void biuoxtostr(uintmax_t number, char* outbuf, int base, bool up) {
     const char* alphabet = up ? "0123456789ABCDEF" : "0123456789abcdef";
     char* end = outbuf;
     do *end++ = alphabet[number % base]; while (number /= base);
@@ -465,7 +465,7 @@ static int biputfmt_di(BUFFER* buf, va_list args, bifmtspec_t* fmt, int* total) 
             return B_FAIL;
     }
 
-    biprinti(received, tmpbuf);
+    biinttostr(received, tmpbuf);
     is_neg = received < 0;
     len = strlen(tmpbuf);
 
@@ -523,7 +523,7 @@ static int biputfmt_uox(BUFFER* buf, va_list args, bifmtspec_t* fmt, int* total,
             return B_FAIL;
     }
 
-    biprintu(received, tmpbuf, is_dec ? 10 : is_oct ? 8 : 16, is_HEX);
+    biuoxtostr(received, tmpbuf, is_dec ? 10 : is_oct ? 8 : 16, is_HEX);
     prefix_size = fmt->alt_form && received > 0 && (is_hex || is_HEX) ? 2 : 0;
     len = strlen(tmpbuf);
 
@@ -560,7 +560,7 @@ static int biputfmt_uox(BUFFER* buf, va_list args, bifmtspec_t* fmt, int* total,
 
 #define B_FLTBUF_CAPACITY 512
 
-static void biprintd(double number, char* outint, char* frcout) {
+static void bidbltostr(double number, char* outint, char* frcout) {
     double intp, frcp;
     size_t count, i = 0;
 
@@ -623,7 +623,7 @@ static int biputfmt_f(BUFFER* buf, va_list args, bifmtspec_t* fmt, int* total, b
         memcpy(intpart, up ? "INF" : "inf", 4);
         frcpart[0] = '\0';
     } else {
-        biprintd(received, intpart, frcpart);
+        bidbltostr(received, intpart, frcpart);
         normal = true;
     }
     ilen = strlen(intpart);
