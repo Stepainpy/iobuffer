@@ -293,12 +293,20 @@ IOBUFFER_API int bungetc(int ch, BUFFER* buf) {
     return ch;
 }
 
+static int vbiprintf(BUFFER* buf, const char* fmt, va_list args);
+
 IOBUFFER_API int bprintf(BUFFER* restrict buf, const char* restrict fmt, ...) {
     int ret; va_list args;
+    if (!buf || !fmt || !buf->writable) return EOB;
     va_start(args, fmt);
-    ret = vbprintf(buf, fmt, args);
+    ret = vbiprintf(buf, fmt, args);
     va_end(args);
     return ret;
+}
+
+IOBUFFER_API int vbprintf(BUFFER* restrict buf, const char* restrict fmt, va_list args) {
+    if (!buf || !fmt || !buf->writable) return EOB;
+    return vbiprintf(buf, fmt, args);
 }
 
 IOBUFFER_API size_t bread(void* restrict data, size_t size, size_t count, BUFFER* restrict buf) {
@@ -367,7 +375,7 @@ IOBUFFER_API BUFVIEW bview(BUFFER* buf) {
     return view;
 }
 
-/* Implementation of vbprintf */
+/* Implementation of vbiprintf */
 
 typedef enum {
     BLM_NONE = 0,
@@ -666,9 +674,8 @@ static int biputfmt_f(BUFFER* buf, va_list args, bifmtspec_t* fmt, int* total, b
     return B_OKEY;
 }
 
-IOBUFFER_API int vbprintf(BUFFER* restrict buf, const char* restrict fmt, va_list args) {
+static int vbiprintf(BUFFER* buf, const char* fmt, va_list args) {
     int total_len = 0;
-    if (!buf || !fmt || !buf->writable) return EOB;
 
     while (true) {
         const char* percent = strchr(fmt, '%');
