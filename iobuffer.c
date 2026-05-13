@@ -542,7 +542,7 @@ static int biputfmt_uox(BUFFER* buf, va_list args, bifmtspec_t* fmt, int* total,
     if (!fmt->left_just && padding)
         if (biimmrepc(' ', padding, buf, total)) return B_FAIL;
 
-    if ((is_hex || is_HEX) && received > 0) {
+    if (fmt->alt_form && (is_hex || is_HEX) && received > 0) {
         if (biimmputc('0', buf, total)) return B_FAIL;
         if (biimmputc(is_hex ? 'x' : 'X', buf, total)) return B_FAIL;
     }
