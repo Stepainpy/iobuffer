@@ -273,8 +273,9 @@ static int biputfmt_f(BUFFER* buf, va_list args, bifmtspec_t* fmt, int* total, b
     ilen = strlen(intpart);
     flen = strlen(frcpart);
 
-    padding = fmt->fieldwidth - ilen - fmt->precision - 1
-        - (bisign(received) || fmt->signing >= 0);
+    padding = fmt->fieldwidth - ilen
+        - (bisign(received) || fmt->signing >= 0)
+        - (normal ? 1 + fmt->precision : 0);
     padding = padding < 0 ? 0 : padding;
 
     if (!fmt->lead_zero && !fmt->left_just && padding)
