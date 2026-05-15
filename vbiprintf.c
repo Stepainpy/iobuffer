@@ -498,6 +498,7 @@ int vbiprintf(BUFFER* buf, const char* fmt, va_list args) {
                         case BLM_T   : *va_arg(args, ptrdiff_t*) = total_len; break;
                         case BLM_L_UPPER: goto error;
                     } break;
+
                     case 'c':
                     if (fmt.lenmod != BLM_NONE) goto error;
                     {
@@ -511,6 +512,7 @@ int vbiprintf(BUFFER* buf, const char* fmt, va_list args) {
                         if (!fmt.left_just)
                             if (biimmputc(received, buf, &total_len)) goto error;
                     } break;
+
                     case 's':
                     if (fmt.lenmod != BLM_NONE) goto error;
                     {
@@ -532,26 +534,32 @@ int vbiprintf(BUFFER* buf, const char* fmt, va_list args) {
                         if (!fmt.left_just)
                             if (biimmputs(received, fmt.precision, buf, &total_len)) goto error;
                     } break;
+
                     case 'd': case 'i':
                         if (biputfmt_di(buf, args, &fmt, &total_len)) goto error;
                         break;
+
                     case 'u': case 'o': case 'x': case 'X':
                         if (biputfmt_uox(buf, args, &fmt, &total_len, *fmtstr)) goto error;
                         break;
+
                     case 'p':
                         if (fmt.lenmod != BLM_NONE) goto error;
                         fmt.lenmod = BLM_Z; /* use size_t as uintptr_t */
                         fmt.alt_form = true;
                         if (biputfmt_uox(buf, args, &fmt, &total_len, 'x')) goto error;
                         break;
+
                     case 'f': case 'F':
                         if (fmt.precision < 0) fmt.precision = 6;
                         if (biputfmt_f(buf, args, &fmt, &total_len, *fmtstr == 'F')) goto error;
                         break;
+
                     case 'e': case 'E':
                         if (fmt.precision < 0) fmt.precision = 6;
                         if (biputfmt_e(buf, args, &fmt, &total_len, *fmtstr == 'E')) goto error;
                         break;
+
                     default: goto error;
                 }
             }
