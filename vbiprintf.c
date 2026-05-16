@@ -71,6 +71,17 @@ int biimmrepc(int ch, size_t count,        BUFFER* buf, int* accumulator);
 static int bimin(int a, int b) { return a < b ? a : b; }
 static int bimax(int a, int b) { return a > b ? a : b; }
 
+static int biroundeddigit(char digit, char next) {
+    if (next >= '5' && digit != '9') return digit + 1;
+    return digit;
+}
+
+static int bisign(long double num) {
+    if (num != num) return 0;
+    if (num < 0) return 1;
+    return 0;
+}
+
 static void biinttostr(intmax_t number, char* outbuf) {
     char* end = outbuf;
     if (number < 0) do *end++ = '0' - number % 10; while (number /= 10);
@@ -89,6 +100,33 @@ static void biuoxtostr(uintmax_t number, char* outbuf, int base, bool up) {
     for (--end; outbuf < end; outbuf++, end--) {
         char tmp = *outbuf; *outbuf = *end; *end = tmp;
     }
+}
+
+static void bidbltostr(double number, char* outint, char* frcout) {
+    double intp, frcp;
+    size_t count, i = 0;
+
+    frcp = modf(number < 0 ? -number : number, &intp);
+
+    do {
+        double digit = fmod(intp, 10.0);
+        outint[i++] = '0' + (int)digit;
+        intp = (intp - digit) / 10.0;
+    } while (intp && i < B_FLTBUF_CAPACITY - 1);
+    outint[i] = '\0';
+    for (count = i, i = 0; i < count / 2; i++) {
+        char tmp = outint[i];
+        outint[i] = outint[count - i - 1];
+        outint[count - i - 1] = tmp;
+    }
+
+    for (i = 0; frcp && i < B_FLTBUF_CAPACITY - 1;) {
+        double digit;
+        modf(frcp *= 10.0, &digit);
+        frcout[i++] = '0' + (int)digit;
+        frcp -= digit;
+    }
+    frcout[i] = '\0';
 }
 
 static int biputfmt_di(BUFFER* buf, va_list args, bifmtspec_t* fmt, int* total) {
@@ -202,44 +240,6 @@ static int biputfmt_uox(BUFFER* buf, va_list args, bifmtspec_t* fmt, int* total,
         if (biimmrepc(' ', padding, buf, total)) return B_FAIL;
 
     return B_OKEY;
-}
-
-static void bidbltostr(double number, char* outint, char* frcout) {
-    double intp, frcp;
-    size_t count, i = 0;
-
-    frcp = modf(number < 0 ? -number : number, &intp);
-
-    do {
-        double digit = fmod(intp, 10.0);
-        outint[i++] = '0' + (int)digit;
-        intp = (intp - digit) / 10.0;
-    } while (intp && i < B_FLTBUF_CAPACITY - 1);
-    outint[i] = '\0';
-    for (count = i, i = 0; i < count / 2; i++) {
-        char tmp = outint[i];
-        outint[i] = outint[count - i - 1];
-        outint[count - i - 1] = tmp;
-    }
-
-    for (i = 0; frcp && i < B_FLTBUF_CAPACITY - 1;) {
-        double digit;
-        modf(frcp *= 10.0, &digit);
-        frcout[i++] = '0' + (int)digit;
-        frcp -= digit;
-    }
-    frcout[i] = '\0';
-}
-
-static int biroundeddigit(char digit, char next) {
-    if (next >= '5' && digit != '9') return digit + 1;
-    return digit;
-}
-
-static int bisign(long double num) {
-    if (num != num) return 0;
-    if (num < 0) return 1;
-    return 0;
 }
 
 static int biputfmt_f(BUFFER* buf, va_list args, bifmtspec_t* fmt, int* total, bool up) {
