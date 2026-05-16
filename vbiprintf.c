@@ -293,12 +293,13 @@ static int biputfmt_f(BUFFER* buf, va_list args, bifmtspec_t* fmt, int* total, b
     if (biimmputs(intpart, ilen, buf, total)) return B_FAIL;
 
     if (normal) {
-        if (biimmputc('.', buf, total)) return B_FAIL;
+        if (fmt->precision > 0 || fmt->alt_form)
+            if (biimmputc('.', buf, total)) return B_FAIL;
 
         if (flen < fmt->precision) {
             if (biimmputs(frcpart, flen, buf, total)) return B_FAIL;
             if (biimmrepc('0', fmt->precision - flen, buf, total)) return B_FAIL;
-        } else {
+        } else if (fmt->precision > 0) {
             if (biimmputs(frcpart, fmt->precision - 1, buf, total)) return B_FAIL;
             if (biimmputc(biroundeddigit(
                 frcpart[fmt->precision - 1], frcpart[fmt->precision]), buf, total)) return B_FAIL;
@@ -393,13 +394,16 @@ static int biputfmt_e(BUFFER* buf, va_list args, bifmtspec_t* fmt, int* total, b
             memcpy(fullfrac + 2, frcpart - exponent, fflen);
         }
 
+        if (biimmputc(fullfrac[0], buf, total)) return B_FAIL;
         if (fflen < fmt->precision) {
-            if (biimmputs(fullfrac, fflen + 2, buf, total)) return B_FAIL;
+            if (biimmputs(fullfrac + 1, fflen + 1, buf, total)) return B_FAIL;
             if (biimmrepc('0', fmt->precision - fflen, buf, total)) return B_FAIL;
-        } else {
-            if (biimmputs(fullfrac, fmt->precision + 1, buf, total)) return B_FAIL;
+        } else if (fmt->precision > 0) {
+            if (biimmputs(fullfrac + 1, fmt->precision, buf, total)) return B_FAIL;
             if (biimmputc(biroundeddigit(
                 fullfrac[fmt->precision + 1], fullfrac[fmt->precision + 2]), buf, total)) return B_FAIL;
+        } else if (fmt->alt_form) {
+            if (biimmputc('.', buf, total)) return B_FAIL;
         }
 
         if (biimmputc(up ? 'E' : 'e', buf, total)) return B_FAIL;
@@ -458,14 +462,17 @@ int vbiprintf(BUFFER* buf, const char* fmt, va_list args) {
                     fmtstr += 1;
                 }
 
-                if (fmtstr[0] == '.' && '1' <= fmtstr[1] && fmtstr[1] <= '9') {
-                    fmt.precision = atoi(++fmtstr);
-                    if (fmt.precision == 0) goto error;
-                    while ('0' <= *fmtstr && *fmtstr <= '9') ++fmtstr;
-                } else if (fmtstr[0] == '.' && fmtstr[1] == '*') {
-                    fmt.precision = va_arg(args, int);
-                    if (fmt.precision <= 0) goto error;
-                    fmtstr += 2;
+                if (*fmtstr == '.') {
+                    fmtstr += 1;
+                    if ('0' <= *fmtstr && *fmtstr <= '9') {
+                        fmt.precision = atoi(fmtstr);
+                        while ('0' <= *fmtstr && *fmtstr <= '9') ++fmtstr;
+                    } else if (*fmtstr == '*') {
+                        fmt.precision = va_arg(args, int);
+                        if (fmt.precision < 0) goto error;
+                        fmtstr += 1;
+                    } else
+                        fmt.precision = 0;
                 }
 
                 switch (*fmtstr) {
