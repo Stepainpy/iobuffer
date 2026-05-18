@@ -18,7 +18,10 @@ typedef unsigned char bool;
 #define B_FAIL 1
 #define B_OKEY 0
 
+#define B_INTBUF_CAPACITY 32
 #define B_FLTBUF_CAPACITY 512
+
+#define B_LU_ALPHABET "0123456789abcdef0123456789ABCDEF"
 
 #if defined(__GNUC__) && __STDC_VERSION__ < 199901L
 #  pragma GCC diagnostic push
@@ -99,9 +102,8 @@ static void biinttostr(intmax_t number, char* outbuf) {
 }
 
 static void biuoxtostr(uintmax_t number, char* outbuf, int base, bool up) {
-    const char* alphabet = up ? "0123456789ABCDEF" : "0123456789abcdef";
     char* end = outbuf;
-    do *end++ = alphabet[number % base]; while (number /= base);
+    do *end++ = B_LU_ALPHABET[16 * up + number % base]; while (number /= base);
     *end = '\0';
     bireverse(outbuf, end);
 }
@@ -130,7 +132,7 @@ static void bidbltostr(double number, char* outint, char* frcout) {
 }
 
 static int biputfmt_di(BUFFER* buf, va_list args, bifmtspec_t* fmt, int* total) {
-    char tmpbuf[24] = {0};
+    static char tmpbuf[B_INTBUF_CAPACITY] = {0};
     bool is_neg; int len, padding;
     intmax_t received;
 
@@ -184,7 +186,7 @@ static int biputfmt_di(BUFFER* buf, va_list args, bifmtspec_t* fmt, int* total) 
 }
 
 static int biputfmt_uox(BUFFER* buf, va_list args, bifmtspec_t* fmt, int* total, char specch) {
-    char tmpbuf[24] = {0};
+    static char tmpbuf[B_INTBUF_CAPACITY] = {0};
     int len, prefix_size, padding;
     uintmax_t received;
     bool is_dec = specch == 'u';
