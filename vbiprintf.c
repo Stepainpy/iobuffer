@@ -82,14 +82,20 @@ static int bisign(long double num) {
     return 0;
 }
 
+static void bireverse(char* first, char* last) {
+    for (--last; first < last; first++, last--) {
+        char t = *first;
+        *first = *last;
+        *last  = t;
+    }
+}
+
 static void biinttostr(intmax_t number, char* outbuf) {
     char* end = outbuf;
     if (number < 0) do *end++ = '0' - number % 10; while (number /= 10);
     else            do *end++ = '0' + number % 10; while (number /= 10);
     *end = '\0';
-    for (--end; outbuf < end; outbuf++, end--) {
-        char tmp = *outbuf; *outbuf = *end; *end = tmp;
-    }
+    bireverse(outbuf, end);
 }
 
 static void biuoxtostr(uintmax_t number, char* outbuf, int base, bool up) {
@@ -97,9 +103,7 @@ static void biuoxtostr(uintmax_t number, char* outbuf, int base, bool up) {
     char* end = outbuf;
     do *end++ = alphabet[number % base]; while (number /= base);
     *end = '\0';
-    for (--end; outbuf < end; outbuf++, end--) {
-        char tmp = *outbuf; *outbuf = *end; *end = tmp;
-    }
+    bireverse(outbuf, end);
 }
 
 static void bidbltostr(double number, char* outint, char* frcout) {
@@ -113,12 +117,8 @@ static void bidbltostr(double number, char* outint, char* frcout) {
         outint[i++] = '0' + (int)digit;
         intp = (intp - digit) / 10.0;
     } while (intp && i < B_FLTBUF_CAPACITY - 1);
-    outint[i] = '\0';
-    for (count = i, i = 0; i < count / 2; i++) {
-        char tmp = outint[i];
-        outint[i] = outint[count - i - 1];
-        outint[count - i - 1] = tmp;
-    }
+    outint[i] = '\0'; count = i;
+    bireverse(outint, outint + count);
 
     for (i = 0; frcp && i < B_FLTBUF_CAPACITY - 1;) {
         double digit;
