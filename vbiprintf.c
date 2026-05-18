@@ -18,7 +18,7 @@ typedef unsigned char bool;
 #define B_FAIL 1
 #define B_OKEY 0
 
-#define B_INTBUF_CAPACITY 32
+#define B_INTBUF_CAPACITY 80
 #define B_FLTBUF_CAPACITY 512
 
 #define B_LU_ALPHABET "0123456789abcdef0123456789ABCDEF"
@@ -87,6 +87,8 @@ static int bisign(long double num) {
 
 static int bibasefromch(char ch) {
     switch (ch) {
+        case 'b':
+        case 'B': return  2;
         case 'o': return  8;
         case 'u': return 10;
         case 'x':
@@ -111,7 +113,7 @@ static void biinttostr(intmax_t number, char* outbuf) {
     bireverse(outbuf, end);
 }
 
-static void biuoxtostr(uintmax_t number, char* outbuf, int base, bool up) {
+static void biunttostr(uintmax_t number, char* outbuf, int base, bool up) {
     char* end = outbuf;
     do *end++ = B_LU_ALPHABET[16 * up + number % base]; while (number /= base);
     *end = '\0';
@@ -197,7 +199,7 @@ static int biputfmt_di(BUFFER* buf, va_list args, bifmtspec_t* fmt, int* total) 
     return B_OKEY;
 }
 
-static int biputfmt_uox(BUFFER* buf, va_list args, bifmtspec_t* fmt, int* total, char specch) {
+static int biputfmt_boux(BUFFER* buf, va_list args, bifmtspec_t* fmt, int* total, char specch) {
     static char tmpbuf[B_INTBUF_CAPACITY] = {0};
     int len, prefix_size, padding, base;
     uintmax_t received;
@@ -219,14 +221,14 @@ static int biputfmt_uox(BUFFER* buf, va_list args, bifmtspec_t* fmt, int* total,
     }
 
     base = bibasefromch(specch);
-    biuoxtostr(received, tmpbuf, base, specch == 'X');
+    biunttostr(received, tmpbuf, base, specch == 'X');
     len = strlen(tmpbuf);
 
-    prefix_size = fmt->alt_form && received > 0 && base == 16 ? 2 : 0;
+    prefix_size = fmt->alt_form && received > 0 && (base == 16 || base == 2) ? 2 : 0;
     zerozero = fmt->precision == 0 && received == 0;
 
     if (!zerozero && fmt->lead_zero && !fmt->left_just)
-        fmt->precision = bimax(1 + (fmt->alt_form && base == 16), fmt->fieldwidth) - prefix_size;
+        fmt->precision = bimax(1 + (fmt->alt_form && (base == 16 || base == 2)), fmt->fieldwidth) - prefix_size;
 
     if (base == 8 && fmt->alt_form && fmt->precision <= len - zerozero)
         fmt->precision = len - zerozero + 1;
@@ -236,7 +238,7 @@ static int biputfmt_uox(BUFFER* buf, va_list args, bifmtspec_t* fmt, int* total,
     if (!fmt->left_just && padding)
         if (biimmrepc(' ', padding, buf, total)) return B_FAIL;
 
-    if (fmt->alt_form && base == 16 && received > 0) {
+    if (fmt->alt_form && (base == 16 || base == 2) && received > 0) {
         if (biimmputc(   '0', buf, total)) return B_FAIL;
         if (biimmputc(specch, buf, total)) return B_FAIL;
     }
@@ -557,16 +559,18 @@ int vbiprintf(BUFFER* buf, const char* fmt, va_list args) {
                         if (biputfmt_di(buf, args, &fmt, &total_len)) goto error;
                         break;
 
-                    case 'u': case 'o': case 'x': case 'X':
+                    case 'b': case 'B':
+                    case 'o': case 'u':
+                    case 'x': case 'X':
                         if (fmt.precision < 0) fmt.precision = 1;
-                        if (biputfmt_uox(buf, args, &fmt, &total_len, *fmtstr)) goto error;
+                        if (biputfmt_boux(buf, args, &fmt, &total_len, *fmtstr)) goto error;
                         break;
 
                     case 'p':
                         if (fmt.lenmod != BLM_NONE) goto error;
                         fmt.lenmod = BLM_Z; /* use size_t as uintptr_t */
                         fmt.alt_form = true;
-                        if (biputfmt_uox(buf, args, &fmt, &total_len, 'x')) goto error;
+                        if (biputfmt_boux(buf, args, &fmt, &total_len, 'x')) goto error;
                         break;
 
                     case 'f': case 'F':
