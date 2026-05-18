@@ -133,8 +133,11 @@ static void bidbltostr(double number, char* outint, char* frcout) {
 
 static int biputfmt_di(BUFFER* buf, va_list args, bifmtspec_t* fmt, int* total) {
     static char tmpbuf[B_INTBUF_CAPACITY] = {0};
-    bool is_neg; int len, padding;
     intmax_t received;
+    int len, padding;
+    bool zerozero;
+    bool has_sign;
+    bool is_neg;
 
     switch (fmt->lenmod) {
         case BLM_NONE: received =        va_arg(args, int ); break;
@@ -152,18 +155,16 @@ static int biputfmt_di(BUFFER* buf, va_list args, bifmtspec_t* fmt, int* total) 
     }
 
     biinttostr(received, tmpbuf);
-    is_neg = received < 0;
     len = strlen(tmpbuf);
 
-    if (fmt->precision < 0) {
-        if (fmt->lead_zero && !fmt->left_just)
-            fmt->precision = bimax(1, fmt->fieldwidth) - (fmt->signing >= 0 || is_neg);
-        else
-            fmt->precision = 1;
-    }
+    is_neg = received < 0;
+    has_sign = fmt->signing >= 0 || is_neg;
+    zerozero = fmt->precision == 0 && received == 0;
 
-    padding = fmt->fieldwidth - bimax(fmt->precision, len) - (fmt->signing >= 0 || is_neg);
-    padding = padding < 0 ? 0 : padding;
+    if (!zerozero && fmt->lead_zero && !fmt->left_just)
+        fmt->precision = bimax(1, fmt->fieldwidth) - has_sign;
+
+    padding = bimax(0, fmt->fieldwidth - bimax(fmt->precision, len - zerozero) - has_sign);
 
     if (!fmt->left_just && padding)
         if (biimmrepc(' ', padding, buf, total)) return B_FAIL;
@@ -177,7 +178,8 @@ static int biputfmt_di(BUFFER* buf, va_list args, bifmtspec_t* fmt, int* total) 
     if (fmt->precision > len)
         if (biimmrepc('0', fmt->precision - len, buf, total)) return B_FAIL;
 
-    if (biimmputs(tmpbuf, len, buf, total)) return B_FAIL;
+    if (!zerozero)
+        if (biimmputs(tmpbuf, len, buf, total)) return B_FAIL;
 
     if ( fmt->left_just && padding)
         if (biimmrepc(' ', padding, buf, total)) return B_FAIL;
@@ -471,7 +473,6 @@ int vbiprintf(BUFFER* buf, const char* fmt, va_list args) {
                         while ('0' <= *fmtstr && *fmtstr <= '9') ++fmtstr;
                     } else if (*fmtstr == '*') {
                         fmt.precision = va_arg(args, int);
-                        if (fmt.precision < 0) goto error;
                         fmtstr += 1;
                     } else
                         fmt.precision = 0;
@@ -545,6 +546,7 @@ int vbiprintf(BUFFER* buf, const char* fmt, va_list args) {
                     } break;
 
                     case 'd': case 'i':
+                        if (fmt.precision < 0) fmt.precision = 1;
                         if (biputfmt_di(buf, args, &fmt, &total_len)) goto error;
                         break;
 
