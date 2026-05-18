@@ -85,6 +85,16 @@ static int bisign(long double num) {
     return 0;
 }
 
+static int bibasefromch(char ch) {
+    switch (ch) {
+        case 'o': return  8;
+        case 'u': return 10;
+        case 'x':
+        case 'X': return 16;
+        default: return 0;
+    }
+}
+
 static void bireverse(char* first, char* last) {
     for (--last; first < last; first++, last--) {
         char t = *first;
@@ -189,12 +199,9 @@ static int biputfmt_di(BUFFER* buf, va_list args, bifmtspec_t* fmt, int* total) 
 
 static int biputfmt_uox(BUFFER* buf, va_list args, bifmtspec_t* fmt, int* total, char specch) {
     static char tmpbuf[B_INTBUF_CAPACITY] = {0};
-    int len, prefix_size, padding;
+    int len, prefix_size, padding, base;
     uintmax_t received;
-    bool is_dec = specch == 'u';
-    bool is_oct = specch == 'o';
-    bool is_hex = specch == 'x';
-    bool is_HEX = specch == 'X';
+    bool zerozero;
 
     switch (fmt->lenmod) {
         case BLM_NONE: received =         va_arg(args, uint ); break;
@@ -211,34 +218,34 @@ static int biputfmt_uox(BUFFER* buf, va_list args, bifmtspec_t* fmt, int* total,
             return B_FAIL;
     }
 
-    biuoxtostr(received, tmpbuf, is_dec ? 10 : is_oct ? 8 : 16, is_HEX);
-    prefix_size = fmt->alt_form && received > 0 && (is_hex || is_HEX) ? 2 : 0;
+    base = bibasefromch(specch);
+    biuoxtostr(received, tmpbuf, base, specch == 'X');
     len = strlen(tmpbuf);
 
-    if (fmt->precision < 0) {
-        if (fmt->lead_zero && !fmt->left_just)
-            fmt->precision = bimax(1 + (fmt->alt_form && (is_hex || is_HEX)), fmt->fieldwidth) - prefix_size;
-        else
-            fmt->precision = 1;
-    }
-    if (is_oct && received > 0 && fmt->precision <= len)
-        fmt->precision = len + 1;
+    prefix_size = fmt->alt_form && received > 0 && base == 16 ? 2 : 0;
+    zerozero = fmt->precision == 0 && received == 0;
 
-    padding = fmt->fieldwidth - bimax(fmt->precision, len) - prefix_size;
-    padding = padding < 0 ? 0 : padding;
+    if (!zerozero && fmt->lead_zero && !fmt->left_just)
+        fmt->precision = bimax(1 + (fmt->alt_form && base == 16), fmt->fieldwidth) - prefix_size;
+
+    if (base == 8 && fmt->alt_form && fmt->precision <= len - zerozero)
+        fmt->precision = len - zerozero + 1;
+
+    padding = bimax(0, fmt->fieldwidth - bimax(fmt->precision, len - zerozero) - prefix_size);
 
     if (!fmt->left_just && padding)
         if (biimmrepc(' ', padding, buf, total)) return B_FAIL;
 
-    if (fmt->alt_form && (is_hex || is_HEX) && received > 0) {
-        if (biimmputc('0', buf, total)) return B_FAIL;
-        if (biimmputc(is_hex ? 'x' : 'X', buf, total)) return B_FAIL;
+    if (fmt->alt_form && base == 16 && received > 0) {
+        if (biimmputc(   '0', buf, total)) return B_FAIL;
+        if (biimmputc(specch, buf, total)) return B_FAIL;
     }
 
-    if (fmt->precision > len)
-        if (biimmrepc('0', fmt->precision - len, buf, total)) return B_FAIL;
+    if (fmt->precision > len - zerozero)
+        if (biimmrepc('0', fmt->precision - len + zerozero, buf, total)) return B_FAIL;
 
-    if (biimmputs(tmpbuf, len, buf, total)) return B_FAIL;
+    if (!zerozero)
+        if (biimmputs(tmpbuf, len, buf, total)) return B_FAIL;
 
     if ( fmt->left_just && padding)
         if (biimmrepc(' ', padding, buf, total)) return B_FAIL;
@@ -551,6 +558,7 @@ int vbiprintf(BUFFER* buf, const char* fmt, va_list args) {
                         break;
 
                     case 'u': case 'o': case 'x': case 'X':
+                        if (fmt.precision < 0) fmt.precision = 1;
                         if (biputfmt_uox(buf, args, &fmt, &total_len, *fmtstr)) goto error;
                         break;
 
