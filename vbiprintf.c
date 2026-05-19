@@ -126,7 +126,7 @@ static void bidbltostr(double number, char* outbuf) {
         digit = fmod(intp, 10);
         outbuf[i++] = '0' + (int)digit;
         intp = (intp - digit) / 10.0;
-    } while (intp && i < B_FLTBUF_CAPACITY - 1);
+    } while (intp && i < B_FLTBUF_CAPACITY - 2);
 
     bireverse(outbuf, outbuf + i);
     outbuf[i++] = '.';
@@ -317,17 +317,13 @@ static int biputfmt_f(BUFFER* buf, va_list args, bifmtspec_t* fmt, int* total, b
     return B_OKEY;
 }
 
-#define BD_DIS_ESPEC 1
-
-#if !BD_DIS_ESPEC
 static int biputfmt_e(BUFFER* buf, va_list args, bifmtspec_t* fmt, int* total, bool up) {
-    static char intpart[B_FLTBUF_CAPACITY];
-    static char frcpart[B_FLTBUF_CAPACITY];
-    static char exppart[16];
+    static char tmpbuf[B_FLTBUF_CAPACITY], expbuf[8];
     long double received;
     bool normal = false;
+    bool is_neg, has_sign;
     int padding, exponent;
-    int ilen, flen, elen;
+    int len, flen, elen;
 
     switch (fmt->lenmod) {
         case BLM_NONE   : received = va_arg(args,      double); break;
@@ -336,46 +332,62 @@ static int biputfmt_e(BUFFER* buf, va_list args, bifmtspec_t* fmt, int* total, b
         default: return B_FAIL;
     }
 
-    if (received != received) {
-        memcpy(intpart, up ? "NAN" : "nan", 4);
-        frcpart[0] = '\0';
-    } else if (
-        (fmt->lenmod == BLM_NONE    && (received < - DBL_MAX ||  DBL_MAX < received)) ||
-        (fmt->lenmod == BLM_L_UPPER && (received < -LDBL_MAX || LDBL_MAX < received))
-    ) {
-        memcpy(intpart, up ? "INF" : "inf", 4);
-        frcpart[0] = '\0';
-    } else {
-        bidbltostr(received, intpart, frcpart);
-        normal = true;
-    }
-    ilen = strlen(intpart);
-    flen = strlen(frcpart);
-
-    if (received == 0.l)
-        exponent = 0;
-    else if (ilen > 1 || intpart[0] != '0')
-        exponent = ilen - 1;
+    /**/ if (biisnan(received))
+        memcpy(tmpbuf, up ? "NAN" : "nan", 4);
+    else if (biisinf(received))
+        memcpy(tmpbuf, up ? "INF" : "inf", 4);
     else
-        exponent = -1 - (int)strspn(frcpart, "0");
-    biinttostr(exponent, exppart);
-    elen = strlen(exppart);
-    if (elen < 2) {
-        exppart[2] = exppart[1];
-        exppart[1] = exppart[0];
-        exppart[0] = '0';
+        bidbltostr(received, tmpbuf), normal = true;
+
+    len = strlen(tmpbuf);
+    if (normal && received != 0) {
+        int point = strchr(tmpbuf, '.') - tmpbuf;
+
+        if (point == 1 && tmpbuf[0] == '0') {
+            exponent = -1 - strspn(tmpbuf + 2, "0");
+            memmove(tmpbuf + 1, tmpbuf + 1 - exponent, len - 1 + exponent + 1);
+            tmpbuf[0] = tmpbuf[1];
+            tmpbuf[1] = '.';
+            len = strlen(tmpbuf);
+        } else {
+            exponent = point - 1;
+            memmove(tmpbuf + 2, tmpbuf + 1, point - 1);
+            tmpbuf[1] = '.';
+        }
+
+        flen = len - 2;
+        if (flen > fmt->precision) {
+            char* last = tmpbuf + 1 + fmt->precision;
+            char after_last = last[1]; last[1] = '\0';
+            last -= fmt->precision == 0;
+            *last = biroundeddigit(*last, after_last);
+
+            flen = fmt->precision;
+            len = 2 + flen;
+        }
+    } else if (received == 0)
+        flen = exponent =  0;
+    else
+        flen = exponent = -1;
+
+    biinttostr(exponent, expbuf);
+    elen = strlen(expbuf);
+    if (elen == 1) {
+        expbuf[2] = expbuf[1];
+        expbuf[1] = expbuf[0];
+        expbuf[0] = '0';
         elen = 2;
     }
 
-    padding = fmt->fieldwidth
-        - (bisign(received) || fmt->signing >= 0)
-        - (normal ? 2 + fmt->precision + 2 + elen : 3);
-    padding = padding < 0 ? 0 : padding;
+    is_neg = received < 0;
+    has_sign = fmt->signing >= 0 || is_neg;
+
+    padding = bimax(0, fmt->fieldwidth - len - has_sign - (normal ? 2 + elen : 0));
 
     if (!fmt->lead_zero && !fmt->left_just && padding)
         if (biimmrepc(' ', padding, buf, total)) return B_FAIL;
 
-    if (bisign(received)) {
+    if (is_neg) {
         if (biimmputc('-', buf, total)) return B_FAIL;
     } else if (fmt->signing >= 0) {
         if (biimmputc(fmt->signing > 0 ? '+' : ' ', buf, total)) return B_FAIL;
@@ -384,48 +396,20 @@ static int biputfmt_e(BUFFER* buf, va_list args, bifmtspec_t* fmt, int* total, b
     if (fmt->lead_zero && !fmt->left_just && padding)
         if (biimmrepc('0', padding, buf, total)) return B_FAIL;
 
+    if (biimmputs(tmpbuf, len - (fmt->precision == 0 && !fmt->alt_form), buf, total)) return B_FAIL;
     if (normal) {
-        static char fullfrac[2 * B_FLTBUF_CAPACITY];
-        int fflen;
-
-        if (exponent >= 0) {
-            fullfrac[0] = intpart[0];
-            fullfrac[1] = '.';
-            memcpy(fullfrac + 2, intpart + 1, ilen - 1);
-            memcpy(fullfrac + 1 + ilen, frcpart, flen + 1);
-            fflen = ilen - 1 + flen;
-        } else {
-            char* notzero = frcpart - exponent - 1;
-            fullfrac[0] = notzero[0] ? notzero[0] : '0';
-            fullfrac[1] = '.';
-            fflen = flen > -exponent ? flen + exponent : 0;
-            memcpy(fullfrac + 2, frcpart - exponent, fflen);
-        }
-
-        if (biimmputc(fullfrac[0], buf, total)) return B_FAIL;
-        if (fflen < fmt->precision) {
-            if (biimmputs(fullfrac + 1, fflen + 1, buf, total)) return B_FAIL;
-            if (biimmrepc('0', fmt->precision - fflen, buf, total)) return B_FAIL;
-        } else if (fmt->precision > 0) {
-            if (biimmputs(fullfrac + 1, fmt->precision, buf, total)) return B_FAIL;
-            if (biimmputc(biroundeddigit(
-                fullfrac[fmt->precision + 1], fullfrac[fmt->precision + 2]), buf, total)) return B_FAIL;
-        } else if (fmt->alt_form) {
-            if (biimmputc('.', buf, total)) return B_FAIL;
-        }
-
+        if (fmt->precision > flen)
+            if (biimmrepc('0', fmt->precision - flen, buf, total)) return B_FAIL;
         if (biimmputc(up ? 'E' : 'e', buf, total)) return B_FAIL;
         if (biimmputc(exponent < 0 ? '-' : '+', buf, total)) return B_FAIL;
-        if (biimmputs(exppart, elen, buf, total)) return B_FAIL;
-    } else
-        if (biimmputs(intpart, ilen, buf, total)) return B_FAIL;
+        if (biimmputs(expbuf, elen, buf, total)) return B_FAIL;
+    }
 
     if (fmt->left_just && padding)
         if (biimmrepc(' ', padding, buf, total)) return B_FAIL;
 
     return B_OKEY;
 }
-#endif
 
 int vbiprintf(BUFFER* buf, const char* fmt, va_list args) {
     int total_len = 0;
@@ -573,12 +557,12 @@ int vbiprintf(BUFFER* buf, const char* fmt, va_list args) {
                         if (fmt.precision < 0) fmt.precision = 6;
                         if (biputfmt_f(buf, args, &fmt, &total_len, *fmtstr == 'F')) goto error;
                         break;
-#if !BD_DIS_ESPEC
+
                     case 'e': case 'E':
                         if (fmt.precision < 0) fmt.precision = 6;
                         if (biputfmt_e(buf, args, &fmt, &total_len, *fmtstr == 'E')) goto error;
                         break;
-#endif
+
                     default: goto error;
                 }
             }
