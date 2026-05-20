@@ -414,6 +414,118 @@ static int biputfmt_e(BUFFER* buf, va_list args, bifmtspec_t* fmt, int* total, b
     return B_OKEY;
 }
 
+static int biputfmt_g(BUFFER* buf, va_list args, bifmtspec_t* fmt, int* total, bool up) {
+    static char tmpbuf[B_FLTBUF_CAPACITY], expbuf[8];
+    long double received;
+    bool normal = false;
+    bool fixed = false;
+    bool is_neg, has_sign;
+    int padding, exponent;
+    int len, flen, elen;
+
+    switch (fmt->lenmod) {
+        case BLM_NONE   : received = va_arg(args,      double); break;
+        case BLM_L_UPPER: received = va_arg(args, long double); break;
+
+        default: return B_FAIL;
+    }
+
+    /**/ if (biisnan(received))
+        memcpy(tmpbuf, up ? "NAN" : "nan", 4);
+    else if (biisinf(received))
+        memcpy(tmpbuf, up ? "INF" : "inf", 4);
+    else
+        bidbltostr(received, tmpbuf), normal = true;
+
+    len = strlen(tmpbuf);
+    if (normal && received != 0) {
+        int point = strchr(tmpbuf, '.') - tmpbuf;
+        exponent = bigetexponent(tmpbuf, point);
+
+        fixed = -4 <= exponent && exponent < fmt->precision;
+        fmt->precision -= fixed ? exponent + 1 : 1;
+
+        if (fixed)
+            flen = len - point - 1;
+        else {
+            if (exponent < 0) {
+                memmove(tmpbuf + 1, tmpbuf + 1 - exponent, len + exponent);
+                tmpbuf[0] = tmpbuf[1];
+                len = len + exponent + 1;
+            } else
+                memmove(tmpbuf + 2, tmpbuf + 1, point - 1);
+
+            tmpbuf[point = 1] = '.';
+            flen = len - 2;
+        }
+
+        if (flen > fmt->precision) {
+            char* last = tmpbuf + point + fmt->precision;
+            char after_last = last[1]; last[1] = '\0';
+            last -= fmt->precision == 0;
+            *last = biroundeddigit(*last, after_last);
+
+            flen = fmt->precision;
+            len = point + 1 + flen;
+        }
+    } else if (received == 0) {
+        fmt->precision -= 1;
+        flen = exponent = 0;
+        fixed = true;
+    } else
+        flen = exponent = -1;
+
+    if (!fixed) {
+        biinttostr(exponent, expbuf);
+        elen = strlen(expbuf);
+        if (elen == 1) {
+            expbuf[2] = expbuf[1];
+            expbuf[1] = expbuf[0];
+            expbuf[0] = '0';
+            elen = 2;
+        }
+    }
+
+    if (!fmt->alt_form) {
+        while (tmpbuf[len - 1] == '0') len--, flen--;
+        if    (tmpbuf[len - 1] == '.') len--, flen=0;
+    }
+
+    is_neg = received < 0;
+    has_sign = fmt->signing >= 0 || is_neg;
+
+    padding = bimax(0, fmt->fieldwidth - len - has_sign -
+        (normal ? (fixed ? (fmt->alt_form ? fmt->precision - flen : 0) : 2 + elen) : 0));
+
+    if (!fmt->lead_zero && !fmt->left_just && padding)
+        if (biimmrepc(' ', padding, buf, total)) return B_FAIL;
+
+    if (is_neg) {
+        if (biimmputc('-', buf, total)) return B_FAIL;
+    } else if (fmt->signing >= 0) {
+        if (biimmputc(fmt->signing > 0 ? '+' : ' ', buf, total)) return B_FAIL;
+    }
+
+    if (fmt->lead_zero && !fmt->left_just && padding)
+        if (biimmrepc('0', padding, buf, total)) return B_FAIL;
+
+    if (biimmputs(tmpbuf, len, buf, total)) return B_FAIL;
+    if (normal) {
+        if (fmt->alt_form && fmt->precision > flen)
+            if (biimmrepc('0', fmt->precision - flen, buf, total)) return B_FAIL;
+        if (!fixed) {
+            if (biimmputc(up ? 'E' : 'e', buf, total)) return B_FAIL;
+            if (biimmputc(exponent < 0 ? '-' : '+', buf, total)) return B_FAIL;
+            if (biimmputs(expbuf, elen, buf, total)) return B_FAIL;
+        }
+    }
+
+    if (fmt->left_just && padding)
+        if (biimmrepc(' ', padding, buf, total)) return B_FAIL;
+
+    return B_OKEY;
+}
+
 int vbiprintf(BUFFER* buf, const char* fmt, va_list args) {
     int total_len = 0;
 
@@ -564,6 +676,12 @@ int vbiprintf(BUFFER* buf, const char* fmt, va_list args) {
                     case 'e': case 'E':
                         if (fmt.precision < 0) fmt.precision = 6;
                         if (biputfmt_e(buf, args, &fmt, &total_len, *fmtstr == 'E')) goto error;
+                        break;
+
+                    case 'g': case 'G':
+                        if (fmt.precision <  0) fmt.precision = 6;
+                        if (fmt.precision == 0) fmt.precision = 1;
+                        if (biputfmt_g(buf, args, &fmt, &total_len, *fmtstr == 'G')) goto error;
                         break;
 
                     default: goto error;
