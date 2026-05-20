@@ -77,6 +77,11 @@ static int bimax(int a, int b) { return a > b ? a : b; }
 static bool biisnan(long double x) { return x != x; }
 static bool biisinf(long double x) { return x < -LDBL_MAX || LDBL_MAX < x; }
 
+static int bigetexponent(const char* numstr, int point_pos) {
+    return point_pos == 1 && numstr[0] == '0'
+        ? -1 - (int)strspn(numstr + 2, "0") : point_pos - 1;
+}
+
 static int biroundeddigit(char digit, char next) {
     return digit + (next >= '5' && digit != '9');
 }
@@ -342,28 +347,26 @@ static int biputfmt_e(BUFFER* buf, va_list args, bifmtspec_t* fmt, int* total, b
     len = strlen(tmpbuf);
     if (normal && received != 0) {
         int point = strchr(tmpbuf, '.') - tmpbuf;
+        exponent = bigetexponent(tmpbuf, point);
 
-        if (point == 1 && tmpbuf[0] == '0') {
-            exponent = -1 - strspn(tmpbuf + 2, "0");
-            memmove(tmpbuf + 1, tmpbuf + 1 - exponent, len - 1 + exponent + 1);
+        if (exponent < 0) {
+            memmove(tmpbuf + 1, tmpbuf + 1 - exponent, len + exponent);
             tmpbuf[0] = tmpbuf[1];
-            tmpbuf[1] = '.';
-            len = strlen(tmpbuf);
-        } else {
-            exponent = point - 1;
+            len = len + exponent + 1;
+        } else
             memmove(tmpbuf + 2, tmpbuf + 1, point - 1);
-            tmpbuf[1] = '.';
-        }
 
+        tmpbuf[point = 1] = '.';
         flen = len - 2;
+
         if (flen > fmt->precision) {
-            char* last = tmpbuf + 1 + fmt->precision;
+            char* last = tmpbuf + point + fmt->precision;
             char after_last = last[1]; last[1] = '\0';
             last -= fmt->precision == 0;
             *last = biroundeddigit(*last, after_last);
 
             flen = fmt->precision;
-            len = 2 + flen;
+            len = point + 1 + flen;
         }
     } else if (received == 0)
         flen = exponent =  0;
