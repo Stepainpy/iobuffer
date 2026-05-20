@@ -86,6 +86,10 @@ static int biroundeddigit(char digit, char next) {
     return digit + (next >= '5' && digit != '9');
 }
 
+static int biroundedhexdigit(char digit, char next) {
+    return digit + (next >= '8' && digit != 'f' && digit != 'F');
+}
+
 static int bibasefromch(char ch) {
     switch (ch) {
         case 'b':
@@ -142,6 +146,27 @@ static void bidbltostr(double number, char* outbuf) {
     }
 
     outbuf[i] = '\0';
+}
+
+static void bihfntostr(double number, char* outbuf, int* exp, bool up) {
+    union { double dbl; ullong unt; } as;
+    int exponent; ullong mantissa;
+    bool normal; int i, j;
+
+    as.dbl = number; as.unt &= ((ullong)1 << 63) - 1; /* truncate sign bit */
+
+    exponent = (int)(as.unt >> (DBL_MANT_DIG - 1)) - (DBL_MAX_EXP - 1);
+    mantissa = as.unt & (((ullong)1 << (DBL_MANT_DIG - 1)) - 1);
+    normal = exponent > -(DBL_MAX_EXP - 1);
+
+    i = 0;
+    outbuf[i++] = normal ? '1' : '0';
+    outbuf[i++] = '.';
+    for (j = 48; j >= 0 && mantissa; mantissa &= ((ullong)1 << j) - 1, j -= 4)
+        outbuf[i++] = B_LU_ALPHABET[16 * up + (mantissa >> j & 15)];
+    outbuf[i] = '\0';
+
+    *exp = exponent + !normal;
 }
 
 static int biputfmt_di(BUFFER* buf, va_list args, bifmtspec_t* fmt, int* total) {
@@ -526,6 +551,86 @@ static int biputfmt_g(BUFFER* buf, va_list args, bifmtspec_t* fmt, int* total, b
     return B_OKEY;
 }
 
+static int biputfmt_a(BUFFER* buf, va_list args, bifmtspec_t* fmt, int* total, bool up) {
+    static char tmpbuf[B_FLTBUF_CAPACITY], expbuf[8];
+    long double received;
+    bool normal = false;
+    bool is_neg, has_sign;
+    int padding, exponent;
+    int len, flen, elen;
+
+    switch (fmt->lenmod) {
+        case BLM_NONE   : received = va_arg(args,      double); break;
+        case BLM_L_UPPER: received = va_arg(args, long double); break;
+
+        default: return B_FAIL;
+    }
+
+    /**/ if (biisnan(received))
+        memcpy(tmpbuf, up ? "NAN" : "nan", 4);
+    else if (biisinf(received))
+        memcpy(tmpbuf, up ? "INF" : "inf", 4);
+    else
+        bihfntostr(received, tmpbuf, &exponent, up), normal = true;
+
+    len = strlen(tmpbuf);
+    if (normal && received != 0) {
+        flen = len - 2;
+        if (fmt->precision >= 0 && flen > fmt->precision) {
+            char* last = tmpbuf + 1 + fmt->precision;
+            char after_last = last[1]; last[1] = '\0';
+            last -= fmt->precision == 0;
+            *last = biroundedhexdigit(*last, after_last);
+
+            flen = fmt->precision;
+            len = 2 + flen;
+        }
+    } else if (received == 0)
+        flen = exponent = 0;
+    else
+        flen = exponent = -1;
+
+    biinttostr(exponent, expbuf);
+    elen = strlen(expbuf);
+
+    if (fmt->precision < 0 && !fmt->alt_form)
+        if (tmpbuf[len - 1] == '.') len--, flen=0;
+
+    is_neg = received < 0;
+    has_sign = fmt->signing >= 0 || is_neg;
+
+    padding = bimax(0, fmt->fieldwidth - 2 - len - has_sign - (normal ? 2 + elen : 0));
+
+    if (!fmt->lead_zero && !fmt->left_just && padding)
+        if (biimmrepc(' ', padding, buf, total)) return B_FAIL;
+
+    if (is_neg) {
+        if (biimmputc('-', buf, total)) return B_FAIL;
+    } else if (fmt->signing >= 0) {
+        if (biimmputc(fmt->signing > 0 ? '+' : ' ', buf, total)) return B_FAIL;
+    }
+
+    if (normal)
+        if (biimmputs(up ? "0X" : "0x", 2, buf, total)) return B_FAIL;
+
+    if (fmt->lead_zero && !fmt->left_just && padding)
+        if (biimmrepc('0', padding, buf, total)) return B_FAIL;
+
+    if (biimmputs(tmpbuf, len - (fmt->precision == 0 && !fmt->alt_form), buf, total)) return B_FAIL;
+    if (normal) {
+        if (fmt->precision >= 0 && fmt->precision > flen)
+            if (biimmrepc('0', fmt->precision - flen, buf, total)) return B_FAIL;
+        if (biimmputc(up ? 'P' : 'p', buf, total)) return B_FAIL;
+        if (biimmputc(exponent < 0 ? '-' : '+', buf, total)) return B_FAIL;
+        if (biimmputs(expbuf, elen, buf, total)) return B_FAIL;
+    }
+
+    if (fmt->left_just && padding)
+        if (biimmrepc(' ', padding, buf, total)) return B_FAIL;
+
+    return B_OKEY;
+}
+
 int vbiprintf(BUFFER* buf, const char* fmt, va_list args) {
     int total_len = 0;
 
@@ -682,6 +787,10 @@ int vbiprintf(BUFFER* buf, const char* fmt, va_list args) {
                         if (fmt.precision <  0) fmt.precision = 6;
                         if (fmt.precision == 0) fmt.precision = 1;
                         if (biputfmt_g(buf, args, &fmt, &total_len, *fmtstr == 'G')) goto error;
+                        break;
+
+                    case 'a': case 'A':
+                        if (biputfmt_a(buf, args, &fmt, &total_len, *fmtstr == 'A')) goto error;
                         break;
 
                     default: goto error;
