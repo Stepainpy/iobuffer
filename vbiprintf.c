@@ -164,7 +164,8 @@ static void bihfntostr(double number, char* outbuf, int* exp, bool up) {
     int exponent; ullong mantissa;
     bool normal; int i, j;
 
-    as.dbl = number; as.unt &= ((ullong)1 << 63) - 1; /* truncate sign bit */
+    as.dbl = number;
+    as.unt &= ~((ullong)-1 << 63); /* truncate sign bit */
 
     exponent = (int)(as.unt >> (DBL_MANT_DIG - 1)) - (DBL_MAX_EXP - 1);
     mantissa = as.unt & (((ullong)1 << (DBL_MANT_DIG - 1)) - 1);
@@ -181,7 +182,7 @@ static void bihfntostr(double number, char* outbuf, int* exp, bool up) {
 }
 
 static int biputfmt_di(BUFFER* buf, va_list args, bifmtspec_t* fmt, int* total) {
-    static char tmpbuf[B_INTBUF_CAPACITY] = {0};
+    static char tmpbuf[B_INTBUF_CAPACITY];
     intmax_t received;
     int len, padding;
     bool zerozero;
@@ -238,7 +239,7 @@ static int biputfmt_di(BUFFER* buf, va_list args, bifmtspec_t* fmt, int* total) 
 }
 
 static int biputfmt_boux(BUFFER* buf, va_list args, bifmtspec_t* fmt, int* total, char specch) {
-    static char tmpbuf[B_INTBUF_CAPACITY] = {0};
+    static char tmpbuf[B_INTBUF_CAPACITY];
     int len, prefix_size, padding, base;
     uintmax_t received;
     bool zerozero;
