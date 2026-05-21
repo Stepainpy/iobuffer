@@ -1,6 +1,7 @@
 #define IOBUFFER_SOURCE
 #include "iobuffer.h"
 
+#include <limits.h>
 #include <stdint.h>
 #include <string.h>
 #include <float.h>
@@ -110,10 +111,11 @@ static void bireverse(char* first, char* last) {
 }
 
 static int bistrtoint(const char* str, const char** end) {
-    const int MAX = (int)(~0u >> 1); int result = 0;
+    int result = 0;
     while ('0' <= *str && *str <= '9') {
-        if (result > MAX / 10 || *str - '0' > MAX % 10) return -1;
-        result = 10 * result + (*str++ - '0');
+        int digit = *str++ - '0';
+        if (result > INT_MAX / 10 && digit > INT_MAX % 10) return -1;
+        result = 10 * result + digit;
     }
     *end = str;
     return result;
