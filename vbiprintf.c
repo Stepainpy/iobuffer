@@ -572,6 +572,13 @@ int vbiprintf(BUFFER* buf, const char* fmt, va_list args) {
                         case BLM_L_UPPER: goto error;
                     } break;
 
+                    case 'p':
+                        if (fmt.lenmod != BLM_NONE) goto error;
+                        fmt.lenmod = BLM_Z; /* use size_t as uintptr_t */
+                        fmt.alt_form = true;
+                        if (biputfmt_boux(buf, args, &fmt, &total_len, 'x')) goto error;
+                        break;
+
                     case 'c':
                     if (fmt.lenmod != BLM_NONE) goto error;
                     {
@@ -618,13 +625,6 @@ int vbiprintf(BUFFER* buf, const char* fmt, va_list args) {
                     case 'x': case 'X':
                         if (fmt.precision < 0) fmt.precision = 1;
                         if (biputfmt_boux(buf, args, &fmt, &total_len, *fmtstr)) goto error;
-                        break;
-
-                    case 'p':
-                        if (fmt.lenmod != BLM_NONE) goto error;
-                        fmt.lenmod = BLM_Z; /* use size_t as uintptr_t */
-                        fmt.alt_form = true;
-                        if (biputfmt_boux(buf, args, &fmt, &total_len, 'x')) goto error;
                         break;
 
                     case 'f': case 'F':
