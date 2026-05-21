@@ -300,6 +300,18 @@ If `byte` does not equal `EOB`, pushes the byte `byte` (reinterpreted as `unsign
 Loads the data from the given locations, converts them to character string equivalents and writes the results to buffer `buffer`.  
 **Return value**: The number of characters written if successful or negative value if an error occurred.
 
+|  L\S  |  `c`  |      `s`      |    `d`,`i`    | `b`,`B`,`o`,`u`,`x`,`X` | `f`,`F`,`e`,`E`,`g`,`G`,`a`,`A` |   `p`   |      `n`       |
+| :---: | :---: | :-----------: | :-----------: | :---------------------: | :-----------------------------: | :-----: | :------------: |
+| *N/A* | `int` | `const char*` |     `int`     |     `unsigned int`      |            `double`             | `void*` |     `int*`     |
+|  `L`  | *N/A* |     *N/A*     |     *N/A*     |          *N/A*          |          `long double`          |  *N/A*  |     *N/A*      |
+|  `hh` | *N/A* |     *N/A*     | `signed char` |     `unsigned char`     |              *N/A*              |  *N/A*  | `signed char*` |
+|  `h`  | *N/A* |     *N/A*     |    `short`    |    `unsigned short`     |              *N/A*              |  *N/A*  |    `short*`    |
+|  `l`  | *N/A* |     *N/A*     |    `long`     |     `unsigned long`     |              *N/A*              |  *N/A*  |    `long*`     |
+|  `ll` | *N/A* |     *N/A*     |  `long long`  |  `unsigned long long`   |              *N/A*              |  *N/A*  |  `long long*`  |
+|  `j`  | *N/A* |     *N/A*     |  `intmax_t`   |       `uintmax_t`       |              *N/A*              |  *N/A*  |  `intmax_t*`   |
+|  `z`  | *N/A* |     *N/A*     |   `size_t`    |        `size_t`         |              *N/A*              |  *N/A*  |   `size_t*`    |
+|  `t`  | *N/A* |     *N/A*     |  `ptrdiff_t`  |       `ptrdiff_t`       |              *N/A*              |  *N/A*  |  `ptrdiff_t*`  |
+
 ### `int vbprintf(BUFFER* restrict buffer, const char* restrict format, va_list list)`
 
 Loads the data from the locations, defined by `list`, converts them to character string equivalents and writes the results to buffer `buffer`.  
