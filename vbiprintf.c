@@ -41,10 +41,6 @@ typedef struct {
     bool left_just;
 } bifmtspec_t;
 
-int biimmputc(int ch,                      BUFFER* buf, int* accumulator);
-int biimmputs(const char* str, size_t len, BUFFER* buf, int* accumulator);
-int biimmrepc(int ch, size_t count,        BUFFER* buf, int* accumulator);
-
 static int bimin(int a, int b) { return a < b ? a : b; }
 static int bimax(int a, int b) { return a > b ? a : b; }
 

@@ -5,6 +5,21 @@
 #include <stdlib.h>
 #include <string.h>
 
+struct BUFFER {
+    uchar* data;
+    size_t count;
+    size_t capacity;
+    bpos_t cursor;
+
+    balloc_t alloc;
+    void*    udata;
+
+    bool readable;
+    bool writable;
+    bool allocated;
+    bool fixed;
+};
+
 static size_t bimin(size_t a, size_t b) { return a < b ? a : b; }
 static size_t bimax(size_t a, size_t b) { return a > b ? a : b; }
 
@@ -239,8 +254,6 @@ IOBUFFER_API int bungetc(int ch, BUFFER* buf) {
     return ch;
 }
 
-int vbiprintf(BUFFER* buf, const char* fmt, va_list args);
-
 IOBUFFER_API int bprintf(BUFFER* restrict buf, const char* restrict fmt, ...) {
     int ret; va_list args;
     if (!buf || !fmt || !buf->writable) return EOB;
@@ -321,8 +334,8 @@ IOBUFFER_API BUFVIEW bview(BUFFER* buf) {
     return view;
 }
 
-/* Implementation of support functions for vbiprintf,
- * need access to the fields of BUFFER
+/* Implementation of immediately put functions,
+ * need access to the fields of BUFFER and few static functions
  */
 
 int biimmputc(int ch, BUFFER* buf, int* accumulator) {

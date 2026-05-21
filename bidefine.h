@@ -42,21 +42,14 @@ typedef   signed long long sllong;
 typedef unsigned long long ullong;
 B_NO_GCC_WARN_END()
 
-/* Implementation of struct BUFFER */
+/* Declarations of immediately put functions */
 
-struct BUFFER {
-    uchar* data;
-    size_t count;
-    size_t capacity;
-    bpos_t cursor;
+int biimmputc(int ch,                      BUFFER* buf, int* accumulator);
+int biimmputs(const char* str, size_t len, BUFFER* buf, int* accumulator);
+int biimmrepc(int ch, size_t count,        BUFFER* buf, int* accumulator);
 
-    balloc_t alloc;
-    void*    udata;
+/* Declarations of formatted io functions */
 
-    bool readable;
-    bool writable;
-    bool allocated;
-    bool fixed;
-};
+int vbiprintf(BUFFER* buf, const char* fmt, va_list args);
 
 #endif /* IOBUFFER_DEFINES_H */
