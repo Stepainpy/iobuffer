@@ -2,7 +2,6 @@
 #include "iobuffer.h"
 
 #include <stdint.h>
-#include <stdlib.h>
 #include <string.h>
 #include <float.h>
 #include <math.h>
@@ -108,6 +107,16 @@ static void bireverse(char* first, char* last) {
         *first = *last;
         *last  = t;
     }
+}
+
+static int bistrtoint(const char* str, const char** end) {
+    const int MAX = (int)(~0u >> 1); int result = 0;
+    while ('0' <= *str && *str <= '9') {
+        if (result > MAX / 10 || *str - '0' > MAX % 10) return -1;
+        result = 10 * result + (*str++ - '0');
+    }
+    *end = str;
+    return result;
 }
 
 static void biinttostr(intmax_t number, char* outbuf) {
@@ -515,10 +524,9 @@ int vbiprintf(BUFFER* buf, const char* fmt, va_list args) {
                             break;
                     }
 
-                if ('1' <= *fmtstr && *fmtstr <= '9') {
-                    fmt.fieldwidth = atoi(fmtstr);
-                    if (fmt.fieldwidth == 0) goto error;
-                    while ('0' <= *fmtstr && *fmtstr <= '9') ++fmtstr;
+                if ('0' <= *fmtstr && *fmtstr <= '9') {
+                    fmt.fieldwidth = bistrtoint(fmtstr, &fmtstr);
+                    if (fmt.fieldwidth <= 0) goto error;
                 } else if (*fmtstr == '*') {
                     int received = va_arg(args, int);
                     if (received < 0) {
@@ -532,8 +540,8 @@ int vbiprintf(BUFFER* buf, const char* fmt, va_list args) {
                 if (*fmtstr == '.') {
                     fmtstr += 1;
                     if ('0' <= *fmtstr && *fmtstr <= '9') {
-                        fmt.precision = atoi(fmtstr);
-                        while ('0' <= *fmtstr && *fmtstr <= '9') ++fmtstr;
+                        fmt.precision = bistrtoint(fmtstr, &fmtstr);
+                        if (fmt.precision < 0) goto error;
                     } else if (*fmtstr == '*') {
                         fmt.precision = va_arg(args, int);
                         fmtstr += 1;
