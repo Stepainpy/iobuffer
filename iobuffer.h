@@ -12,7 +12,7 @@
 #include <stdarg.h>
 #include <stddef.h>
 
-/* =========== Version macros ============ */
+/* Version macros */
 
 #define __btostr_(x) # x
 #define __btostr(x) __btostr_(x)
@@ -25,7 +25,7 @@
     __btostr(IOBUFFER_VERSION_MINOR) "." \
     __btostr(IOBUFFER_VERSION_PATCH)
 
-/* ======= Preprocessor conditions ======= */
+/* Preprocessor conditions */
 
 #if __STDC_VERSION__ < 199901L
 #  define restrict __restrict
@@ -57,35 +57,35 @@
 extern "C" {
 #endif
 
-/* =========== Macro constants =========== */
+/* Macro constants */
 
 #define EOB (-1)
 #define BSEEK_SET 0
 #define BSEEK_CUR 1
 #define BSEEK_END 2
 
-/* ================ Types ================ */
+/* Types */
 
 typedef struct BUFFER BUFFER;
 typedef size_t bpos_t;
 typedef void* (*balloc_t)(void* ptr, size_t size, void* userdata);
 
-/* ============= Allocation ============== */
+/* Allocation */
 
 IOBUFFER_API int bsetalloc(balloc_t allocator, void* userdata);
 
-/* ============ Buffer access ============ */
+/* Buffer access */
 
 IOBUFFER_API int bclose(BUFFER* buffer);
 IOBUFFER_API BUFFER* bopen   (const void* restrict data, size_t size, const char* restrict mode) __battrmalloc;
 IOBUFFER_API BUFFER* bmemopen(      void* restrict data, size_t size, const char* restrict mode) __battrmalloc;
 
-/* ======== Operations on buffer ========= */
+/* Operations on buffer */
 
 IOBUFFER_API int berase(BUFFER* buffer, size_t count);
 IOBUFFER_API int breset(BUFFER* buffer);
 
-/* ========= Buffer positioning ========== */
+/* Buffer positioning */
 
 IOBUFFER_API int bgetpos(BUFFER* restrict buffer,       bpos_t* restrict pos);
 IOBUFFER_API int bsetpos(BUFFER*          buffer, const bpos_t*          pos);
@@ -95,12 +95,12 @@ IOBUFFER_API int  bseek(BUFFER* buffer, long offset, int origin);
 
 IOBUFFER_API void brewind(BUFFER* buffer);
 
-/* ========= Direct input/output ========= */
+/* Direct input/output */
 
 IOBUFFER_API size_t bread (      void* restrict data, size_t size, size_t count, BUFFER* restrict buffer);
 IOBUFFER_API size_t bwrite(const void* restrict data, size_t size, size_t count, BUFFER* restrict buffer);
 
-/* ====== Unformatted input/output ======= */
+/* Unformatted input/output */
 
 IOBUFFER_API int bgetc(BUFFER* buffer);
 IOBUFFER_API int bpeek(BUFFER* buffer);
@@ -111,16 +111,16 @@ IOBUFFER_API int bputs(const char* restrict string, BUFFER* restrict buffer);
 
 IOBUFFER_API int bungetc(int byte, BUFFER* buffer);
 
-/* ======= Formatted input/output ======== */
+/* Formatted input/output */
 
 IOBUFFER_API int  bprintf(BUFFER* restrict buffer, const char* restrict format, ...         ) __battrformat(3);
 IOBUFFER_API int vbprintf(BUFFER* restrict buffer, const char* restrict format, va_list list) __battrformat(0);
 
-/* =========== Error handling ============ */
+/* Error handling */
 
 IOBUFFER_API int beob(BUFFER* buffer);
 
-/* =========== View extension ============ */
+/* View extension */
 
 typedef struct BUFVIEW {
     const void* base;
