@@ -5,5 +5,5 @@
     "license": "MIT",
     "description": "Dynamic buffer with API like as std IO",
     "keywords": ["buffer", "dynamic", "io"],
-    "src": ["iobuffer.h", "iobuffer.c"]
+    "src": ["iobuffer.h", "iobuffer.c", "vbiprintf.c"]
 }

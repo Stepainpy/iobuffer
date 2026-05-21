@@ -3,7 +3,6 @@
 
 #include <stdlib.h>
 #include <string.h>
-#include <stdio.h>
 
 #if __STDC_VERSION__ >= 199901L
 #  include <stdbool.h>
@@ -11,27 +10,6 @@
 typedef unsigned char bool;
 #  define false ((bool)0)
 #  define true  ((bool)1)
-#endif
-
-/* ignore warning with function 'snprintf' in C89 */
-#if defined(__GNUC__) && __STDC_VERSION__ < 199901L
-#  define __bnowarnbegin \
-    _Pragma("GCC diagnostic push") \
-    _Pragma("GCC diagnostic ignored \"-Wimplicit-function-declaration\"")
-#  define __bnowarnend \
-    _Pragma("GCC diagnostic pop")
-#else
-#  define __bnowarnbegin
-#  define __bnowarnend
-#endif
-
-/* taken from GMP: https://github.com/alisw/GMP/blob/master/gmp-impl.h#L305 */
-#ifndef va_copy
-#  ifdef __va_copy
-#    define va_copy(d, s) __va_copy(d, s)
-#  else
-#    define va_copy(d, s) do memcpy(&(d), &(s), sizeof(va_list)); while (0)
-#  endif
 #endif
 
 #define B_FAIL 1
@@ -289,50 +267,20 @@ IOBUFFER_API int bungetc(int ch, BUFFER* buf) {
     return ch;
 }
 
+int vbiprintf(BUFFER* buf, const char* fmt, va_list args);
+
 IOBUFFER_API int bprintf(BUFFER* restrict buf, const char* restrict fmt, ...) {
-    int len; va_list args; uchar saved;
+    int ret; va_list args;
     if (!buf || !fmt || !buf->writable) return EOB;
-
     va_start(args, fmt);
-    __bnowarnbegin
-    len = vsnprintf(NULL, 0, fmt, args);
-    __bnowarnend
+    ret = vbiprintf(buf, fmt, args);
     va_end(args);
-
-    if (len < 0 || birequire(buf, len + 1)) return EOB;
-    saved = buf->data[buf->cursor + len];
-
-    va_start(args, fmt);
-    vsprintf((char*)buf->data + buf->cursor, fmt, args);
-    va_end(args);
-
-    buf->data[buf->cursor += len] = saved;
-    buf->count = bimax(buf->count, buf->cursor);
-
-    return len;
+    return ret;
 }
 
 IOBUFFER_API int vbprintf(BUFFER* restrict buf, const char* restrict fmt, va_list args) {
-    int len; va_list acpy; uchar saved;
     if (!buf || !fmt || !buf->writable) return EOB;
-
-    va_copy(acpy, args);
-    __bnowarnbegin
-    len = vsnprintf(NULL, 0, fmt, acpy);
-    __bnowarnend
-    va_end(acpy);
-
-    if (len < 0 || birequire(buf, len + 1)) return EOB;
-    saved = buf->data[buf->cursor + len];
-
-    va_copy(acpy, args);
-    vsprintf((char*)buf->data + buf->cursor, fmt, acpy);
-    va_end(acpy);
-
-    buf->data[buf->cursor += len] = saved;
-    buf->count = bimax(buf->count, buf->cursor);
-
-    return len;
+    return vbiprintf(buf, fmt, args);
 }
 
 IOBUFFER_API size_t bread(void* restrict data, size_t size, size_t count, BUFFER* restrict buf) {
@@ -399,4 +347,36 @@ IOBUFFER_API BUFVIEW bview(BUFFER* buf) {
         view.stop = buf->data + buf->count;
     }
     return view;
+}
+
+/* Implementation of support functions for vbiprintf,
+ * need access to the fields of BUFFER
+ */
+
+int biimmputc(int ch, BUFFER* buf, int* accumulator) {
+    if (birequire(buf, 1)) return B_FAIL;
+    buf->data[buf->cursor++] = (uchar)ch;
+    buf->count = bimax(buf->count, buf->cursor);
+    *accumulator += 1;
+    return B_OKEY;
+}
+
+int biimmputs(const char* str, size_t len, BUFFER* buf, int* accumulator) {
+    int rc = B_OKEY;
+    if (birequire(buf, len))
+        len = buf->capacity - buf->cursor, rc = B_FAIL;
+    memcpy(buf->data + buf->cursor, str, len);
+    buf->count = bimax(buf->count, buf->cursor += len);
+    *accumulator += len;
+    return rc;
+}
+
+int biimmrepc(int ch, size_t count, BUFFER* buf, int* accumulator) {
+    int rc = B_OKEY;
+    if (birequire(buf, count))
+        count = buf->capacity - buf->cursor, rc = B_FAIL;
+    memset(buf->data + buf->cursor, ch, count);
+    buf->count = bimax(buf->count, buf->cursor += count);
+    *accumulator += count;
+    return rc;
 }
