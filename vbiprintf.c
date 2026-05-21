@@ -208,8 +208,9 @@ static int biputfmt_di(BUFFER* buf, va_list args, bifmtspec_t* fmt, int* total) 
     has_sign = fmt->signing >= 0 || is_neg;
     zerozero = fmt->precision == 0 && received == 0;
 
-    if (!zerozero && fmt->lead_zero && !fmt->left_just)
+    if (!zerozero && fmt->precision < 0 && fmt->lead_zero && !fmt->left_just)
         fmt->precision = bimax(1, fmt->fieldwidth) - has_sign;
+    if (fmt->precision < 0) fmt->precision = 1;
 
     padding = bimax(0, fmt->fieldwidth - bimax(fmt->precision, len - zerozero) - has_sign);
 
@@ -262,8 +263,9 @@ static int biputfmt_boux(BUFFER* buf, va_list args, bifmtspec_t* fmt, int* total
     prefix_size = fmt->alt_form && received > 0 && (base == 16 || base == 2) ? 2 : 0;
     zerozero = fmt->precision == 0 && received == 0;
 
-    if (!zerozero && fmt->lead_zero && !fmt->left_just)
+    if (!zerozero && fmt->precision < 0 && fmt->lead_zero && !fmt->left_just)
         fmt->precision = bimax(1 + (fmt->alt_form && (base == 16 || base == 2)), fmt->fieldwidth) - prefix_size;
+    if (fmt->precision < 0) fmt->precision = 1;
 
     if (base == 8 && fmt->alt_form && fmt->precision <= len - zerozero)
         fmt->precision = len - zerozero + 1;
@@ -624,14 +626,12 @@ int vbiprintf(BUFFER* buf, const char* fmt, va_list args) {
                     } break;
 
                     case 'd': case 'i':
-                        if (fmt.precision < 0) fmt.precision = 1;
                         if (biputfmt_di(buf, args, &fmt, &total_len)) goto error;
                         break;
 
                     case 'b': case 'B':
                     case 'o': case 'u':
                     case 'x': case 'X':
-                        if (fmt.precision < 0) fmt.precision = 1;
                         if (biputfmt_boux(buf, args, &fmt, &total_len, *fmtstr)) goto error;
                         break;
 
