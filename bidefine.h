@@ -1,0 +1,62 @@
+#ifndef IOBUFFER_DEFINES_H
+#define IOBUFFER_DEFINES_H
+
+#if defined(__GNUC__) && __STDC_VERSION__ < 199901L
+#  define B_STRINGIFY_IMPL(x) #x
+#  define B_STRINGIFY(x) B_STRINGIFY_IMPL(x)
+
+#  define B_NO_GCC_WARN_BEGIN() _Pragma(B_STRINGIFY(GCC diagnostic push))
+#  define B_NO_GCC_WARN(name)   _Pragma(B_STRINGIFY(GCC diagnostic ignored name))
+#  define B_NO_GCC_WARN_END()   _Pragma(B_STRINGIFY(GCC diagnostic pop))
+#else
+#  define B_NO_GCC_WARN_BEGIN()
+#  define B_NO_GCC_WARN(name)
+#  define B_NO_GCC_WARN_END()
+#endif
+
+/* Boolean and return codes */
+
+#if __STDC_VERSION__ >= 199901L
+#  include <stdbool.h>
+#else
+typedef unsigned char bool;
+#  define false ((bool)0)
+#  define true  ((bool)1)
+#endif
+
+#define B_FAIL 1
+#define B_OKEY 0
+
+/* Shortcut typedefs */
+
+typedef   signed char schar;
+typedef unsigned char uchar;
+
+typedef unsigned short ushort;
+typedef unsigned int   uint  ;
+typedef unsigned long  ulong ;
+
+B_NO_GCC_WARN_BEGIN()
+B_NO_GCC_WARN("-Wlong-long")
+typedef   signed long long sllong;
+typedef unsigned long long ullong;
+B_NO_GCC_WARN_END()
+
+/* Implementation of struct BUFFER */
+
+struct BUFFER {
+    uchar* data;
+    size_t count;
+    size_t capacity;
+    bpos_t cursor;
+
+    balloc_t alloc;
+    void*    udata;
+
+    bool readable;
+    bool writable;
+    bool allocated;
+    bool fixed;
+};
+
+#endif /* IOBUFFER_DEFINES_H */

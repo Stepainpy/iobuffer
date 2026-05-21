@@ -1,37 +1,9 @@
 #define IOBUFFER_SOURCE
 #include "iobuffer.h"
+#include "bidefine.h"
 
 #include <stdlib.h>
 #include <string.h>
-
-#if __STDC_VERSION__ >= 199901L
-#  include <stdbool.h>
-#else
-typedef unsigned char bool;
-#  define false ((bool)0)
-#  define true  ((bool)1)
-#endif
-
-#define B_FAIL 1
-#define B_OKEY 0
-
-typedef unsigned char uchar;
-typedef unsigned long ulong;
-
-struct BUFFER {
-    uchar* data;
-    size_t count;
-    size_t capacity;
-    bpos_t cursor;
-
-    balloc_t alloc;
-    void*    udata;
-
-    bool readable;
-    bool writable;
-    bool allocated;
-    bool fixed;
-};
 
 static size_t bimin(size_t a, size_t b) { return a < b ? a : b; }
 static size_t bimax(size_t a, size_t b) { return a > b ? a : b; }

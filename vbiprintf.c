@@ -1,5 +1,6 @@
 #define IOBUFFER_SOURCE
 #include "iobuffer.h"
+#include "bidefine.h"
 
 #include <limits.h>
 #include <stdint.h>
@@ -7,37 +8,10 @@
 #include <float.h>
 #include <math.h>
 
-#if __STDC_VERSION__ >= 199901L
-#  include <stdbool.h>
-#else
-typedef unsigned char bool;
-#  define false ((bool)0)
-#  define true  ((bool)1)
-#endif
-
-#define B_FAIL 1
-#define B_OKEY 0
-
 #define B_INTBUF_CAPACITY 80
 #define B_FLTBUF_CAPACITY 512
 
 #define B_LU_ALPHABET "0123456789abcdef0123456789ABCDEF"
-
-#if defined(__GNUC__) && __STDC_VERSION__ < 199901L
-#  pragma GCC diagnostic push
-#  pragma GCC diagnostic ignored "-Wlong-long"
-#endif
-typedef   signed long long sllong;
-typedef unsigned long long ullong;
-#if defined(__GNUC__) && __STDC_VERSION__ < 199901L
-#  pragma GCC diagnostic pop
-#endif
-
-typedef   signed char  schar;
-typedef unsigned char  uchar;
-typedef unsigned short ushort;
-typedef unsigned int   uint;
-typedef unsigned long  ulong;
 
 typedef enum {
     BLM_NONE = 0,
