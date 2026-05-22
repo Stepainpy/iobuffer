@@ -32,7 +32,8 @@
 #endif
 
 #ifdef __GNUC__
-#  define __battrformat(va_i) __attribute__((format(printf, 2, va_i)))
+#  define __battrprintfmt(va_i) __attribute__((format(printf, 2, va_i)))
+#  define __battrscanfmt(va_i) __attribute__((format(scanf, 2, va_i)))
 #  ifdef __clang__
 #    define __battrmalloc __attribute__((malloc))
 #  else
@@ -113,8 +114,11 @@ IOBUFFER_API int bungetc(int byte, BUFFER* buffer);
 
 /* Formatted input/output */
 
-IOBUFFER_API int  bprintf(BUFFER* restrict buffer, const char* restrict format, ...         ) __battrformat(3);
-IOBUFFER_API int vbprintf(BUFFER* restrict buffer, const char* restrict format, va_list list) __battrformat(0);
+IOBUFFER_API int  bscanf(BUFFER* restrict buffer, const char* restrict format, ...         ) __battrscanfmt(3);
+IOBUFFER_API int vbscanf(BUFFER* restrict buffer, const char* restrict format, va_list list) __battrscanfmt(0);
+
+IOBUFFER_API int  bprintf(BUFFER* restrict buffer, const char* restrict format, ...         ) __battrprintfmt(3);
+IOBUFFER_API int vbprintf(BUFFER* restrict buffer, const char* restrict format, va_list list) __battrprintfmt(0);
 
 /* Error handling */
 

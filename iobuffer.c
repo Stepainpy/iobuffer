@@ -254,6 +254,20 @@ IOBUFFER_API int bungetc(int ch, BUFFER* buf) {
     return ch;
 }
 
+IOBUFFER_API int bscanf(BUFFER* restrict buf, const char* restrict fmt, ...) {
+    int ret; va_list args;
+    if (!buf || !fmt || !buf->readable) return EOB;
+    va_start(args, fmt);
+    ret = vbiscanf(buf, fmt, args);
+    va_end(args);
+    return ret;
+}
+
+IOBUFFER_API int vbscanf(BUFFER* restrict buf, const char* restrict fmt, va_list args) {
+    if (!buf || !fmt || !buf->readable) return EOB;
+    return vbiscanf(buf, fmt, args);
+}
+
 IOBUFFER_API int bprintf(BUFFER* restrict buf, const char* restrict fmt, ...) {
     int ret; va_list args;
     if (!buf || !fmt || !buf->writable) return EOB;

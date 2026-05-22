@@ -50,6 +50,7 @@ int biimmrepc(int ch, size_t count,        BUFFER* buf, int* accumulator);
 
 /* Declarations of formatted io functions */
 
+int vbiscanf (BUFFER* buf, const char* fmt, va_list args);
 int vbiprintf(BUFFER* buf, const char* fmt, va_list args);
 
 #endif /* IOBUFFER_DEFINES_H */
