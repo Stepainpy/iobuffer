@@ -42,11 +42,16 @@ typedef   signed long long sllong;
 typedef unsigned long long ullong;
 B_NO_GCC_WARN_END()
 
-/* Declarations of immediately put functions */
+/* Declarations of immediately functions */
 
 int biimmputc(int ch,                      BUFFER* buf, int* accumulator);
 int biimmputs(const char* str, size_t len, BUFFER* buf, int* accumulator);
 int biimmrepc(int ch, size_t count,        BUFFER* buf, int* accumulator);
+
+int biimmcmp (const char* str, size_t len, BUFFER* buf, int* accumulator);
+
+int biimmpeek(BUFFER* buf);
+int biimmskip(BUFFER* buf);
 
 /* Declarations of formatted io functions */
 

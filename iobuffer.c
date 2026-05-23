@@ -348,7 +348,7 @@ IOBUFFER_API BUFVIEW bview(BUFFER* buf) {
     return view;
 }
 
-/* Implementation of immediately put functions,
+/* Implementation of immediately functions,
  * need access to the fields of BUFFER and few static functions
  */
 
@@ -378,4 +378,22 @@ int biimmrepc(int ch, size_t count, BUFFER* buf, int* accumulator) {
     buf->count = bimax(buf->count, buf->cursor += count);
     *accumulator += count;
     return rc;
+}
+
+int biimmcmp(const char* str, size_t len, BUFFER* buf, int* accumulator) {
+    int ret; if (len > buf->count - buf->cursor) return B_FAIL;
+    ret = memcmp(buf->data + buf->cursor, str, len);
+    buf->cursor  += len;
+    *accumulator += len;
+    return ret == 0 ? B_OKEY : B_FAIL;
+}
+
+int biimmpeek(BUFFER* buf) {
+    return buf->cursor == buf->count ? EOB : buf->data[buf->cursor];
+}
+
+int biimmskip(BUFFER* buf) {
+    if (buf->cursor == buf->count) return B_FAIL;
+    ++buf->cursor;
+    return B_OKEY;
 }
