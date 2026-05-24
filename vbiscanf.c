@@ -125,6 +125,31 @@ int vbiscanf(BUFFER* buf, const char* fmt, va_list args) {
                         if (fmt.assign) total_count += 1;
                     } break;
 
+                    case 's':
+                    if (fmt.lenmod != BLM_NONE) goto error;
+                    if (fmt.maxwidth == 0) fmt.maxwidth = SIZE_MAX;
+                    {
+                        char* dest = NULL;
+                        if (fmt.assign)
+                            dest = va_arg(args, char*);
+
+                        while (fmt.maxwidth > 0) {
+                            int ch = biimmpeek(buf);
+                            if (ch == EOB || biisspace(ch)) break;
+
+                            biimmskip(buf);
+                            total_len += 1;
+                            fmt.maxwidth -= 1;
+
+                            if (fmt.assign) *dest++ = ch;
+                        }
+
+                        if (fmt.assign) {
+                            *dest = '\0';
+                            total_count += 1;
+                        }
+                    } break;
+
                     default: goto error;
                 }
             } else {
