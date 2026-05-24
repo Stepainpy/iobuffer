@@ -23,7 +23,7 @@ typedef enum {
 typedef struct {
     size_t maxwidth;
     bilenmod_t lenmod;
-    bool not_assign;
+    bool assign;
 } bifmtspec_t;
 
 static bool biisspace(char ch) {
@@ -57,10 +57,11 @@ int vbiscanf(BUFFER* buf, const char* fmt, va_list args) {
                 fmtstr += 1;
             } else if (*fmtstr == '%') {
                 bifmtspec_t fmt = {0};
+                fmt.assign = true;
                 fmtstr += 1;
 
                 if (*fmtstr == '*') {
-                    fmt.not_assign = true;
+                    fmt.assign = false;
                     fmtstr += 1;
                 }
 
@@ -88,7 +89,7 @@ int vbiscanf(BUFFER* buf, const char* fmt, va_list args) {
 
                 switch (*fmtstr) {
                     case 'n':
-                        if (!fmt.not_assign)
+                        if (fmt.assign)
                             switch (fmt.lenmod) {
                                 case BLM_NONE: *va_arg(args,       int*) = total_len; break;
                                 case BLM_HH  : *va_arg(args,     schar*) = total_len; break;
@@ -107,7 +108,8 @@ int vbiscanf(BUFFER* buf, const char* fmt, va_list args) {
                     if (fmt.maxwidth == 0) fmt.maxwidth = 1;
                     {
                         char* dest = NULL;
-                        if (!fmt.not_assign) dest = va_arg(args, char*);
+                        if (fmt.assign)
+                            dest = va_arg(args, char*);
 
                         while (fmt.maxwidth > 0) {
                             int ch = biimmpeek(buf);
@@ -117,10 +119,10 @@ int vbiscanf(BUFFER* buf, const char* fmt, va_list args) {
                             total_len += 1;
                             fmt.maxwidth -= 1;
 
-                            if (!fmt.not_assign) *dest++ = ch;
+                            if (fmt.assign) *dest++ = ch;
                         }
 
-                        if (!fmt.not_assign) total_count += 1;
+                        if (fmt.assign) total_count += 1;
                     } break;
 
                     default: goto error;
