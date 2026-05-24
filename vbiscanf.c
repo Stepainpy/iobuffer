@@ -3,6 +3,7 @@
 #include "bidefine.h"
 
 #include <limits.h>
+#include <stdint.h>
 #include <string.h>
 
 #define B_SPACE_CHARS " \t\n\r\v\f"
@@ -86,6 +87,21 @@ int vbiscanf(BUFFER* buf, const char* fmt, va_list args) {
                 }
 
                 switch (*fmtstr) {
+                    case 'n':
+                        if (!fmt.not_assign)
+                            switch (fmt.lenmod) {
+                                case BLM_NONE: *va_arg(args,       int*) = total_len; break;
+                                case BLM_HH  : *va_arg(args,     schar*) = total_len; break;
+                                case BLM_H   : *va_arg(args,     short*) = total_len; break;
+                                case BLM_L   : *va_arg(args,      long*) = total_len; break;
+                                case BLM_LL  : *va_arg(args,    sllong*) = total_len; break;
+                                case BLM_J   : *va_arg(args,  intmax_t*) = total_len; break;
+                                case BLM_Z   : *va_arg(args,    size_t*) = total_len; break;
+                                case BLM_T   : *va_arg(args, ptrdiff_t*) = total_len; break;
+                                case BLM_L_UPPER: goto error;
+                            }
+                        break;
+
                     default: goto error;
                 }
             } else {
