@@ -2,6 +2,7 @@
 #include "iobuffer.h"
 #include "bidefine.h"
 
+#include <limits.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -157,7 +158,7 @@ IOBUFFER_API int bsetpos(BUFFER* buf, const bpos_t* pos) {
 
 IOBUFFER_API long btell(BUFFER* buf) {
     if (!buf || !buf->data) return -1L;
-    if (buf->cursor > (~0UL >> 1)) return -1L;
+    if (buf->cursor > LONG_MAX) return -1L;
     return buf->cursor;
 }
 
