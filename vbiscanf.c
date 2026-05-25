@@ -26,6 +26,11 @@ typedef struct {
     bool assign;
 } bifmtspec_t;
 
+typedef uint64_t scanset_t[4];
+
+static void bissset(scanset_t ss, uchar value) { ss[value / 64] |= UINT64_C(1) << (value % 64); }
+static bool bissget(scanset_t ss, uchar value) { return (ss[value / 64] >> (value % 64)) & 1; }
+
 static bool biisspace(char ch) {
     return memchr(B_SPACE_CHARS, ch, sizeof B_SPACE_CHARS - 1) != NULL;
 }
@@ -39,6 +44,36 @@ static int bistrtoint(const char* str, const char** end) {
     }
     *end = str;
     return result;
+}
+
+static const char* biparsescanlist(scanset_t ss, bool* inverse, const char* fmtstr) {
+    if (*fmtstr == '^') { *inverse =  true; fmtstr += 1; }
+    if (*fmtstr == ']') { bissset(ss, ']'); fmtstr += 1; }
+
+    while (*fmtstr != ']' && *fmtstr != '\0') {
+        uchar bch = *fmtstr++;
+        if (*fmtstr != '-')
+            bissset(ss, bch);
+        else {
+            uchar ech; int i;
+            fmtstr += 1;
+            ech = *fmtstr++;
+
+            if (ech == '\0') return NULL;
+            if (ech == ']') {
+                bissset(ss, bch);
+                bissset(ss, '-');
+                return fmtstr - 1;
+            }
+
+            if (bch > ech) return NULL;
+            for (i = bch; i <= ech; i++) bissset(ss, i);
+        }
+    }
+
+    if (*fmtstr == '\0') return NULL;
+
+    return fmtstr;
 }
 
 int vbiscanf(BUFFER* buf, const char* fmt, va_list args) {
@@ -136,6 +171,36 @@ int vbiscanf(BUFFER* buf, const char* fmt, va_list args) {
                         while (fmt.maxwidth > 0) {
                             int ch = biimmpeek(buf);
                             if (ch == EOB || biisspace(ch)) break;
+
+                            biimmskip(buf);
+                            total_len += 1;
+                            fmt.maxwidth -= 1;
+
+                            if (fmt.assign) *dest++ = ch;
+                        }
+
+                        if (fmt.assign) {
+                            *dest = '\0';
+                            total_count += 1;
+                        }
+                    } break;
+
+                    case '[':
+                    if (fmt.lenmod != BLM_NONE) goto error;
+                    if (fmt.maxwidth == 0) fmt.maxwidth = SIZE_MAX;
+                    {
+                        scanset_t ss = {0};
+                        bool inverse = false;
+                        char* dest = NULL;
+                        if (fmt.assign)
+                            dest = va_arg(args, char*);
+
+                        fmtstr = biparsescanlist(ss, &inverse, fmtstr + 1);
+                        if (!fmtstr) goto error;
+
+                        while (fmt.maxwidth > 0) {
+                            int ch = biimmpeek(buf);
+                            if (ch == EOB || (inverse == bissget(ss, ch))) break;
 
                             biimmskip(buf);
                             total_len += 1;
