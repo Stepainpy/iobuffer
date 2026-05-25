@@ -5,6 +5,8 @@
 #include <stdlib.h>
 #include <string.h>
 
+#define B_INIT_CAPACITY 1024
+
 struct BUFFER {
     uchar* data;
     size_t count;
@@ -37,7 +39,7 @@ static int birequire(BUFFER* buf, size_t require) {
     if (buf->cursor + require <= newcap) return B_OKEY;
     if (buf->fixed) return B_FAIL;
 
-    if (newcap == 0) newcap = 1024; /* init */
+    if (newcap == 0) newcap = B_INIT_CAPACITY;
     while (buf->cursor + require > newcap)
         /* growth by law 'new = ceil(old * phi)', phi ~ 207/128 */
         newcap = (newcap * 207 + 127) / 128;
