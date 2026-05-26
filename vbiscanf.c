@@ -85,7 +85,7 @@ static const char* biparsescanlist(scanset_t ss, bool* inverse, const char* fmts
 
 static int bistrtouim(BUFFER* buf, bifmtspec_t* fmt, va_list args, int base, int* total, bool signing) {
     uintmax_t result;
-    bool zero_base = false;
+    bool has_prefix = false;
     bool is_neg = false;
     int ch, digit;
 
@@ -101,22 +101,42 @@ static int bistrtouim(BUFFER* buf, bifmtspec_t* fmt, va_list args, int base, int
             biimmskip(buf), --fmt->maxwidth, ++*total;
     }
 
+    /* expected base values: 0, 2, 8, 10 and 16 */
     if (base == 0) {
         if (fmt->maxwidth > 0 && biimmpeek(buf) == '0') {
             biimmskip(buf), --fmt->maxwidth, ++*total;
 
-            zero_base = true;
+            has_prefix = true;
             base = 8;
 
             if (fmt->maxwidth > 0) {
                 ch = biimmpeek(buf);
-                if (ch == 'x' || ch == 'X') {
+                /*  */ if (ch == 'x' || ch == 'X') {
                     biimmskip(buf), --fmt->maxwidth, ++*total;
                     base = 16;
+                } else if (ch == 'b' || ch == 'B') {
+                    biimmskip(buf), --fmt->maxwidth, ++*total;
+                    base = 2;
                 }
             }
         } else
             base = 10;
+    } else if (base != 10) {
+        if (fmt->maxwidth > 0 && biimmpeek(buf) == '0') {
+            biimmskip(buf), --fmt->maxwidth, ++*total;
+
+            if (base == 8) has_prefix = true;
+            else if (fmt->maxwidth > 0) {
+                ch = biimmpeek(buf);
+                /*  */ if (base ==  2 && (ch == 'b' || ch == 'B')) {
+                    biimmskip(buf), --fmt->maxwidth, ++*total;
+                    has_prefix = true;
+                } else if (base == 16 && (ch == 'x' || ch == 'X')) {
+                    biimmskip(buf), --fmt->maxwidth, ++*total;
+                    has_prefix = true;
+                }
+            }
+        }
     }
 
     if (fmt->maxwidth > 0) {
@@ -142,7 +162,7 @@ static int bistrtouim(BUFFER* buf, bifmtspec_t* fmt, va_list args, int base, int
     goto assigning;
 
 prefix_only:
-    if (!zero_base) return B_FAIL;
+    if (!has_prefix) return B_FAIL;
     result = 0;
 
 assigning:
