@@ -258,6 +258,14 @@ int vbiscanf(BUFFER* buf, const char* fmt, va_list args) {
                             }
                         break;
 
+                    case 'p':
+                        if (fmt.lenmod != BLM_NONE) goto error;
+                        fmt.lenmod = BLM_Z; /* use size_t as uintptr_t/void* */
+                        if (fmt.maxwidth == 0) fmt.maxwidth = SIZE_MAX;
+                        if (bistrtouim(buf, &fmt, args, 16, &total_len, false)) goto error;
+                        if (fmt.assign) total_count += 1;
+                        break;
+
                     case 'c':
                     if (fmt.lenmod != BLM_NONE) goto error;
                     if (fmt.maxwidth == 0) fmt.maxwidth = 1;
