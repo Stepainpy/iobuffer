@@ -335,12 +335,25 @@ int vbiscanf(BUFFER* buf, const char* fmt, va_list args) {
                         }
                     } break;
 
-                    case 'i':
+                    case 'i': case 'd':
+                    case 'b': case 'o':
+                    case 'u': case 'x': {
+                        int base = 0; bool signing = false;
+
+                        switch (*fmtstr) {
+                            case 'i': base =  0; signing =  true; break;
+                            case 'd': base = 10; signing =  true; break;
+                            case 'b': base =  2; signing = false; break;
+                            case 'o': base =  8; signing = false; break;
+                            case 'u': base = 10; signing = false; break;
+                            case 'x': base = 16; signing = false; break;
+                        }
+
                         if (fmt.lenmod == BLM_L_UPPER) goto error;
                         if (fmt.maxwidth == 0) fmt.maxwidth = SIZE_MAX;
-                        if (bistrtouim(buf, &fmt, args, 0, &total_len, true)) goto error;
+                        if (bistrtouim(buf, &fmt, args, base, &total_len, signing)) goto error;
                         if (fmt.assign) total_count += 1;
-                        break;
+                    } break;
 
                     default: goto error;
                 }
