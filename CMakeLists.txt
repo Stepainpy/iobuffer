@@ -1,12 +1,12 @@
 cmake_minimum_required(VERSION 3.30)
 project(iobuffer
-    VERSION 2.2.0
+    VERSION      2.2.0
     DESCRIPTION "Dynamic memory buffer with API as C standard FILE"
     HOMEPAGE_URL https://github.com/Stepainpy/iobuffer
-    LANGUAGES C
+    LANGUAGES    C
 )
 
-set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR})
+set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
 
 set(CMAKE_C_STANDARD 90) # Also known as C89
 set(CMAKE_C_STANDARD_REQUIRED ON)
@@ -19,4 +19,5 @@ else()
 endif()
 
 add_library(${PROJECT_NAME} STATIC iobuffer.c vbiprintf.c)
-target_include_directories(${PROJECT_NAME} PUBLIC ${CMAKE_SOURCE_DIR})
+target_include_directories(${PROJECT_NAME}
+    PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
