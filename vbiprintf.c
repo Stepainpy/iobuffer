@@ -282,6 +282,7 @@ static int biputfmt_feg(BUFFER* buf, va_list args, bifmtspec_t* fmt, int* total,
 
     switch (fmt->lenmod) {
         case BLM_NONE   : received = va_arg(args,      double); break;
+        case BLM_L      : received = va_arg(args,      double); break;
         case BLM_L_UPPER: received = va_arg(args, long double); break;
 
         default: return B_FAIL;
@@ -399,6 +400,7 @@ static int biputfmt_a(BUFFER* buf, va_list args, bifmtspec_t* fmt, int* total, b
 
     switch (fmt->lenmod) {
         case BLM_NONE   : received = va_arg(args,      double); break;
+        case BLM_L      : received = va_arg(args,      double); break;
         case BLM_L_UPPER: received = va_arg(args, long double); break;
 
         default: return B_FAIL;
