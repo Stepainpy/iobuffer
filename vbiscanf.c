@@ -85,7 +85,7 @@ static const char* biparsescanlist(scanset_t ss, bool* inverse, const char* fmts
 }
 
 static int bistrtouim(BUFFER* buf, bifmtspec_t* fmt, va_list args, int base, int* total, bool signing) {
-    uintmax_t result;
+    uintmax_t result = 0;
     bool has_prefix = false;
     bool is_neg = false;
     int ch, digit;
@@ -142,31 +142,24 @@ static int bistrtouim(BUFFER* buf, bifmtspec_t* fmt, va_list args, int base, int
 
     if (fmt->maxwidth > 0) {
         ch = biimmpeek(buf);
-        if (ch == EOB) goto prefix_only;
-
         digit = bichartodigit(ch);
-        if (digit < 0 || digit >= base) goto prefix_only;
 
-        biimmskip(buf), --fmt->maxwidth, ++*total;
-        result = digit;
-
-        while (fmt->maxwidth > 0 && (ch = biimmpeek(buf)) != EOB) {
-            digit = bichartodigit(ch);
-            if (digit < 0 || digit >= base) break;
+        if (0 <= digit && digit < base) {
             biimmskip(buf), --fmt->maxwidth, ++*total;
+            result = digit;
 
-            result = result * base + digit;
-        }
-    } else
-        goto prefix_only;
+            while (fmt->maxwidth > 0 && (ch = biimmpeek(buf)) != EOB) {
+                digit = bichartodigit(ch);
+                if (digit < 0 || digit >= base) break;
+                biimmskip(buf), --fmt->maxwidth, ++*total;
 
-    goto assignment;
+                result = result * base + digit;
+            }
+        } else if (!has_prefix)
+            return B_FAIL;
+    } else if (!has_prefix)
+        return B_FAIL;
 
-prefix_only:
-    if (!has_prefix) return B_FAIL;
-    result = 0;
-
-assignment:
     if (is_neg) result = -result;
 
     /**/ if (fmt->assign &&  signing)
@@ -325,12 +318,11 @@ static int bistrtoflt(BUFFER* buf, bifmtspec_t* fmt, va_list args, int* total) {
             if (biimmpeek(buf) == 'I')
                 if (biimmcmp("INITY", 5, buf, total)) return B_FAIL;
             result = +1.0 / +0.0;
-        } else if (has_zero) goto assignment;
-          else               return B_FAIL;
+        } else if (!has_zero)
+            return B_FAIL;
     } else if (!has_zero)
         return B_FAIL;
 
-assignment:
     if (is_neg) result = -result;
     if (fmt->assign)
         switch (fmt->lenmod) {
