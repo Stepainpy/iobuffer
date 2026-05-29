@@ -491,8 +491,9 @@ int vbiscanf(BUFFER* buf, const char* fmt, va_list args) {
                     } break;
 
                     case 'i': case 'd':
-                    case 'b': case 'o':
-                    case 'u': case 'x': {
+                    case 'b': case 'B':
+                    case 'o': case 'u':
+                    case 'x': case 'X': {
                         int base = 0; bool signing = false;
 
                         switch (*fmtstr) {
@@ -510,8 +511,10 @@ int vbiscanf(BUFFER* buf, const char* fmt, va_list args) {
                         if (fmt.assign) total_count += 1;
                     } break;
 
-                    case 'f': case 'e':
-                    case 'g': case 'a':
+                    case 'f': case 'F':
+                    case 'e': case 'E':
+                    case 'g': case 'G':
+                    case 'a': case 'A':
                         if (fmt.maxwidth == 0) fmt.maxwidth = SIZE_MAX;
                         if (bistrtoflt(buf, &fmt, args, &total_len)) goto error;
                         if (fmt.assign) total_count += 1;
