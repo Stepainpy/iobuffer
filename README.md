@@ -302,7 +302,7 @@ Loads the data from the given locations, converts them to character string equiv
 |  `L`  | *N/A* |     *N/A*     |     *N/A*     |          *N/A*          |          `long double`          |  *N/A*  |     *N/A*      |
 |  `hh` | *N/A* |     *N/A*     | `signed char` |     `unsigned char`     |              *N/A*              |  *N/A*  | `signed char*` |
 |  `h`  | *N/A* |     *N/A*     |    `short`    |    `unsigned short`     |              *N/A*              |  *N/A*  |    `short*`    |
-|  `l`  | *N/A* |     *N/A*     |    `long`     |     `unsigned long`     |              *N/A*              |  *N/A*  |    `long*`     |
+|  `l`  | *N/A* |     *N/A*     |    `long`     |     `unsigned long`     |            `double`             |  *N/A*  |    `long*`     |
 |  `ll` | *N/A* |     *N/A*     |  `long long`  |  `unsigned long long`   |              *N/A*              |  *N/A*  |  `long long*`  |
 |  `j`  | *N/A* |     *N/A*     |  `intmax_t`   |       `uintmax_t`       |              *N/A*              |  *N/A*  |  `intmax_t*`   |
 |  `z`  | *N/A* |     *N/A*     |   `size_t`    |        `size_t`         |              *N/A*              |  *N/A*  |   `size_t*`    |
