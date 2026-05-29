@@ -5,6 +5,7 @@
 #include <limits.h>
 #include <stdint.h>
 #include <string.h>
+#include <math.h>
 
 #define B_SPACE_CHARS " \t\n\r\v\f"
 
@@ -159,13 +160,13 @@ static int bistrtouim(BUFFER* buf, bifmtspec_t* fmt, va_list args, int base, int
     } else
         goto prefix_only;
 
-    goto assigning;
+    goto assignment;
 
 prefix_only:
     if (!has_prefix) return B_FAIL;
     result = 0;
 
-assigning:
+assignment:
     if (is_neg) result = -result;
 
     /**/ if (fmt->assign &&  signing)
@@ -191,6 +192,152 @@ assigning:
             case BLM_Z   : *va_arg(args,    size_t*) = result; break;
             case BLM_T   : *va_arg(args, ptrdiff_t*) = result; break;
             case BLM_L_UPPER:       /* plug for switch */      break;
+        }
+
+    return B_OKEY;
+}
+
+static int bistrtoflt(BUFFER* buf, bifmtspec_t* fmt, va_list args, int* total) {
+    double result = 0;
+    bool has_zero = false;
+    bool is_neg = false;
+    int base = 10;
+    int ch, digit;
+
+    while (biisspace(biimmpeek(buf)))
+        biimmskip(buf), ++*total;
+
+    if (fmt->maxwidth > 0) {
+        ch = biimmpeek(buf);
+        /*  */ if (ch == '-') {
+            biimmskip(buf), --fmt->maxwidth, ++*total;
+            is_neg = true;
+        } else if (ch == '+')
+            biimmskip(buf), --fmt->maxwidth, ++*total;
+    }
+
+    if (fmt->maxwidth > 0 && biimmpeek(buf) == '0') {
+        biimmskip(buf), --fmt->maxwidth, ++*total;
+        has_zero = true;
+
+        if (fmt->maxwidth > 0) {
+            ch = biimmpeek(buf);
+            if (ch == 'x' || ch == 'X') {
+                biimmskip(buf), --fmt->maxwidth, ++*total;
+                has_zero = fmt->maxwidth == 0;
+                base = 16;
+            }
+        }
+    }
+
+    if (fmt->maxwidth > 0) {
+        ch = biimmpeek(buf);
+        digit = bichartodigit(ch);
+
+        if (ch == '.' || (0 <= digit && digit < base)) {
+            if (ch != '.') {
+                biimmskip(buf), --fmt->maxwidth, ++*total;
+                result = digit;
+            }
+
+            while (fmt->maxwidth > 0 && (ch = biimmpeek(buf)) != EOB) {
+                digit = bichartodigit(ch);
+                if (digit < 0 || digit >= base) break;
+                biimmskip(buf), --fmt->maxwidth, ++*total;
+
+                result = result * base + digit;
+            }
+
+            if (fmt->maxwidth > 0 && biimmpeek(buf) == '.') {
+                int exponent = -1;
+                biimmskip(buf), --fmt->maxwidth, ++*total;
+                while (fmt->maxwidth > 0 && (ch = biimmpeek(buf)) != EOB) {
+                    digit = bichartodigit(ch);
+                    if (digit < 0 || digit >= base) break;
+                    biimmskip(buf), --fmt->maxwidth, ++*total;
+
+                    result += (double)digit * pow(base, exponent);
+                    exponent -= 1;
+                }
+            }
+
+            ch = biimmpeek(buf);
+            /*  */ if (base == 10 && (ch == 'e' || ch == 'E')) {
+                bool is_neg_exp = false;
+                int exponent = 0;
+                biimmskip(buf), --fmt->maxwidth, ++*total;
+
+                if (fmt->maxwidth > 0) {
+                    ch = biimmpeek(buf);
+                    /*  */ if (ch == '-') {
+                        biimmskip(buf), --fmt->maxwidth, ++*total;
+                        is_neg_exp = true;
+                    } else if (ch == '+')
+                        biimmskip(buf), --fmt->maxwidth, ++*total;
+                }
+
+                while (fmt->maxwidth > 0 && (ch = biimmpeek(buf)) != EOB) {
+                    digit = bichartodigit(ch);
+                    if (digit < 0 || digit >= 10) break;
+                    biimmskip(buf), --fmt->maxwidth, ++*total;
+
+                    exponent = 10 * exponent + digit;
+                }
+
+                result *= pow(10, is_neg_exp ? -exponent : exponent);
+            } else if (base == 16 && (ch == 'p' || ch == 'P')) {
+                bool is_neg_exp = false;
+                int exponent = 0;
+                biimmskip(buf), --fmt->maxwidth, ++*total;
+
+                if (fmt->maxwidth > 0) {
+                    ch = biimmpeek(buf);
+                    /*  */ if (ch == '-') {
+                        biimmskip(buf), --fmt->maxwidth, ++*total;
+                        is_neg_exp = true;
+                    } else if (ch == '+')
+                        biimmskip(buf), --fmt->maxwidth, ++*total;
+                }
+
+                while (fmt->maxwidth > 0 && (ch = biimmpeek(buf)) != EOB) {
+                    digit = bichartodigit(ch);
+                    if (digit < 0 || digit >= 10) break;
+                    biimmskip(buf), --fmt->maxwidth, ++*total;
+
+                    exponent = 10 * exponent + digit;
+                }
+
+                result = ldexp(result, is_neg_exp ? -exponent : exponent);
+            }
+        } else if (!has_zero && base != 16 && ch == 'n') {
+            if (biimmcmp("nan", 3, buf, total)) return B_FAIL;
+            result = +0.0 / +0.0;
+        } else if (!has_zero && base != 16 && ch == 'N') {
+            if (biimmcmp("NAN", 3, buf, total)) return B_FAIL;
+            result = +0.0 / +0.0;
+        } else if (!has_zero && base != 16 && ch == 'i') {
+            if (biimmcmp("inf", 3, buf, total)) return B_FAIL;
+            if (biimmpeek(buf) == 'i')
+                if (biimmcmp("inity", 5, buf, total)) return B_FAIL;
+            result = +1.0 / +0.0;
+        } else if (!has_zero && base != 16 && ch == 'I') {
+            if (biimmcmp("INF", 3, buf, total)) return B_FAIL;
+            if (biimmpeek(buf) == 'I')
+                if (biimmcmp("INITY", 5, buf, total)) return B_FAIL;
+            result = +1.0 / +0.0;
+        } else if (has_zero) goto assignment;
+          else               return B_FAIL;
+    } else if (!has_zero)
+        return B_FAIL;
+
+assignment:
+    if (is_neg) result = -result;
+    if (fmt->assign)
+        switch (fmt->lenmod) {
+            case BLM_NONE   : *va_arg(args,       float*) = result; break;
+            case BLM_L      : *va_arg(args,      double*) = result; break;
+            case BLM_L_UPPER: *va_arg(args, long double*) = result; break;
+            default:              /* plug for switch */             break;
         }
 
     return B_OKEY;
@@ -362,6 +509,13 @@ int vbiscanf(BUFFER* buf, const char* fmt, va_list args) {
                         if (bistrtouim(buf, &fmt, args, base, &total_len, signing)) goto error;
                         if (fmt.assign) total_count += 1;
                     } break;
+
+                    case 'f': case 'e':
+                    case 'g': case 'a':
+                        if (fmt.maxwidth == 0) fmt.maxwidth = SIZE_MAX;
+                        if (bistrtoflt(buf, &fmt, args, &total_len)) goto error;
+                        if (fmt.assign) total_count += 1;
+                        break;
 
                     default: goto error;
                 }

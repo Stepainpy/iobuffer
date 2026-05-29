@@ -381,11 +381,13 @@ int biimmrepc(int ch, size_t count, BUFFER* buf, int* accumulator) {
 }
 
 int biimmcmp(const char* str, size_t len, BUFFER* buf, int* accumulator) {
-    int ret; if (len > buf->count - buf->cursor) return B_FAIL;
-    ret = memcmp(buf->data + buf->cursor, str, len);
-    buf->cursor  += len;
-    *accumulator += len;
-    return ret == 0 ? B_OKEY : B_FAIL;
+    size_t i; if (len > buf->count - buf->cursor) return B_FAIL;
+    for (i = 0; i < len; i++) {
+        if (buf->data[buf->cursor] != str[i]) return B_FAIL;
+        buf->cursor  += 1;
+        *accumulator += 1;
+    }
+    return B_OKEY;
 }
 
 int biimmpeek(BUFFER* buf) {
