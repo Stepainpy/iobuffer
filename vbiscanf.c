@@ -389,6 +389,9 @@ int vbiscanf(BUFFER* buf, const char* fmt, va_list args) {
                     case 'L': fmt.lenmod = BLM_L_UPPER; ++fmtstr; break;
                 }
 
+                if (fmt.maxwidth == 0)
+                    fmt.maxwidth = *fmtstr == 'c' ? 1 : SIZE_MAX;
+
                 switch (*fmtstr) {
                     case 'n':
                         if (fmt.assign)
@@ -408,14 +411,12 @@ int vbiscanf(BUFFER* buf, const char* fmt, va_list args) {
                     case 'p':
                         if (fmt.lenmod != BLM_NONE) goto error;
                         fmt.lenmod = BLM_Z; /* use size_t as uintptr_t/void* */
-                        if (fmt.maxwidth == 0) fmt.maxwidth = SIZE_MAX;
                         if (bistrtouim(buf, &fmt, args, 16, &total_len, false)) goto error;
                         if (fmt.assign) total_count += 1;
                         break;
 
                     case 'c':
                     if (fmt.lenmod != BLM_NONE) goto error;
-                    if (fmt.maxwidth == 0) fmt.maxwidth = 1;
                     {
                         char* dest = NULL;
                         if (fmt.assign)
@@ -437,7 +438,6 @@ int vbiscanf(BUFFER* buf, const char* fmt, va_list args) {
 
                     case 's':
                     if (fmt.lenmod != BLM_NONE) goto error;
-                    if (fmt.maxwidth == 0) fmt.maxwidth = SIZE_MAX;
                     {
                         char* dest = NULL;
                         if (fmt.assign)
@@ -462,7 +462,6 @@ int vbiscanf(BUFFER* buf, const char* fmt, va_list args) {
 
                     case '[':
                     if (fmt.lenmod != BLM_NONE) goto error;
-                    if (fmt.maxwidth == 0) fmt.maxwidth = SIZE_MAX;
                     {
                         scanset_t ss = {0};
                         bool inverse = false;
@@ -506,7 +505,6 @@ int vbiscanf(BUFFER* buf, const char* fmt, va_list args) {
                         }
 
                         if (fmt.lenmod == BLM_L_UPPER) goto error;
-                        if (fmt.maxwidth == 0) fmt.maxwidth = SIZE_MAX;
                         if (bistrtouim(buf, &fmt, args, base, &total_len, signing)) goto error;
                         if (fmt.assign) total_count += 1;
                     } break;
@@ -515,7 +513,9 @@ int vbiscanf(BUFFER* buf, const char* fmt, va_list args) {
                     case 'e': case 'E':
                     case 'g': case 'G':
                     case 'a': case 'A':
-                        if (fmt.maxwidth == 0) fmt.maxwidth = SIZE_MAX;
+                        if (fmt.lenmod != BLM_NONE &&
+                            fmt.lenmod != BLM_L    &&
+                            fmt.lenmod != BLM_L_UPPER) goto error;
                         if (bistrtoflt(buf, &fmt, args, &total_len)) goto error;
                         if (fmt.assign) total_count += 1;
                         break;
