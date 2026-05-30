@@ -1,6 +1,6 @@
 {
     "name": "iobuffer",
-    "version": "2.2.0",
+    "version": "2.3.0",
     "repo": "Stepainpy/iobuffer",
     "license": "MIT",
     "description": "Dynamic memory buffer with API as C standard FILE",

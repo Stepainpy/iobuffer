@@ -18,7 +18,7 @@
 #define __btostr(x) __btostr_(x)
 
 #define IOBUFFER_VERSION_MAJOR 2
-#define IOBUFFER_VERSION_MINOR 2
+#define IOBUFFER_VERSION_MINOR 3
 #define IOBUFFER_VERSION_PATCH 0
 #define IOBUFFER_VERSION \
     __btostr(IOBUFFER_VERSION_MAJOR) "." \
