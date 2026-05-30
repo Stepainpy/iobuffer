@@ -1,5 +1,5 @@
 #define IOBUFFER_SOURCE
-#include "iobuffer.h"
+#include <iobuffer/iobuffer.h>
 #include "bidefine.h"
 
 #include <limits.h>
