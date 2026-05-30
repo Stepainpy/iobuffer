@@ -18,6 +18,7 @@ else()
     add_compile_options(-O2 -Wall -Wextra -Wpedantic)
 endif()
 
-add_library(${PROJECT_NAME} STATIC iobuffer.c vbiprintf.c)
+add_library(${PROJECT_NAME}
+    STATIC iobuffer.c vbiprintf.c vbiscanf.c)
 target_include_directories(${PROJECT_NAME}
     PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})

@@ -257,6 +257,20 @@ IOBUFFER_API int bungetc(int ch, BUFFER* buf) {
     return ch;
 }
 
+IOBUFFER_API int bscanf(BUFFER* restrict buf, const char* restrict fmt, ...) {
+    int ret; va_list args;
+    if (!buf || !fmt || !buf->readable) return EOB;
+    va_start(args, fmt);
+    ret = vbiscanf(buf, fmt, args);
+    va_end(args);
+    return ret;
+}
+
+IOBUFFER_API int vbscanf(BUFFER* restrict buf, const char* restrict fmt, va_list args) {
+    if (!buf || !fmt || !buf->readable) return EOB;
+    return vbiscanf(buf, fmt, args);
+}
+
 IOBUFFER_API int bprintf(BUFFER* restrict buf, const char* restrict fmt, ...) {
     int ret; va_list args;
     if (!buf || !fmt || !buf->writable) return EOB;
@@ -337,7 +351,7 @@ IOBUFFER_API BUFVIEW bview(BUFFER* buf) {
     return view;
 }
 
-/* Implementation of immediately put functions,
+/* Implementation of immediately functions,
  * need access to the fields of BUFFER and few static functions
  */
 
@@ -367,4 +381,24 @@ int biimmrepc(int ch, size_t count, BUFFER* buf, int* accumulator) {
     buf->count = bimax(buf->count, buf->cursor += count);
     *accumulator += count;
     return rc;
+}
+
+int biimmcmp(const char* str, size_t len, BUFFER* buf, int* accumulator) {
+    size_t i; if (len > buf->count - buf->cursor) return B_FAIL;
+    for (i = 0; i < len; i++) {
+        if (buf->data[buf->cursor] != str[i]) return B_FAIL;
+        buf->cursor  += 1;
+        *accumulator += 1;
+    }
+    return B_OKEY;
+}
+
+int biimmpeek(BUFFER* buf) {
+    return buf->cursor == buf->count ? EOB : buf->data[buf->cursor];
+}
+
+int biimmskip(BUFFER* buf) {
+    if (buf->cursor == buf->count) return B_FAIL;
+    ++buf->cursor;
+    return B_OKEY;
 }
