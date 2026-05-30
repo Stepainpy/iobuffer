@@ -1,5 +1,5 @@
 build/
-*.a
+bin/
 
 # temporary file for debug
 Makefile
