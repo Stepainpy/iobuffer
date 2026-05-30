@@ -102,7 +102,9 @@ int main(void) {
   - [`bputc`](#int-bputcint-byte-buffer-buffer)
   - [`bputs`](#int-bputsconst-char-restrict-string-buffer-restrict-buffer)
   - [`bungetc`](#int-bungetcint-byte-buffer-buffer)
-- [Formatted ~~input~~/output](#formatted-inputoutput)
+- [Formatted input/output](#formatted-inputoutput)
+  - [`bscanf`](#int-bscanfbuffer-restrict-buffer-const-char-restrict-format-)
+  - [`vbscanf`](#int-vbscanfbuffer-restrict-buffer-const-char-restrict-format-va_list-vlist)
   - [`bprintf`](#int-bprintfbuffer-restrict-buffer-const-char-restrict-format-)
   - [`vbprintf`](#int-vbprintfbuffer-restrict-buffer-const-char-restrict-format-va_list-list)
 - [Error handling](#error-handling)
@@ -285,11 +287,29 @@ Writes every character from the null-terminated string `string` to the output bu
 If `byte` does not equal `EOB`, pushes the byte `byte` (reinterpreted as `unsigned char`) into the buffer `buffer` in such a manner that subsequent read operation from buffer will retrieve that byte.  
 **Return value**: On success `byte` is returned. On failure `EOB` is returned and the given buffer remains unchanged.
 
-## Formatted ~~input~~/output
+## Formatted input/output
 
-> [!NOTE]
-> Why doesn't exist `bscanf`/`vbscanf`? Standard `scanf` return count success parsed values.  
-> Not exist common way get read it characters after `scanf`. I don't want to completely create `bscanf`/`vbscanf`.
+### `int bscanf(BUFFER* restrict buffer, const char* restrict format, ...)`
+
+Reads data from the buffer `buffer`, interprets it according to format and stores the results into given locations.  
+**Return value**: Number of receiving arguments successfully assigned or negative value if an error occurred.
+
+|  L\S  | `c`,`s`,`[`*set*`]` |    `d`,`i`     | `b`,`B`,`o`,`u`,`x`,`X` | `f`,`F`,`e`,`E`,`g`,`G`,`a`,`A` |   `p`    |      `n`       |
+| :---: | :-----------------: | :------------: | :---------------------: | :-----------------------------: | :------: | :------------: |
+| *N/A* |       `char*`       |     `int*`     |     `unsigned int*`     |            `float*`             | `void**` |     `int*`     |
+|  `L`  |        *N/A*        |     *N/A*      |          *N/A*          |         `long double*`          |  *N/A*   |     *N/A*      |
+| `hh`  |        *N/A*        | `signed char*` |    `unsigned char*`     |              *N/A*              |  *N/A*   | `signed char*` |
+|  `h`  |        *N/A*        |    `short*`    |    `unsigned short*`    |              *N/A*              |  *N/A*   |    `short*`    |
+|  `l`  |        *N/A*        |    `long*`     |    `unsigned long*`     |            `double*`            |  *N/A*   |    `long*`     |
+| `ll`  |        *N/A*        |  `long long*`  |  `unsigned long long*`  |              *N/A*              |  *N/A*   |  `long long*`  |
+|  `j`  |        *N/A*        |  `intmax_t*`   |      `uintmax_t*`       |              *N/A*              |  *N/A*   |  `intmax_t*`   |
+|  `z`  |        *N/A*        |   `size_t*`    |        `size_t*`        |              *N/A*              |  *N/A*   |   `size_t*`    |
+|  `t`  |        *N/A*        |  `ptrdiff_t*`  |      `ptrdiff_t*`       |              *N/A*              |  *N/A*   |  `ptrdiff_t*`  |
+
+### `int vbscanf(BUFFER* restrict buffer, const char* restrict format, va_list vlist)`
+
+Reads data from the buffer `buffer`, interprets it according to format and stores the results into locations defined by `list`.  
+**Return value**: Number of receiving arguments successfully assigned or negative value if an error occurred.
 
 ### `int bprintf(BUFFER* restrict buffer, const char* restrict format, ...)`
 
