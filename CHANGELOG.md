@@ -1,5 +1,21 @@
 # Changelog
 
+## 2.3.0 - 2026-05-30
+
+### Changed
+
+- Replace `CMAKE_SOURCE_DIR` to `CMAKE_CURRENT_SOURCE_DIR`
+
+### Added
+
+- Full implementation of `bscanf`/`vbscanf` functions
+- Documentation with `bscanf`/`vbscanf` functions in `README.md` file
+- `CHANGELOG.md` file
+
+### Fixed
+
+- `l` length modifier in `bprintf`/`vbprintf` functions
+
 ## 2.2.0 - 2026-05-22
 
 ### Added
