@@ -9,10 +9,11 @@ Dynamic buffer with API like standard C files. Support standard C89 (ANSI C).
 Simple read loop:
 ``` c
 #include <stdio.h>
-#include "iobuffer.h"
+#include <iobuffer/iobuffer.h>
 
 int main(void) {
     BUFFER* bd; int ch;
+
     bd = bopen("Hello, world!", 13, "r");
     if (!bd) return 1;
 
@@ -24,14 +25,21 @@ int main(void) {
     return 0;
 }
 ```
+Output:
+```
+Hello, world!
+```
 
 Global read and write:
 ``` c
 #include <stdio.h>
-#include "iobuffer.h"
+#include <iobuffer/iobuffer.h>
 
 int main(void) {
-    BUFFER* bd; int ch;
+    BUFFER* bd;
+    BUFVIEW bv;
+    int ch;
+
     bd = bopen(NULL, 0, "w+");
     if (!bd) return 1;
 
@@ -48,13 +56,17 @@ int main(void) {
 
     brewind(bd);
     berase(bd, 27);
-    while ((ch = bgetc(bd)) != EOB)
-        putchar(ch);
-    putchar('\n');
+
+    bv = bview(bd);
+    printf(BV_FMT"\n", BV_ARG(bv, base, stop));
 
     bclose(bd);
     return 0;
 }
+```
+Output:
+```
+AaBbCcDdEeFfGgHhIiJjKkLlMmNnOoPpQqRrSsTtUuVvWwXxYyZz
 ```
 
 ## Documentation
