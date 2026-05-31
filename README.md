@@ -66,8 +66,6 @@ int main(void) {
   - [`IOBUFFER_VERSION_MAJOR`](#iobuffer_version_major)
   - [`IOBUFFER_VERSION_MINOR`](#iobuffer_version_minor)
   - [`IOBUFFER_VERSION_PATCH`](#iobuffer_version_patch)
-  - [`IOBUFFER_API`](#iobuffer_api)
-  - [`IOBUFFER_AS_DLL`](#iobuffer_as_dll)
 - [Macro constants](#macro-constants)
   - [`EOB`](#eob)
   - [`BSEEK_SET`](#bseek_set)
@@ -129,12 +127,6 @@ Macro expanded to integer with minor part of version.
 
 ### `IOBUFFER_VERSION_PATCH`
 Macro expanded to integer with patch part of version.
-
-### `IOBUFFER_API`
-Macro for library function declarations.
-
-### `IOBUFFER_AS_DLL`
-If defined, then `IOBUFFER_API` expand to `__declspec` with need setting.
 
 ## Macro constants
 

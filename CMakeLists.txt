@@ -6,9 +6,7 @@ project(iobuffer
     LANGUAGES    C
 )
 
-set(BUILD_SHARED_LIBS OFF)
-
-add_library(iobuffer)
+add_library(iobuffer STATIC)
 add_library(iobuffer::iobuffer ALIAS iobuffer)
 
 set(HEADERS include/iobuffer/iobuffer.h)
@@ -34,8 +32,6 @@ set_target_properties(iobuffer PROPERTIES
 
 target_include_directories(iobuffer
     PUBLIC "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>")
-target_compile_definitions(iobuffer
-    PUBLIC "$<$<BOOL:${BUILD_SHARED_LIBS}>:IOBUFFER_AS_DLL>")
 
 if(MSVC)
     target_compile_options(iobuffer PUBLIC /O2 /W4)
@@ -45,6 +41,5 @@ endif()
 
 if(PROJECT_IS_TOP_LEVEL)
     set_target_properties(iobuffer PROPERTIES
-        ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/bin"
-    )
+        ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/bin")
 endif()

@@ -44,16 +44,6 @@
 #  define __battrmalloc
 #endif
 
-#ifdef IOBUFFER_AS_DLL
-#  ifdef IOBUFFER_SOURCE
-#    define IOBUFFER_API __declspec(dllexport)
-#  else
-#    define IOBUFFER_API __declspec(dllimport)
-#  endif
-#else
-#  define IOBUFFER_API extern
-#endif
-
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -73,56 +63,56 @@ typedef void* (*balloc_t)(void* ptr, size_t size, void* userdata);
 
 /* Allocation */
 
-IOBUFFER_API int bsetalloc(balloc_t allocator, void* userdata);
+int bsetalloc(balloc_t allocator, void* userdata);
 
 /* Buffer access */
 
-IOBUFFER_API int bclose(BUFFER* buffer);
-IOBUFFER_API BUFFER* bopen   (const void* restrict data, size_t size, const char* restrict mode) __battrmalloc;
-IOBUFFER_API BUFFER* bmemopen(      void* restrict data, size_t size, const char* restrict mode) __battrmalloc;
+int bclose(BUFFER* buffer);
+BUFFER* bopen   (const void* restrict data, size_t size, const char* restrict mode) __battrmalloc;
+BUFFER* bmemopen(      void* restrict data, size_t size, const char* restrict mode) __battrmalloc;
 
 /* Operations on buffer */
 
-IOBUFFER_API int berase(BUFFER* buffer, size_t count);
-IOBUFFER_API int breset(BUFFER* buffer);
+int berase(BUFFER* buffer, size_t count);
+int breset(BUFFER* buffer);
 
 /* Buffer positioning */
 
-IOBUFFER_API int bgetpos(BUFFER* restrict buffer,       bpos_t* restrict pos);
-IOBUFFER_API int bsetpos(BUFFER*          buffer, const bpos_t*          pos);
+int bgetpos(BUFFER* restrict buffer,       bpos_t* restrict pos);
+int bsetpos(BUFFER*          buffer, const bpos_t*          pos);
 
-IOBUFFER_API long btell(BUFFER* buffer);
-IOBUFFER_API int  bseek(BUFFER* buffer, long offset, int origin);
+long btell(BUFFER* buffer);
+int  bseek(BUFFER* buffer, long offset, int origin);
 
-IOBUFFER_API void brewind(BUFFER* buffer);
+void brewind(BUFFER* buffer);
 
 /* Direct input/output */
 
-IOBUFFER_API size_t bread (      void* restrict data, size_t size, size_t count, BUFFER* restrict buffer);
-IOBUFFER_API size_t bwrite(const void* restrict data, size_t size, size_t count, BUFFER* restrict buffer);
+size_t bread (      void* restrict data, size_t size, size_t count, BUFFER* restrict buffer);
+size_t bwrite(const void* restrict data, size_t size, size_t count, BUFFER* restrict buffer);
 
 /* Unformatted input/output */
 
-IOBUFFER_API int bgetc(BUFFER* buffer);
-IOBUFFER_API int bpeek(BUFFER* buffer);
-IOBUFFER_API char* bgets(char* restrict str, int count, BUFFER* restrict buffer);
+int bgetc(BUFFER* buffer);
+int bpeek(BUFFER* buffer);
+char* bgets(char* restrict str, int count, BUFFER* restrict buffer);
 
-IOBUFFER_API int bputc(int byte, BUFFER* buffer);
-IOBUFFER_API int bputs(const char* restrict string, BUFFER* restrict buffer);
+int bputc(int byte, BUFFER* buffer);
+int bputs(const char* restrict string, BUFFER* restrict buffer);
 
-IOBUFFER_API int bungetc(int byte, BUFFER* buffer);
+int bungetc(int byte, BUFFER* buffer);
 
 /* Formatted input/output */
 
-IOBUFFER_API int  bscanf(BUFFER* restrict buffer, const char* restrict format, ...         ) __battrscanfmt(3);
-IOBUFFER_API int vbscanf(BUFFER* restrict buffer, const char* restrict format, va_list list) __battrscanfmt(0);
+int  bscanf(BUFFER* restrict buffer, const char* restrict format, ...         ) __battrscanfmt(3);
+int vbscanf(BUFFER* restrict buffer, const char* restrict format, va_list list) __battrscanfmt(0);
 
-IOBUFFER_API int  bprintf(BUFFER* restrict buffer, const char* restrict format, ...         ) __battrprintfmt(3);
-IOBUFFER_API int vbprintf(BUFFER* restrict buffer, const char* restrict format, va_list list) __battrprintfmt(0);
+int  bprintf(BUFFER* restrict buffer, const char* restrict format, ...         ) __battrprintfmt(3);
+int vbprintf(BUFFER* restrict buffer, const char* restrict format, va_list list) __battrprintfmt(0);
 
 /* Error handling */
 
-IOBUFFER_API int beob(BUFFER* buffer);
+int beob(BUFFER* buffer);
 
 /* View extension */
 
@@ -132,7 +122,7 @@ typedef struct BUFVIEW {
     const void* stop;
 } BUFVIEW;
 
-IOBUFFER_API BUFVIEW bview(BUFFER* buffer);
+BUFVIEW bview(BUFFER* buffer);
 
 #define BV_FMT "%.*s"
 #define BV_ARG( view, begin, end) (int)BV_SIZE(view, begin, end), (const char*)(view).begin
