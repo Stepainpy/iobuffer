@@ -1,4 +1,3 @@
-#define IOBUFFER_SOURCE
 #include <iobuffer/iobuffer.h>
 #include "bidefine.h"
 

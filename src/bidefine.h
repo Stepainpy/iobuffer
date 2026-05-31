@@ -2,12 +2,9 @@
 #define IOBUFFER_DEFINES_H
 
 #if defined(__GNUC__) && __STDC_VERSION__ < 199901L
-#  define B_STRINGIFY_IMPL(x) #x
-#  define B_STRINGIFY(x) B_STRINGIFY_IMPL(x)
-
-#  define B_NO_GCC_WARN_BEGIN() _Pragma(B_STRINGIFY(GCC diagnostic push))
-#  define B_NO_GCC_WARN(name)   _Pragma(B_STRINGIFY(GCC diagnostic ignored name))
-#  define B_NO_GCC_WARN_END()   _Pragma(B_STRINGIFY(GCC diagnostic pop))
+#  define B_NO_GCC_WARN_BEGIN() _Pragma(IOBUFFER_STRINGIFY(GCC diagnostic push))
+#  define B_NO_GCC_WARN(name)   _Pragma(IOBUFFER_STRINGIFY(GCC diagnostic ignored name))
+#  define B_NO_GCC_WARN_END()   _Pragma(IOBUFFER_STRINGIFY(GCC diagnostic pop))
 #else
 #  define B_NO_GCC_WARN_BEGIN()
 #  define B_NO_GCC_WARN(name)

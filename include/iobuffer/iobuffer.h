@@ -14,16 +14,16 @@
 
 /* Version macros */
 
-#define __btostr_(x) # x
-#define __btostr(x) __btostr_(x)
+#define __IOBUFFER_STRINGIFY(x) # x
+#define   IOBUFFER_STRINGIFY(x) __IOBUFFER_STRINGIFY(x)
 
 #define IOBUFFER_VERSION_MAJOR 2
 #define IOBUFFER_VERSION_MINOR 3
 #define IOBUFFER_VERSION_PATCH 0
 #define IOBUFFER_VERSION \
-    __btostr(IOBUFFER_VERSION_MAJOR) "." \
-    __btostr(IOBUFFER_VERSION_MINOR) "." \
-    __btostr(IOBUFFER_VERSION_PATCH)
+    IOBUFFER_STRINGIFY(IOBUFFER_VERSION_MAJOR) "." \
+    IOBUFFER_STRINGIFY(IOBUFFER_VERSION_MINOR) "." \
+    IOBUFFER_STRINGIFY(IOBUFFER_VERSION_PATCH)
 
 /* Preprocessor conditions */
 
