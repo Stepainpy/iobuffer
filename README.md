@@ -1,5 +1,12 @@
 # IOBuffer
 
+## Table of content
+
+- [Overview](#overview)
+- [Linking](#linking)
+- [Examples](#examples)
+- [Documentation](#documentation)
+
 ## Overview
 
 Dynamic buffer with API like standard C files. Support standard C89 (ANSI C).
@@ -94,7 +101,7 @@ AaBbCcDdEeFfGgHhIiJjKkLlMmNnOoPpQqRrSsTtUuVvWwXxYyZz
 
 ## Documentation
 
-### Table of content
+### Index
 
 - [Configuration macros](#configuration-macros)
   - [`IOBUFFER_VERSION`](#iobuffer_version)
