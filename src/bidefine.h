@@ -1,6 +1,8 @@
 #ifndef IOBUFFER_DEFINES_H
 #define IOBUFFER_DEFINES_H
 
+#include <limits.h>
+
 #if defined(__GNUC__) && __STDC_VERSION__ < 199901L
 #  define B_NO_GCC_WARN_BEGIN() _Pragma(IOBUFFER_STRINGIFY(GCC diagnostic push))
 #  define B_NO_GCC_WARN(name)   _Pragma(IOBUFFER_STRINGIFY(GCC diagnostic ignored name))
@@ -38,6 +40,23 @@ B_NO_GCC_WARN("-Wlong-long")
 typedef   signed long long sllong;
 typedef unsigned long long ullong;
 B_NO_GCC_WARN_END()
+
+/* stdint.h for C89 */
+
+#if __STDC_VERSION__ >= 199901L
+#  include <stdint.h>
+#else
+#  if ULONG_MAX >= ULLONG_MAX
+typedef   long  intmax_t;
+typedef  ulong uintmax_t;
+#  else
+typedef sllong  intmax_t;
+typedef ullong uintmax_t;
+#  endif
+#endif
+
+#define SIZE_MAX ((size_t)0 - 1)
+#define UINTMAX_BITS (sizeof(uintmax_t) * CHAR_BIT)
 
 /* Declarations of immediately functions */
 

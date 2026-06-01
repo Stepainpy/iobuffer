@@ -1,7 +1,6 @@
 #include <iobuffer/iobuffer.h>
 #include "bidefine.h"
 
-#include <limits.h>
 #include <stdlib.h>
 #include <string.h>
 

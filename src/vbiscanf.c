@@ -1,8 +1,6 @@
 #include <iobuffer/iobuffer.h>
 #include "bidefine.h"
 
-#include <limits.h>
-#include <stdint.h>
 #include <string.h>
 #include <math.h>
 
@@ -26,10 +24,15 @@ typedef struct {
     bool assign;
 } bifmtspec_t;
 
-typedef uint64_t scanset_t[4];
+typedef uintmax_t scanset_t[(256 + UINTMAX_BITS - 1) / UINTMAX_BITS];
 
-static void bissset(scanset_t ss, uchar value) { ss[value / 64] |= UINT64_C(1) << (value % 64); }
-static bool bissget(scanset_t ss, uchar value) { return (ss[value / 64] >> (value % 64)) & 1; }
+static void bissset(scanset_t ss, uchar value) {
+    ss[value / UINTMAX_BITS] |= (uintmax_t)1 << (value % UINTMAX_BITS);
+}
+
+static bool bissget(scanset_t ss, uchar value) {
+    return (ss[value / UINTMAX_BITS] >> (value % UINTMAX_BITS)) & 1;
+}
 
 static bool biisspace(int ch) {
     return memchr(B_SPACE_CHARS, ch, sizeof B_SPACE_CHARS - 1) != NULL;
