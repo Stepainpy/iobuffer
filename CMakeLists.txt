@@ -23,15 +23,19 @@ set_target_properties(iobuffer PROPERTIES
     C_STANDARD          90
     C_STANDARD_REQUIRED ON
     C_EXTENSIONS        OFF
-)
-set_target_properties(iobuffer PROPERTIES
+
     PUBLIC_HEADER "${HEADERS}"
-    SOVERSION     ${PROJECT_VERSION_MAJOR}
-      VERSION     ${PROJECT_VERSION}
+
+    SOVERSION ${PROJECT_VERSION_MAJOR}
+      VERSION ${PROJECT_VERSION}
 )
 
 target_include_directories(iobuffer
     PUBLIC "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>")
+
+if(NOT WIN32)
+    target_link_libraries(iobuffer PRIVATE m)
+endif()
 
 if(MSVC)
     target_compile_options(iobuffer PUBLIC /O2 /W4)

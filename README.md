@@ -4,6 +4,29 @@
 
 Dynamic buffer with API like standard C files. Support standard C89 (ANSI C).
 
+## Linking
+
+Add in your `CMakeLists.txt` file this lines.
+
+from local directory ...
+``` cmake
+add_subdirectory(path/to/iobuffer/dir) # e.g.: ./deps/iobuffer
+```
+... or from `FetchContent`
+``` cmake
+include(FetchContent)
+FetchContent_Declare(iobuffer
+    GIT_REPOSITORY https://github.com/Stepainpy/iobuffer
+    GIT_TAG        # commit hash or tag name
+)
+FetchContent_MakeAvailable(iobuffer)
+```
+
+After adding, linking library with your program
+``` cmake
+target_link_libraries(yourapp PRIVATE iobuffer::iobuffer)
+```
+
 ## Examples
 
 Simple read loop:
