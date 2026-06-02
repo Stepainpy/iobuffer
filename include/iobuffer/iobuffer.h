@@ -6,25 +6,25 @@
  *        bwrite -> write to buffer        *
  * * * * * * * * * * * * * * * * * * * * * */
 
-#ifndef IO_DYNAMIC_BUFFER_H
-#define IO_DYNAMIC_BUFFER_H
+#ifndef IOBUFFER_H
+#define IOBUFFER_H
 
 #include <stdarg.h>
 #include <stddef.h>
 
 /* Version macros */
 
-#define __IOBUFFER_STRINGIFY(x) # x
-#define   IOBUFFER_STRINGIFY(x) __IOBUFFER_STRINGIFY(x)
+#define B_STRINGIFY_IMPL(x) # x
+#define B_STRINGIFY(x) B_STRINGIFY_IMPL(x)
 
 #define IOBUFFER_VERSION_MAJOR 2
 #define IOBUFFER_VERSION_MINOR 3
 #define IOBUFFER_VERSION_PATCH 0
 
 #define IOBUFFER_VERSION \
-    IOBUFFER_STRINGIFY(IOBUFFER_VERSION_MAJOR) "." \
-    IOBUFFER_STRINGIFY(IOBUFFER_VERSION_MINOR) "." \
-    IOBUFFER_STRINGIFY(IOBUFFER_VERSION_PATCH)
+    B_STRINGIFY(IOBUFFER_VERSION_MAJOR) "." \
+    B_STRINGIFY(IOBUFFER_VERSION_MINOR) "." \
+    B_STRINGIFY(IOBUFFER_VERSION_PATCH)
 
 /* Preprocessor conditions */
 
@@ -33,17 +33,17 @@
 #endif
 
 #ifdef __GNUC__
-#  define __battrprintfmt(va_i) __attribute__(( format(printf, 2, va_i) ))
-#  define __battr_scanfmt(va_i) __attribute__(( format( scanf, 2, va_i) ))
+#  define B_ATTR_PRINT_FMT(va_i) __attribute__(( format(printf, 2, va_i) ))
+#  define B_ATTR_SCAN__FMT(va_i) __attribute__(( format( scanf, 2, va_i) ))
 #  ifdef __clang__
-#    define __battrmalloc __attribute__(( malloc ))
+#    define B_ATTR_MALLOC __attribute__(( malloc ))
 #  else
-#    define __battrmalloc __attribute__(( malloc, malloc(bclose, 1) ))
+#    define B_ATTR_MALLOC __attribute__(( malloc, malloc(bclose, 1) ))
 #  endif
 #else
-#  define __battrprintfmt(va_i)
-#  define __battr_scanfmt(va_i)
-#  define __battrmalloc
+#  define B_ATTR_PRINT_FMT(va_i)
+#  define B_ATTR_SCAN__FMT(va_i)
+#  define B_ATTR_MALLOC
 #endif
 
 #ifdef __cplusplus
@@ -71,8 +71,8 @@ int bsetalloc(balloc_t allocator, void* userdata);
 
 int bclose(BUFFER* buffer);
 
-BUFFER* bopen   (const void* restrict data, size_t size, const char* restrict mode) __battrmalloc;
-BUFFER* bmemopen(      void* restrict data, size_t size, const char* restrict mode) __battrmalloc;
+BUFFER* bopen   (const void* restrict data, size_t size, const char* restrict mode) B_ATTR_MALLOC;
+BUFFER* bmemopen(      void* restrict data, size_t size, const char* restrict mode) B_ATTR_MALLOC;
 
 /* Operations on buffer */
 
@@ -108,11 +108,11 @@ int bungetc(int byte, BUFFER* buffer);
 
 /* Formatted input/output */
 
-int   bscanf(BUFFER* restrict buffer, const char* restrict format, ...         ) __battr_scanfmt(3);
-int  vbscanf(BUFFER* restrict buffer, const char* restrict format, va_list list) __battr_scanfmt(0);
+int   bscanf(BUFFER* restrict buffer, const char* restrict format, ...         ) B_ATTR_SCAN__FMT(3);
+int  vbscanf(BUFFER* restrict buffer, const char* restrict format, va_list list) B_ATTR_SCAN__FMT(0);
 
-int  bprintf(BUFFER* restrict buffer, const char* restrict format, ...         ) __battrprintfmt(3);
-int vbprintf(BUFFER* restrict buffer, const char* restrict format, va_list list) __battrprintfmt(0);
+int  bprintf(BUFFER* restrict buffer, const char* restrict format, ...         ) B_ATTR_PRINT_FMT(3);
+int vbprintf(BUFFER* restrict buffer, const char* restrict format, va_list list) B_ATTR_PRINT_FMT(0);
 
 /* Error handling */
 
@@ -136,4 +136,4 @@ BUFVIEW bview(BUFFER* buffer);
 }
 #endif
 
-#endif /* IO_DYNAMIC_BUFFER_H */
+#endif /* IOBUFFER_H */
