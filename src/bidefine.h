@@ -53,9 +53,9 @@ typedef  ulong uintmax_t;
 typedef sllong  intmax_t;
 typedef ullong uintmax_t;
 #  endif
+#  define SIZE_MAX ((size_t)0 - 1)
 #endif
 
-#define SIZE_MAX ((size_t)0 - 1)
 #define UINTMAX_BITS (sizeof(uintmax_t) * CHAR_BIT)
 
 /* Declarations of immediately functions */
