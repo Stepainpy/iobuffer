@@ -20,6 +20,7 @@
 #define IOBUFFER_VERSION_MAJOR 2
 #define IOBUFFER_VERSION_MINOR 3
 #define IOBUFFER_VERSION_PATCH 0
+
 #define IOBUFFER_VERSION \
     IOBUFFER_STRINGIFY(IOBUFFER_VERSION_MAJOR) "." \
     IOBUFFER_STRINGIFY(IOBUFFER_VERSION_MINOR) "." \
@@ -32,15 +33,16 @@
 #endif
 
 #ifdef __GNUC__
-#  define __battrprintfmt(va_i) __attribute__((format(printf, 2, va_i)))
-#  define __battrscanfmt(va_i) __attribute__((format(scanf, 2, va_i)))
+#  define __battrprintfmt(va_i) __attribute__(( format(printf, 2, va_i) ))
+#  define __battr_scanfmt(va_i) __attribute__(( format( scanf, 2, va_i) ))
 #  ifdef __clang__
-#    define __battrmalloc __attribute__((malloc))
+#    define __battrmalloc __attribute__(( malloc ))
 #  else
-#    define __battrmalloc __attribute__((malloc, malloc(bclose, 1)))
+#    define __battrmalloc __attribute__(( malloc, malloc(bclose, 1) ))
 #  endif
 #else
-#  define __battrformat(va_i)
+#  define __battrprintfmt(va_i)
+#  define __battr_scanfmt(va_i)
 #  define __battrmalloc
 #endif
 
@@ -68,6 +70,7 @@ int bsetalloc(balloc_t allocator, void* userdata);
 /* Buffer access */
 
 int bclose(BUFFER* buffer);
+
 BUFFER* bopen   (const void* restrict data, size_t size, const char* restrict mode) __battrmalloc;
 BUFFER* bmemopen(      void* restrict data, size_t size, const char* restrict mode) __battrmalloc;
 
@@ -95,6 +98,7 @@ size_t bwrite(const void* restrict data, size_t size, size_t count, BUFFER* rest
 
 int bgetc(BUFFER* buffer);
 int bpeek(BUFFER* buffer);
+
 char* bgets(char* restrict str, int count, BUFFER* restrict buffer);
 
 int bputc(int byte, BUFFER* buffer);
@@ -104,8 +108,8 @@ int bungetc(int byte, BUFFER* buffer);
 
 /* Formatted input/output */
 
-int  bscanf(BUFFER* restrict buffer, const char* restrict format, ...         ) __battrscanfmt(3);
-int vbscanf(BUFFER* restrict buffer, const char* restrict format, va_list list) __battrscanfmt(0);
+int   bscanf(BUFFER* restrict buffer, const char* restrict format, ...         ) __battr_scanfmt(3);
+int  vbscanf(BUFFER* restrict buffer, const char* restrict format, va_list list) __battr_scanfmt(0);
 
 int  bprintf(BUFFER* restrict buffer, const char* restrict format, ...         ) __battrprintfmt(3);
 int vbprintf(BUFFER* restrict buffer, const char* restrict format, va_list list) __battrprintfmt(0);
