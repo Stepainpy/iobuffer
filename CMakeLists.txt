@@ -49,3 +49,9 @@ if(PROJECT_IS_TOP_LEVEL)
     set_target_properties(iobuffer PROPERTIES
         ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/bin")
 endif()
+
+if(PROJECT_IS_TOP_LEVEL)
+    include(CTest)
+    add_subdirectory(tests)
+    enable_testing()
+endif()
