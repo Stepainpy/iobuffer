@@ -1,5 +1,22 @@
 # Changelog
 
+## 3.0.0 - 2026-06-03
+
+### Changed
+
+- Structure of source files and directories
+- Cmake built as static library
+- Names of several macro names
+
+### Added
+
+- Ways for link of library to `README.md` file
+- Output of examples of code
+
+### Fixed
+
+- Using `stdint.h` header in C89
+
 ## 2.3.0 - 2026-05-30
 
 ### Changed
