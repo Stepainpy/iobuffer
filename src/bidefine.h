@@ -4,13 +4,13 @@
 #include <limits.h>
 
 #if defined(__GNUC__) && __STDC_VERSION__ < 199901L
-#  define B_NO_GCC_WARN_BEGIN() _Pragma(B_STRINGIFY(GCC diagnostic push))
-#  define B_NO_GCC_WARN(name)   _Pragma(B_STRINGIFY(GCC diagnostic ignored name))
-#  define B_NO_GCC_WARN_END()   _Pragma(B_STRINGIFY(GCC diagnostic pop))
+#  define B_NO_GCC_WARN_BEGIN _Pragma(B_STRINGIFY(GCC diagnostic push))
+#  define B_NO_GCC_WARN(warn) _Pragma(B_STRINGIFY(GCC diagnostic ignored warn))
+#  define B_NO_GCC_WARN_END   _Pragma(B_STRINGIFY(GCC diagnostic pop))
 #else
-#  define B_NO_GCC_WARN_BEGIN()
-#  define B_NO_GCC_WARN(name)
-#  define B_NO_GCC_WARN_END()
+#  define B_NO_GCC_WARN_BEGIN
+#  define B_NO_GCC_WARN(warn)
+#  define B_NO_GCC_WARN_END
 #endif
 
 /* Boolean and return codes */
@@ -35,11 +35,11 @@ typedef unsigned short ushort;
 typedef unsigned int   uint  ;
 typedef unsigned long  ulong ;
 
-B_NO_GCC_WARN_BEGIN()
+B_NO_GCC_WARN_BEGIN
 B_NO_GCC_WARN("-Wlong-long")
 typedef   signed long long sllong;
 typedef unsigned long long ullong;
-B_NO_GCC_WARN_END()
+B_NO_GCC_WARN_END
 
 /* stdint.h for C89 */
 

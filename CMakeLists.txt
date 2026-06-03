@@ -9,7 +9,9 @@ project(iobuffer
 add_library(iobuffer STATIC)
 add_library(iobuffer::iobuffer ALIAS iobuffer)
 
-set(HEADERS include/iobuffer/iobuffer.h)
+set(HEADERS
+    include/iobuffer/iobuffer.h
+)
 set(SOURCES
     src/bidefine.h
     src/iobuffer.c

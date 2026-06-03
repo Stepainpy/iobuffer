@@ -129,8 +129,8 @@ typedef struct BUFVIEW {
 BUFVIEW bview(BUFFER* buffer);
 
 #define BV_FMT "%.*s"
-#define BV_ARG( view, begin, end) (int)BV_SIZE(view, begin, end), (const char*)(view).begin
-#define BV_SIZE(view, begin, end) ((char*)(view).end - (char*)(view).begin)
+#define BV_ARG(view, begin, end) (int)BV_LEN(view, begin, end), (const char*)(view).begin
+#define BV_LEN(view, begin, end) ((char*)(view).end - (char*)(view).begin)
 
 #ifdef __cplusplus
 }

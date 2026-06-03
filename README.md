@@ -154,7 +154,7 @@ AaBbCcDdEeFfGgHhIiJjKkLlMmNnOoPpQqRrSsTtUuVvWwXxYyZz
   - [`bview`](#bufview-bviewbuffer-buffer)
   - [`BV_FMT`](#bv_fmt)
   - [`BV_ARG`](#bv_argview-begin-end)
-  - [`BV_SIZE`](#bv_sizeview-begin-end)
+  - [`BV_LEN`](#bv_lenview-begin-end)
 
 ## Configuration macros
 
@@ -397,5 +397,5 @@ Macro-constant string literal of format specifier for `BUFVIEW`.
 ### `BV_ARG(view, begin, end)`
 Macro-function for create arguments to `printf`'s functions.
 
-### `BV_SIZE(view, begin, end)`
+### `BV_LEN(view, begin, end)`
 Macro-function get count bytes in view between parameter `begin` and `end`.
