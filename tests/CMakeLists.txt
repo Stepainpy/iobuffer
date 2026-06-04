@@ -6,6 +6,7 @@ set(TESTFILES
     bsetalloc
     bclose
     bopen
+    bmemopen
 )
 
 foreach(CVER IN ITEMS ${CVERSIONS})
