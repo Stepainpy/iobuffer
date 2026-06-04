@@ -5,6 +5,7 @@ set(CVERSIONS 90 99 11 23)
 set(TESTFILES
     bsetalloc
     bclose
+    bopen
 )
 
 foreach(CVER IN ITEMS ${CVERSIONS})

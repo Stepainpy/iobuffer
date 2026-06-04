@@ -88,7 +88,7 @@ BUFFER* bopen(const void* restrict data, size_t size, const char* restrict mode)
     if (!data && size > 0) goto error;
     if (!mode || biparsemode(mode, buf)) goto error;
 
-    if (buf->readable || mode[0] == 'a') {
+    if (mode[0] == 'r' || mode[0] == 'a') {
         if (birequire(buf, size)) goto error;
         memcpy(buf->data, data, size);
         buf->count = size;
