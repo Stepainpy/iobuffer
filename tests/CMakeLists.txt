@@ -2,20 +2,17 @@ project(iobuffer_test LANGUAGES C)
 
 set(CVERSIONS 90 99 11 23)
 
-set(TESTFILES
-    bsetalloc
-    bclose
-    bopen
-    bmemopen
-    berase
-)
+file(GLOB TESTFILES RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "src/b*.c")
 
 foreach(CVER IN ITEMS ${CVERSIONS})
     set(TESTBASE iobuffer_test_${CVER})
     foreach(TFILE IN ITEMS ${TESTFILES})
-        set(TESTNAME ${TESTBASE}_${TFILE})
+        string(LENGTH ${TFILE} TFLEN)
+        math(EXPR TNLEN "${TFLEN} - 7")
+        string(SUBSTRING ${TFILE} 5 ${TNLEN} TNAME)
+        set(TESTNAME ${TESTBASE}_${TNAME})
 
-        add_executable(${TESTNAME} "${TFILE}.c")
+        add_executable(${TESTNAME} ${TFILE})
         add_test(NAME ${TESTNAME} COMMAND ${TESTNAME})
 
         target_link_libraries(${TESTNAME}
