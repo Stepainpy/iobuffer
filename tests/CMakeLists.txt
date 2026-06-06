@@ -5,6 +5,7 @@ set(CVERSIONS 90 99 11 23)
 file(GLOB TESTFILES RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "src/b*.c")
 
 option(IOBT_FMT_DI_ENABLE_LIMITS "Enable check output of signed limits" ON)
+option(IOBT_FMT_BOUX_ENABLE_LIMITS "Enable check output of unsigned limits" ON)
 
 foreach(CVER IN ITEMS ${CVERSIONS})
     set(TESTBASE iobuffer_test_${CVER})
@@ -31,6 +32,10 @@ foreach(CVER IN ITEMS ${CVERSIONS})
         if(IOBT_FMT_DI_ENABLE_LIMITS)
             target_compile_definitions(${TESTNAME}
                 PRIVATE IOBT_FMT_DI_ENABLE_LIMITS=1)
+        endif()
+        if(IOBT_FMT_BOUX_ENABLE_LIMITS)
+            target_compile_definitions(${TESTNAME}
+                PRIVATE IOBT_FMT_BOUX_ENABLE_LIMITS=1)
         endif()
     endforeach()
 endforeach()
