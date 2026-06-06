@@ -110,6 +110,9 @@ int main(void) {
     test_format("%+i", "+1", 1);
     test_format("%+i", "-1", -1);
 
+    test_format("%.i", "15", 15);
+    test_format("%.i", "", 0);
+
     test_format("%0i", "15", 15);
     test_format("%05i", "00015", 15);
     test_format("%-05i", "15   ", 15);
@@ -148,6 +151,83 @@ int main(void) {
     test_format("%+zi", "+0", (size_t)0);
 #endif
 #endif /* IOBT_FMT_DI_ENABLE_LIMITS */
+
+    /* Unsigned integer specifier */
+
+    test_format("%Lb", "");
+    test_format("%LB", "");
+    test_format("%Lo", "");
+    test_format("%Lu", "");
+    test_format("%Lx", "");
+    test_format("%LX", "");
+
+    test_format("%u", "1", 1);
+    test_format("%u", "98765432", 12345679 * 8);
+    test_format("%b", "101010", 42);
+    test_format("%o", "52", 42);
+    test_format("%x", "2a", 42);
+    test_format("%X", "2A", 42);
+
+    test_format("%#b", "0b101010", 42);
+    test_format("%#B", "0B101010", 42);
+    test_format("%#o", "052", 42);
+    test_format("%#u", "42", 42);
+    test_format("%#x", "0x2a", 42);
+    test_format("%#X", "0X2A", 42);
+
+    test_format("%.b", "1111", 15);
+    test_format("%.b", "", 0);
+    test_format("%.o", "17", 15);
+    test_format("%.o", "", 0);
+    test_format("%.u", "15", 15);
+    test_format("%.u", "", 0);
+    test_format("%.x", "f", 15);
+    test_format("%.x", "", 0);
+
+    test_format("%06b", "001111", 15);
+    test_format("%-06b", "1111  ", 15);
+    test_format("%06.3b", "  1111", 15);
+    test_format("%-06.3b", "1111  ", 15);
+    test_format("%06o", "000017", 15);
+    test_format("%-06o", "17    ", 15);
+    test_format("%06.3o", "   017", 15);
+    test_format("%-06.3o", "017   ", 15);
+    test_format("%06u", "000015", 15);
+    test_format("%-06u", "15    ", 15);
+    test_format("%06.3u", "   015", 15);
+    test_format("%-06.3u", "015   ", 15);
+    test_format("%06x", "00000f", 15);
+    test_format("%-06x", "f     ", 15);
+    test_format("%06.3x", "   00f", 15);
+    test_format("%-06.3x", "00f   ", 15);
+
+    test_format("%#010b", "0b00001111", 15);
+    test_format("%#10.5b", "   0b01111", 15);
+
+    test_format("%#06o", "000017", 15);
+    test_format("%#6o", "   017", 15);
+
+    test_format("%#06x", "0x000f", 15);
+    test_format("%#6x", "   0xf", 15);
+
+#if IOBT_FMT_BOUX_ENABLE_LIMITS
+    test_format("%hhu", "255", UCHAR_MAX);
+    test_format("%hu", "65535", USHRT_MAX);
+    test_format("%u", "4294967295", UINT_MAX);
+
+#if LONG_MAX > INT_MAX
+    test_format("%lu", "18446744073709551615", ULONG_MAX);
+#else
+    test_format("%lu", "4294967295", ULONG_MAX);
+#endif
+
+#if __STDC_VERSION__ >= 199901L
+    test_format("%llu", "18446744073709551615", ULLONG_MAX);
+    test_format("%ju", "18446744073709551615", UINTMAX_MAX);
+    test_format("%tu", "9223372036854775807", PTRDIFF_MAX);
+    test_format("%zu", "18446744073709551615", SIZE_MAX);
+#endif
+#endif /* IOBT_FMT_BOUX_ENABLE_LIMITS */
 
     return EXIT_SUCCESS;
 }
