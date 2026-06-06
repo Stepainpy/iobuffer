@@ -1,6 +1,11 @@
 #include <iobuffer/iobuffer.h>
 #include "test.h"
 
+#include <limits.h>
+#if __STDC_VERSION__ >= 199901L
+#  include <stdint.h>
+#endif
+
 void test_format(const char* fmt, const char* exp_out, ...) {
     BUFFER* buf; BUFVIEW bvw;
     int ret; va_list args;
@@ -36,6 +41,9 @@ int main(void) {
     test_format("", "");
     test_format("abc", "abc");
     test_format("%%", "%");
+    test_format("%m", "");
+    test_format("%10.2m", "");
+    test_format("%2.jm", "");
     test_format("50%% of sale", "50% of sale");
     test_format("%i%% of sale", "50% of sale", 50);
 
@@ -84,6 +92,62 @@ int main(void) {
 
     test_format("% 6.4s", "  hell", "hello");
     test_format("%-6.4s", "hell  ", "hello");
+
+    /* Signed integer specifier */
+
+    test_format("%Ld", "");
+    test_format("%Li", "");
+
+    test_format("%i", "1", 1);
+    test_format("%i", "98765432", 12345679 * 8);
+    test_format("%i", "-5", -5);
+    test_format("%i", "-13", 27 - 40);
+
+    test_format("%i", "1", 1);
+    test_format("%i", "-1", -1);
+    test_format("% i", " 1", 1);
+    test_format("% i", "-1", -1);
+    test_format("%+i", "+1", 1);
+    test_format("%+i", "-1", -1);
+
+    test_format("%0i", "15", 15);
+    test_format("%05i", "00015", 15);
+    test_format("%-05i", "15   ", 15);
+    test_format("%05.3i", "  015", 15);
+    test_format("%-05.3i", "015  ", 15);
+
+#if IOBT_FMT_DI_ENABLE_LIMITS
+    test_format("%+hhi", "+127", SCHAR_MAX);
+    test_format("%+hhi", "-128", SCHAR_MIN);
+
+    test_format("%+hi", "+32767", SHRT_MAX);
+    test_format("%+hi", "-32768", SHRT_MIN);
+
+    test_format("%+i", "+2147483647", INT_MAX);
+    test_format("%+i", "-2147483648", INT_MIN);
+
+#if LONG_MAX > INT_MAX
+    test_format("%+li", "+9223372036854775807", LONG_MAX);
+    test_format("%+li", "-9223372036854775808", LONG_MIN);
+#else
+    test_format("%+li", "+2147483647", LONG_MAX);
+    test_format("%+li", "-2147483648", LONG_MIN);
+#endif
+
+#if __STDC_VERSION__ >= 199901L
+    test_format("%+lli", "+9223372036854775807", LLONG_MAX);
+    test_format("%+lli", "-9223372036854775808", LLONG_MIN);
+
+    test_format("%+ji", "+9223372036854775807", INTMAX_MAX);
+    test_format("%+ji", "-9223372036854775808", INTMAX_MIN);
+
+    test_format("%+ti", "+9223372036854775807", PTRDIFF_MAX);
+    test_format("%+ti", "-9223372036854775808", PTRDIFF_MIN);
+
+    test_format("%+zi", "-1", SIZE_MAX);
+    test_format("%+zi", "+0", (size_t)0);
+#endif
+#endif /* IOBT_FMT_DI_ENABLE_LIMITS */
 
     return EXIT_SUCCESS;
 }
