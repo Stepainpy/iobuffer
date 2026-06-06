@@ -23,7 +23,7 @@ add_subdirectory(path/to/iobuffer/dir) # e.g.: ./deps/iobuffer
 ``` cmake
 include(FetchContent)
 FetchContent_Declare(iobuffer
-    GIT_REPOSITORY https://github.com/Stepainpy/iobuffer
+    GIT_REPOSITORY https://github.com/Stepainpy/iobuffer.git
     GIT_TAG        # commit hash or tag name
 )
 FetchContent_MakeAvailable(iobuffer)
