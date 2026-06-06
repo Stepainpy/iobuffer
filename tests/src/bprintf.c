@@ -153,6 +153,7 @@ int main(void) {
 #endif /* IOBT_FMT_DI_ENABLE_LIMITS */
 
     /* Unsigned integer specifier */
+    /* and pointer specifier (implicit) */
 
     test_format("%Lb", "");
     test_format("%LB", "");
@@ -228,6 +229,22 @@ int main(void) {
     test_format("%zu", "18446744073709551615", SIZE_MAX);
 #endif
 #endif /* IOBT_FMT_BOUX_ENABLE_LIMITS */
+
+    /* TODO: Float-point number specifier */
+
+    /* Number of written characters specifier */
+
+    {
+    int x, y;
+
+    test_format("abc%ndef%n", "abcdef", &x, &y);
+    TEST_CASE("check NoWC", x == 3);
+    TEST_CASE("check NoWC", y == 6);
+
+    test_format("%n%x%n", "abcdef", &x, 0xabcdef, &y);
+    TEST_CASE("check NoWC", x == 0);
+    TEST_CASE("check NoWC", y == 6);
+    }
 
     return EXIT_SUCCESS;
 }
