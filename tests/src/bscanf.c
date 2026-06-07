@@ -131,14 +131,28 @@ int main(void) {
 
     }
 
-    /* TODO: Float-point number specifier */
+    /* Float-point number specifier */
+
+    {
+    float x;
+
+    test_format("%g", 1, 5, "31.25", &x);
+    TEST_CASE("check float spec", x == 31.25);
+    test_format("%f", 1, 9, "31.250000", &x);
+    TEST_CASE("check float spec", x == 31.25);
+    test_format("%e", 1, 11, "3.125000e+1", &x);
+    TEST_CASE("check float spec", x == 31.25);
+    test_format("%a", 1, 9, "0x1.f4p+4", &x);
+    TEST_CASE("check float spec", x == 31.25);
+
+    }
 
     /* Number of characters read */
 
     {
     int n;
 
-    test_format("%*i%n", 1, 8, "  -80085  ", &n);
+    test_format("%*i%n", 0, 8, "  -80085  ", &n);
     TEST_CASE("check NoCR", n == 8);
 
     }
