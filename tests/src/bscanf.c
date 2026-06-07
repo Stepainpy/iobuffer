@@ -79,5 +79,21 @@ int main(void) {
 
     }
 
+    /* Scanset specifier */
+
+    {
+    char ca[16];
+
+    test_format("%[cab]", 1, 3, "abcdef", &ca);
+    TEST_CASE("chech ss spec", strcmp(ca, "abc") == 0);
+    test_format("%[^cab]", 1, 3, "234cdef", &ca);
+    TEST_CASE("chech ss spec", strcmp(ca, "234") == 0);
+    test_format("%[][0-9]", 1, 8, "[69][42]cdef", &ca);
+    TEST_CASE("chech ss spec", strcmp(ca, "[69][42]") == 0);
+
+    test_format("8(%*[0-9])-%*[0-9]-%*[0-9]-%*[0-9]", 0, 16, "8(800)-555-35-35");
+
+    }
+
     return EXIT_SUCCESS;
 }
