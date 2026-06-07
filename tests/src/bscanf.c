@@ -96,6 +96,7 @@ int main(void) {
     }
 
     /* Integer specifier */
+    /* and pointer specifier */
 
     {
     int x;
@@ -127,6 +128,18 @@ int main(void) {
     test_format("%*o", 0, 4, " +149");
     test_format("%*x", 0, 5, " +1f9");
     test_format("%*x", 0, 5, "0x1f9");
+
+    }
+
+    /* TODO: Float-point number specifier */
+
+    /* Number of characters read */
+
+    {
+    int n;
+
+    test_format("%*i%n", 1, 8, "  -80085  ", &n);
+    TEST_CASE("check NoCR", n == 8);
 
     }
 
