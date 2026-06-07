@@ -95,5 +95,40 @@ int main(void) {
 
     }
 
+    /* Integer specifier */
+
+    {
+    int x;
+
+    test_format("%i", 1, 6, "  +123", &x);
+    TEST_CASE("check int spec", x == 123);
+    test_format("%i", 1, 6, "  -123", &x);
+    TEST_CASE("check int spec", x == -123);
+
+    test_format("%i", 1, 3, "0b123", &x);
+    TEST_CASE("check bin spec", x == 1);
+    test_format("%i", 1, 4, "0123", &x);
+    TEST_CASE("check oct spec", x == 83);
+    test_format("%i", 1, 5, "0x123", &x);
+    TEST_CASE("check hex spec", x == 291);
+
+    test_format("%3i", 1, 3, "12345", &x);
+    TEST_CASE("check bounds", x == 123);
+    test_format("%3i", 1, 3, "0x12345", &x);
+    TEST_CASE("check bounds", x == 1);
+    test_format("%3i", 1, 2, "00x12345", &x);
+    TEST_CASE("check bounds", x == 0);
+    test_format("%3i", 1, 3, "+0x12345", &x);
+    TEST_CASE("check bounds", x == 0);
+
+    test_format("%*d", 0, 5, " -123");
+    test_format("%*b", 0, 3, " +123");
+    test_format("%*b", 0, 5, "0b101");
+    test_format("%*o", 0, 4, " +149");
+    test_format("%*x", 0, 5, " +1f9");
+    test_format("%*x", 0, 5, "0x1f9");
+
+    }
+
     return EXIT_SUCCESS;
 }
