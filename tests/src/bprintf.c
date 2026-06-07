@@ -230,7 +230,52 @@ int main(void) {
 #endif
 #endif /* IOBT_FMT_BOUX_ENABLE_LIMITS */
 
-    /* TODO: Float-point number specifier */
+    /* Float-point number specifier */
+
+    test_format("%hf", "");
+    test_format("%je", "");
+    test_format("%zg", "");
+    test_format("%ta", "");
+
+    test_format("%f", "31.250000", 31.25);
+    test_format("%e", "3.125000e+01", 31.25);
+    test_format("%g", "31.25", 31.25);
+    test_format("%a", "0x1.f4p+4", 31.25);
+
+    test_format("%10.3f", "    31.250", 31.25);
+    test_format("%-10.3f", "31.250    ", 31.25);
+    test_format("%.0f", "31", 31.25);
+    test_format("%.f", "31", 31.25);
+    test_format("%#.0f", "31.", 31.25);
+    test_format("%#.f", "31.", 31.25);
+
+    test_format("%10.3e", " 3.125e+01", 31.25);
+    test_format("%-10.3e", "3.125e+01 ", 31.25);
+    test_format("%.0e", "3e+01", 31.25);
+    test_format("%.e", "3e+01", 31.25);
+    test_format("%#.0e", "3.e+01", 31.25);
+    test_format("%#.e", "3.e+01", 31.25);
+
+    test_format("%15.5a", "   0x1.f4000p+4", 31.25);
+    test_format("%-10.3a", "0x1.f40p+4", 31.25);
+    test_format("%.0a", "0x2p+4", 31.25);
+    test_format("%.a", "0x2p+4", 31.25);
+    test_format("%#.0a", "0x2.p+4", 31.25);
+    test_format("%#.a", "0x2.p+4", 31.25);
+
+    test_format("%f", "inf", 1.0 / 0.0);
+    test_format("%F", "INF", 1.0 / 0.0);
+    test_format("%e", "inf", 1.0 / 0.0);
+    test_format("%E", "INF", 1.0 / 0.0);
+    test_format("%g", "inf", 1.0 / 0.0);
+    test_format("%G", "INF", 1.0 / 0.0);
+    test_format("%a", "inf", 1.0 / 0.0);
+    test_format("%A", "INF", 1.0 / 0.0);
+
+    test_format("%e", "3.125000e+01", 31.25);
+    test_format("%E", "3.125000E+01", 31.25);
+    test_format("%a", "0x1.f4p+4", 31.25);
+    test_format("%A", "0X1.F4P+4", 31.25);
 
     /* Number of written characters specifier */
 
