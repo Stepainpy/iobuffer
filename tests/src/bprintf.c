@@ -20,7 +20,7 @@ void test_format(const char* fmt, const char* exp_out, ...) {
     ret = vbprintf(buf, fmt, args);
     bvw = bview(buf);
     TEST_CASE(tcname, ret == exp_out_len);
-    TEST_CASE(tcname, memcmp(bvw.base, exp_out, ret) == 0);
+    TEST_MCMP(tcname, exp_out, bvw.base, ret);
 
     bclose(buf);
     va_end(args);

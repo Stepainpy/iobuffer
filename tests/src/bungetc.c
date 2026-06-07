@@ -23,7 +23,7 @@ int main(void) {
     TEST_CASE("check intermedian", BV_LEN(bvw, base, stop) == 4);
     TEST_CASE("check intermedian", BV_LEN(bvw, base, head) == 2);
     TEST_CASE("check intermedian", BV_LEN(bvw, head, stop) == 2);
-    TEST_CASE("check intermedian", memcmp(bvw.base, "Term", 4) == 0);
+    TEST_MCMP("check intermedian", "Term", bvw.base, 4);
 
     TEST_CASE("unget character", bungetc('a', buf) == 'a');
     TEST_CASE("unget character", bungetc('H', buf) == 'H');
@@ -34,7 +34,7 @@ int main(void) {
     TEST_CASE("check intermedian", BV_LEN(bvw, base, stop) == 4);
     TEST_CASE("check intermedian", BV_LEN(bvw, base, head) == 0);
     TEST_CASE("check intermedian", BV_LEN(bvw, head, stop) == 4);
-    TEST_CASE("check intermedian", memcmp(bvw.base, "Harm", 4) == 0);
+    TEST_MCMP("check intermedian", "Harm", bvw.base, 4);
 
     bclose(buf);
 

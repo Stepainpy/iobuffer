@@ -28,7 +28,7 @@ int main(void) {
     TEST_CASE("write from start | less than length", BV_LEN(bvw, base, stop) == 3);
     TEST_CASE("write from start | less than length", BV_LEN(bvw, base, head) == 3);
     TEST_CASE("write from start | less than length", BV_LEN(bvw, head, stop) == 0);
-    TEST_CASE("write from start | less than length", memcmp(bvw.base, "ver", 3) == 0);
+    TEST_MCMP("write from start | less than length", "ver", bvw.base, 3);
     bclose(buf);
 
     buf = bmemopen(base, sizeof base, "w");
@@ -38,7 +38,7 @@ int main(void) {
     TEST_CASE("write from start | equal to length", BV_LEN(bvw, base, stop) == 8);
     TEST_CASE("write from start | equal to length", BV_LEN(bvw, base, head) == 8);
     TEST_CASE("write from start | equal to length", BV_LEN(bvw, head, stop) == 0);
-    TEST_CASE("write from start | equal to length", memcmp(bvw.base, "deadbeef", 8) == 0);
+    TEST_MCMP("write from start | equal to length", "deadbeef", bvw.base, 8);
     bclose(buf);
 
     buf = bmemopen(base, sizeof base, "w");
@@ -48,7 +48,7 @@ int main(void) {
     TEST_CASE("write from start | greater than length", BV_LEN(bvw, base, stop) == 6);
     TEST_CASE("write from start | greater than length", BV_LEN(bvw, base, head) == 6);
     TEST_CASE("write from start | greater than length", BV_LEN(bvw, head, stop) == 0);
-    TEST_CASE("write from start | greater than length", memcmp(bvw.base, "very l", 6) == 0);
+    TEST_MCMP("write from start | greater than length", "very l", bvw.base, 6);
     bclose(buf);
 
     strcpy(base, "beaver");
@@ -60,7 +60,7 @@ int main(void) {
     TEST_CASE("write from middle | less than length", BV_LEN(bvw, base, stop) == 8);
     TEST_CASE("write from middle | less than length", BV_LEN(bvw, base, head) == 4);
     TEST_CASE("write from middle | less than length", BV_LEN(bvw, head, stop) == 4);
-    TEST_CASE("write from middle | less than length", memcmp(bvw.base, "beeeer", 6) == 0);
+    TEST_MCMP("write from middle | less than length", "beeeer", bvw.base, 6);
     bclose(buf);
 
     strcpy(base, "beaver");
@@ -72,7 +72,7 @@ int main(void) {
     TEST_CASE("write from middle | equal to length", BV_LEN(bvw, base, stop) == 8);
     TEST_CASE("write from middle | equal to length", BV_LEN(bvw, base, head) == 8);
     TEST_CASE("write from middle | equal to length", BV_LEN(bvw, head, stop) == 0);
-    TEST_CASE("write from middle | equal to length", memcmp(bvw.base, "behavior", 8) == 0);
+    TEST_MCMP("write from middle | equal to length", "behavior", bvw.base, 8);
     bclose(buf);
 
     strcpy(base, "beaver");
@@ -84,7 +84,7 @@ int main(void) {
     TEST_CASE("write from middle | greater than length", BV_LEN(bvw, base, stop) == 8);
     TEST_CASE("write from middle | greater than length", BV_LEN(bvw, base, head) == 7);
     TEST_CASE("write from middle | greater than length", BV_LEN(bvw, head, stop) == 1);
-    TEST_CASE("write from middle | greater than length", memcmp(bvw.base, "beavare", 7) == 0);
+    TEST_MCMP("write from middle | greater than length", "beavare", bvw.base, 7);
     bclose(buf);
 
     strcpy(base, "beaver");
@@ -96,7 +96,7 @@ int main(void) {
     TEST_CASE("write from end | less than length", BV_LEN(bvw, base, stop) == 7);
     TEST_CASE("write from end | less than length", BV_LEN(bvw, base, head) == 7);
     TEST_CASE("write from end | less than length", BV_LEN(bvw, head, stop) == 0);
-    TEST_CASE("write from end | less than length", memcmp(bvw.base, "beavers", 7) == 0);
+    TEST_MCMP("write from end | less than length", "beavers", bvw.base, 7);
     bclose(buf);
 
     strcpy(base, "beaver");
@@ -108,7 +108,7 @@ int main(void) {
     TEST_CASE("write from end | equal to length", BV_LEN(bvw, base, stop) == 8);
     TEST_CASE("write from end | equal to length", BV_LEN(bvw, base, head) == 8);
     TEST_CASE("write from end | equal to length", BV_LEN(bvw, head, stop) == 0);
-    TEST_CASE("write from end | equal to length", memcmp(bvw.base, "beaveres", 8) == 0);
+    TEST_MCMP("write from end | equal to length", "beaveres", bvw.base, 8);
     bclose(buf);
 
     strcpy(base, "beaver");
@@ -120,7 +120,7 @@ int main(void) {
     TEST_CASE("write from end | greater than length", BV_LEN(bvw, base, stop) == 6);
     TEST_CASE("write from end | greater than length", BV_LEN(bvw, base, head) == 6);
     TEST_CASE("write from end | greater than length", BV_LEN(bvw, head, stop) == 0);
-    TEST_CASE("write from end | greater than length", memcmp(bvw.base, "beaver", 7) == 0);
+    TEST_MCMP("write from end | greater than length", "beaver", bvw.base, 7);
     bclose(buf);
 
     return EXIT_SUCCESS;

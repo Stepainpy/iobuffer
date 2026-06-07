@@ -51,7 +51,7 @@ int main(void) {
     test_format("%*c", 0, 1, "ABC");
 
     test_format("%5c", 1, 5, "Two words", &ca);
-    TEST_CASE("check char spec", memcmp(ca, "Two wo", 5) == 0);
+    TEST_MCMP("check char spec", "Two wo", ca, 5);
     test_format("%*5c", 0, 5, "Two words");
 
     }

@@ -24,7 +24,7 @@ int main(void) {
     TEST_CASE("after put", BV_LEN(bvw, base, stop) == 4);
     TEST_CASE("after put", BV_LEN(bvw, base, head) == 4);
     TEST_CASE("after put", BV_LEN(bvw, head, stop) == 0);
-    TEST_CASE("after put", memcmp(buffer, "Text", 4) == 0);
+    TEST_MCMP("after put", "Text", buffer, 4);
 
     bclose(buf);
 

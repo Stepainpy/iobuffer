@@ -29,7 +29,7 @@ int main(void) {
     TEST_CASE("read from start | less than length", BV_LEN(bvw, base, stop) == 6);
     TEST_CASE("read from start | less than length", BV_LEN(bvw, base, head) == 4);
     TEST_CASE("read from start | less than length", BV_LEN(bvw, head, stop) == 2);
-    TEST_CASE("read from start | less than length", memcmp(dest, "beav", 4) == 0);
+    TEST_MCMP("read from start | less than length", "beav", dest, 4);
 
     brewind(buf);
     ret = bread(dest, 2, 3, buf);
@@ -38,7 +38,7 @@ int main(void) {
     TEST_CASE("read from start | equal to length", BV_LEN(bvw, base, stop) == 6);
     TEST_CASE("read from start | equal to length", BV_LEN(bvw, base, head) == 6);
     TEST_CASE("read from start | equal to length", BV_LEN(bvw, head, stop) == 0);
-    TEST_CASE("read from start | equal to length", memcmp(dest, "beaver", 6) == 0);
+    TEST_MCMP("read from start | equal to length", "beaver", dest, 6);
 
     brewind(buf);
     ret = bread(dest, 5, 2, buf);
@@ -47,7 +47,7 @@ int main(void) {
     TEST_CASE("read from start | greater than length", BV_LEN(bvw, base, stop) == 6);
     TEST_CASE("read from start | greater than length", BV_LEN(bvw, base, head) == 5);
     TEST_CASE("read from start | greater than length", BV_LEN(bvw, head, stop) == 1);
-    TEST_CASE("read from start | greater than length", memcmp(dest, "beave", 5) == 0);
+    TEST_MCMP("read from start | greater than length", "beave", dest, 5);
 
     bseek(buf, 2, BSEEK_SET);
     ret = bread(dest, 1, 3, buf);
@@ -56,7 +56,7 @@ int main(void) {
     TEST_CASE("read from middle | less than length", BV_LEN(bvw, base, stop) == 6);
     TEST_CASE("read from middle | less than length", BV_LEN(bvw, base, head) == 5);
     TEST_CASE("read from middle | less than length", BV_LEN(bvw, head, stop) == 1);
-    TEST_CASE("read from middle | less than length", memcmp(dest, "ave", 3) == 0);
+    TEST_MCMP("read from middle | less than length", "ave", dest, 3);
 
     bseek(buf, 2, BSEEK_SET);
     ret = bread(dest, 2, 2, buf);
@@ -65,7 +65,7 @@ int main(void) {
     TEST_CASE("read from middle | equal to length", BV_LEN(bvw, base, stop) == 6);
     TEST_CASE("read from middle | equal to length", BV_LEN(bvw, base, head) == 6);
     TEST_CASE("read from middle | equal to length", BV_LEN(bvw, head, stop) == 0);
-    TEST_CASE("read from middle | equal to length", memcmp(dest, "aver", 4) == 0);
+    TEST_MCMP("read from middle | equal to length", "aver", dest, 4);
 
     bseek(buf, 2, BSEEK_SET);
     ret = bread(dest, 3, 2, buf);
@@ -74,7 +74,7 @@ int main(void) {
     TEST_CASE("read from middle | greater than length", BV_LEN(bvw, base, stop) == 6);
     TEST_CASE("read from middle | greater than length", BV_LEN(bvw, base, head) == 5);
     TEST_CASE("read from middle | greater than length", BV_LEN(bvw, head, stop) == 1);
-    TEST_CASE("read from middle | greater than length", memcmp(dest, "ave", 3) == 0);
+    TEST_MCMP("read from middle | greater than length", "ave", dest, 3);
 
     bseek(buf, 0, BSEEK_END);
     ret = bread(dest, 1, 1, buf);

@@ -25,7 +25,7 @@ int main(void) {
     TEST_CASE("remove from start | less than length", BV_LEN(bvw, base, stop) == 3);
     TEST_CASE("remove from start | less than length", BV_LEN(bvw, base, head) == 0);
     TEST_CASE("remove from start | less than length", BV_LEN(bvw, head, stop) == 3);
-    TEST_CASE("remove from start | less than length", memcmp(bvw.base, "ver", 3) == 0);
+    TEST_MCMP("remove from start | less than length", "ver", bvw.base, 3);
     bclose(buf);
 
     buf = bopen("beaver", 6, "r+");
@@ -56,7 +56,7 @@ int main(void) {
     TEST_CASE("remove from middle | less than length", BV_LEN(bvw, base, stop) == 4);
     TEST_CASE("remove from middle | less than length", BV_LEN(bvw, base, head) == 2);
     TEST_CASE("remove from middle | less than length", BV_LEN(bvw, head, stop) == 2);
-    TEST_CASE("remove from middle | less than length", memcmp(bvw.base, "beer", 4) == 0);
+    TEST_MCMP("remove from middle | less than length", "beer", bvw.base, 4);
     bclose(buf);
 
     buf = bopen("beaver", 6, "r+");

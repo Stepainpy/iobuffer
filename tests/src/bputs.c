@@ -24,7 +24,7 @@ int main(void) {
     TEST_CASE("after put", BV_LEN(bvw, base, stop) == 3);
     TEST_CASE("after put", BV_LEN(bvw, base, head) == 3);
     TEST_CASE("after put", BV_LEN(bvw, head, stop) == 0);
-    TEST_CASE("after put", memcmp(buffer, "Tex", 3) == 0);
+    TEST_MCMP("after put", "Tex", buffer, 3);
 
     bseek(buf, 1, BSEEK_SET);
 
@@ -33,8 +33,7 @@ int main(void) {
     TEST_CASE("after put", BV_LEN(bvw, base, stop) == 4);
     TEST_CASE("after put", BV_LEN(bvw, base, head) == 4);
     TEST_CASE("after put", BV_LEN(bvw, head, stop) == 0);
-    TEST_CASE("after put", memcmp(buffer, "Tort", 4) == 0);
-
+    TEST_MCMP("after put", "Tort", buffer, 4);
 
     bclose(buf);
 
