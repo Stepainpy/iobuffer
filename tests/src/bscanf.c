@@ -62,17 +62,17 @@ int main(void) {
     char ca[16];
 
     test_format("%s", 1, 4, "word", &ca);
-    TEST_CASE("check str spec", strcmp(ca, "word") == 0);
+    TEST_SCMP("check str spec", "word", ca);
     test_format("%s", 1, 3, "Two words", &ca);
-    TEST_CASE("check str spec", strcmp(ca, "Two") == 0);
+    TEST_SCMP("check str spec", "Two", ca);
 
     test_format("%*s", 0, 4, "word", &ca);
     test_format("%*s", 0, 3, "Two words", &ca);
 
     test_format("%3s", 1, 3, "word", &ca);
-    TEST_CASE("check str spec", strcmp(ca, "wor") == 0);
+    TEST_SCMP("check str spec", "wor", ca);
     test_format("%8s", 1, 3, "Two words", &ca);
-    TEST_CASE("check str spec", strcmp(ca, "Two") == 0);
+    TEST_SCMP("check str spec", "Two", ca);
 
     test_format("%*3s", 0, 3, "word", &ca);
     test_format("%*8s", 0, 3, "Two words", &ca);
@@ -85,11 +85,11 @@ int main(void) {
     char ca[16];
 
     test_format("%[cab]", 1, 3, "abcdef", &ca);
-    TEST_CASE("chech ss spec", strcmp(ca, "abc") == 0);
+    TEST_SCMP("chech ss spec", "abc", ca);
     test_format("%[^cab]", 1, 3, "234cdef", &ca);
-    TEST_CASE("chech ss spec", strcmp(ca, "234") == 0);
+    TEST_SCMP("chech ss spec", "234", ca);
     test_format("%[][0-9]", 1, 8, "[69][42]cdef", &ca);
-    TEST_CASE("chech ss spec", strcmp(ca, "[69][42]") == 0);
+    TEST_SCMP("chech ss spec", "[69][42]", ca);
 
     test_format("8(%*[0-9])-%*[0-9]-%*[0-9]-%*[0-9]", 0, 16, "8(800)-555-35-35");
 

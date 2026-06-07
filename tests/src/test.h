@@ -33,6 +33,16 @@ void memdump(FILE* stream, const void* ptr, size_t size) {
     exit(EXIT_FAILURE); \
 } while (0)
 
+#define TEST_SCMP(name, exp, rec) do {  \
+    const char* lptr = (exp);           \
+    const char* rptr = (rec);           \
+    if (strcmp(lptr, rptr) == 0) break; \
+    fprintf(stderr, "%s:%i: Failed string compare: %s\n", FILENM, __LINE__, (name)); \
+    fprintf(stderr, "  Expected: %s\n", lptr); \
+    fprintf(stderr, "  Received: %s\n", rptr); \
+    exit(EXIT_FAILURE); \
+} while (0)
+
 #define TEST_CASE(name, cond) ((void)(           \
     !!(cond) || (                                \
         fprintf(stderr,                          \

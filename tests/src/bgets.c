@@ -30,19 +30,19 @@ int main(void) {
     , 43, "r");
 
     TEST_CASE("extract Alan"  , bgets(dest, sizeof dest, buf) == dest);
-    TEST_CASE("extract Alan"  , strcmp(dest, "Alan Tu") == 0);
+    TEST_SCMP("extract Alan"  , "Alan Tu", dest);
     TEST_CASE("extract Alan"  , bgets(dest, sizeof dest, buf) == dest);
-    TEST_CASE("extract Alan"  , strcmp(dest, "ring\n" ) == 0);
+    TEST_SCMP("extract Alan"  , "ring\n", dest);
     TEST_CASE("extract John"  , bgets(dest, sizeof dest, buf) == dest);
-    TEST_CASE("extract John"  , strcmp(dest, "John vo") == 0);
+    TEST_SCMP("extract John"  , "John vo", dest);
     TEST_CASE("extract John"  , bgets(dest, sizeof dest, buf) == dest);
-    TEST_CASE("extract John"  , strcmp(dest, "n Neuma") == 0);
+    TEST_SCMP("extract John"  , "n Neuma", dest);
     TEST_CASE("extract John"  , bgets(dest, sizeof dest, buf) == dest);
-    TEST_CASE("extract John"  , strcmp(dest, "nn\n"   ) == 0);
+    TEST_SCMP("extract John"  , "nn\n", dest);
     TEST_CASE("extract Alonzo", bgets(dest, sizeof dest, buf) == dest);
-    TEST_CASE("extract Alonzo", strcmp(dest, "Alonzo ") == 0);
+    TEST_SCMP("extract Alonzo", "Alonzo ", dest);
     TEST_CASE("extract Alonzo", bgets(dest, sizeof dest, buf) == dest);
-    TEST_CASE("extract Alonzo", strcmp(dest, "Church\n") == 0);
+    TEST_SCMP("extract Alonzo", "Church\n", dest);
     TEST_CASE("extract nothing", bgets(dest, sizeof dest, buf) == NULL);
 
     bclose(buf);
