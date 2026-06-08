@@ -436,7 +436,11 @@ static int biputfmt_a(BUFFER* buf, va_list args, bifmtspec_t* fmt, int* total, b
     is_neg = received < 0;
     has_sign = fmt->signing >= 0 || is_neg;
 
-    padding = bimax(0, fmt->fieldwidth - 2 - len - has_sign - (normal ? 2 + elen : 0));
+    padding = bimax(0, fmt->fieldwidth
+        - 2 - len - has_sign - (normal ? 2 + elen : 0)
+        - (fmt->precision >= 0 && fmt->precision > flen
+            ? fmt->precision - flen : 0)
+    );
 
     if (!fmt->lead_zero && !fmt->left_just && padding)
         if (biimmrepc(' ', padding, buf, total)) return B_FAIL;

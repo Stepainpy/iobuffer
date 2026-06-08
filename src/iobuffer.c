@@ -88,7 +88,7 @@ BUFFER* bopen(const void* restrict data, size_t size, const char* restrict mode)
     if (!data && size > 0) goto error;
     if (!mode || biparsemode(mode, buf)) goto error;
 
-    if (buf->readable || mode[0] == 'a') {
+    if (mode[0] == 'r' || mode[0] == 'a') {
         if (birequire(buf, size)) goto error;
         memcpy(buf->data, data, size);
         buf->count = size;
@@ -284,19 +284,19 @@ int vbprintf(BUFFER* restrict buf, const char* restrict fmt, va_list args) {
 }
 
 size_t bread(void* restrict data, size_t size, size_t count, BUFFER* restrict buf) {
-    size_t read;
     if (!buf || !buf->data || !buf->readable) return 0;
     if (!data || !size || !count) return 0;
 
-    read = bimin((buf->count - buf->cursor) / size, count);
-    memcpy(data, buf->data + buf->cursor, read * size);
-    buf->cursor += read * size;
+    count = bimin((buf->count - buf->cursor) / size, count);
+    memcpy(data, buf->data + buf->cursor, size * count);
+    buf->cursor += size * count;
 
-    return read;
+    return count;
 }
 
 size_t bwrite(const void* restrict data, size_t size, size_t count, BUFFER* restrict buf) {
-    if (!buf || !size || !count || !buf->writable) return 0;
+    if (!buf || !buf->writable) return 0;
+    if (!data || !size || !count) return 0;
 
     if (birequire(buf, size * count))
         count = (buf->capacity - buf->cursor) / size;
