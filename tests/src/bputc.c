@@ -5,25 +5,24 @@ int main(void) {
     BUFFER* buf; BUFVIEW bvw;
     char buffer[4];
 
-    TEST_CASE("call with null pointer", bputc(0, NULL) == EOB);
+    TEST_ICMP("call with null pointer", EOB, ==, bputc(0, NULL));
 
     buf = bopen("Text", 4, "r");
-    TEST_CASE("call with not writable", bputc(0, buf) == EOB);
+    TEST_ICMP("call with not writable", EOB, ==, bputc(0, buf));
     bclose(buf);
 
     buf = bmemopen(buffer, sizeof buffer, "w");
 
-    TEST_CASE("put character", bputc('T', buf) == 'T');
-    TEST_CASE("put character", bputc('e', buf) == 'e');
-    TEST_CASE("put character", bputc('x', buf) == 'x');
-    TEST_CASE("put character", bputc('t', buf) == 't');
-    TEST_CASE("put character", bputc('s', buf) == EOB);
-    TEST_CASE("put character", bputc('.', buf) == EOB);
+    TEST_ICMP("put character", 'T', ==, bputc('T', buf));
+    TEST_ICMP("put character", 'e', ==, bputc('e', buf));
+    TEST_ICMP("put character", 'x', ==, bputc('x', buf));
+    TEST_ICMP("put character", 't', ==, bputc('t', buf));
+    TEST_ICMP("put character", EOB, ==, bputc('s', buf));
+    TEST_ICMP("put character", EOB, ==, bputc('.', buf));
 
     bvw = bview(buf);
-    TEST_CASE("after put", BV_LEN(bvw, base, stop) == 4);
-    TEST_CASE("after put", BV_LEN(bvw, base, head) == 4);
-    TEST_CASE("after put", BV_LEN(bvw, head, stop) == 0);
+    TEST_ICMP("after put", 4, ==, BV_LEN(bvw, base, stop));
+    TEST_ICMP("after put", 4, ==, BV_LEN(bvw, base, head));
     TEST_MCMP("after put", "Text", buffer, 4);
 
     bclose(buf);

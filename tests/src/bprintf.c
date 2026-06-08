@@ -19,7 +19,7 @@ void test_format(const char* fmt, const char* exp_out, ...) {
 
     ret = vbprintf(buf, fmt, args);
     bvw = bview(buf);
-    TEST_CASE(tcname, ret == exp_out_len);
+    TEST_ICMP(tcname, exp_out_len, ==, ret);
     TEST_MCMP(tcname, exp_out, bvw.base, ret);
 
     bclose(buf);
@@ -29,11 +29,11 @@ void test_format(const char* fmt, const char* exp_out, ...) {
 int main(void) {
     BUFFER* buf;
 
-    TEST_CASE("call with null pointer", bprintf(NULL, NULL) < 0);
+    TEST_ICMP("call with null pointer", 0, >, bprintf(NULL, NULL));
 
     buf = bopen("Text", 4, "r");
-    TEST_CASE("call with not format"  , bprintf(buf, NULL) < 0);
-    TEST_CASE("call with not writable", bprintf(buf, "io") < 0);
+    TEST_ICMP("call with not format"  , 0, >, bprintf(buf, NULL));
+    TEST_ICMP("call with not writable", 0, >, bprintf(buf, "io"));
     bclose(buf);
 
     /* Plain text */
@@ -283,12 +283,13 @@ int main(void) {
     int x, y;
 
     test_format("abc%ndef%n", "abcdef", &x, &y);
-    TEST_CASE("check NoWC", x == 3);
-    TEST_CASE("check NoWC", y == 6);
+    TEST_ICMP("check NoWC", 3, ==, x);
+    TEST_ICMP("check NoWC", 6, ==, y);
 
     test_format("%n%x%n", "abcdef", &x, 0xabcdef, &y);
-    TEST_CASE("check NoWC", x == 0);
-    TEST_CASE("check NoWC", y == 6);
+    TEST_ICMP("check NoWC", 0, ==, x);
+    TEST_ICMP("check NoWC", 6, ==, y);
+
     }
 
     return EXIT_SUCCESS;

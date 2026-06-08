@@ -4,28 +4,28 @@
 int main(void) {
     BUFFER* buf;
 
-    TEST_CASE("call with null pointer", bpeek(NULL) == EOB);
+    TEST_ICMP("call with null pointer", EOB, ==, bpeek(NULL));
 
     buf = bopen(NULL, 0, "w");
-    TEST_CASE("call with not allocated data", bpeek(buf) == EOB);
+    TEST_ICMP("call with not allocated data", EOB, ==, bpeek(buf));
     bclose(buf);
 
     buf = bopen("Text", 4, "a");
-    TEST_CASE("call with not readable", bpeek(buf) == EOB);
+    TEST_ICMP("call with not readable", EOB, ==, bpeek(buf));
     bclose(buf);
 
     buf = bopen("Text", 4, "r");
-    TEST_CASE("extract first"     , bpeek(buf) == 'T');
-    TEST_CASE("extract first"     , bpeek(buf) == 'T');
+    TEST_ICMP("extract first"     , 'T', ==, bpeek(buf));
+    TEST_ICMP("extract first"     , 'T', ==, bpeek(buf));
     bseek(buf, 2, BSEEK_SET);
-    TEST_CASE("extract middle"    , bpeek(buf) == 'x');
-    TEST_CASE("extract middle"    , bpeek(buf) == 'x');
+    TEST_ICMP("extract middle"    , 'x', ==, bpeek(buf));
+    TEST_ICMP("extract middle"    , 'x', ==, bpeek(buf));
     bseek(buf, -1, BSEEK_END);
-    TEST_CASE("extract last"      , bpeek(buf) == 't');
-    TEST_CASE("extract last"      , bpeek(buf) == 't');
+    TEST_ICMP("extract last"      , 't', ==, bpeek(buf));
+    TEST_ICMP("extract last"      , 't', ==, bpeek(buf));
     bseek(buf, 0, BSEEK_END);
-    TEST_CASE("extract after last", bpeek(buf) == EOB);
-    TEST_CASE("extract after last", bpeek(buf) == EOB);
+    TEST_ICMP("extract after last", EOB, ==, bpeek(buf));
+    TEST_ICMP("extract after last", EOB, ==, bpeek(buf));
     bclose(buf);
 
     return EXIT_SUCCESS;

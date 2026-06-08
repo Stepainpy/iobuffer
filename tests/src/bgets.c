@@ -6,21 +6,21 @@ int main(void) {
 
     memset(dest, 0xC3, sizeof dest);
 
-    TEST_CASE("call with null pointer", bgets(NULL, 0, NULL) == NULL);
+    TEST_PCMP("call with null pointer", NULL, ==, bgets(NULL, 0, NULL));
 
     buf = bopen(NULL, 0, "w");
-    TEST_CASE("call with not allocated data", bgets(NULL, 0, buf) == NULL);
+    TEST_PCMP("call with not allocated data", NULL, ==, bgets(NULL, 0, buf));
     bclose(buf);
 
     buf = bopen("Text", 4, "a");
-    TEST_CASE("call with not readable", bgets(NULL, 0, buf) == NULL);
+    TEST_PCMP("call with not readable", NULL, ==, bgets(NULL, 0, buf));
     bclose(buf);
 
     buf = bopen("Text", 4, "r");
-    TEST_CASE("call with null dest"  , bgets(NULL, 0, buf) == NULL);
-    TEST_CASE("call with zero length", bgets(dest, 0, buf) == NULL);
-    TEST_CASE("call with one length" , bgets(dest, 1, buf) == dest);
-    TEST_CASE("check one length", dest[0] == '\0');
+    TEST_PCMP("call with null dest"  , NULL, ==, bgets(NULL, 0, buf));
+    TEST_PCMP("call with zero length", NULL, ==, bgets(dest, 0, buf));
+    TEST_PCMP("call with one length" , dest, ==, bgets(dest, 1, buf));
+    TEST_ICMP("check one length", '\0', ==, dest[0]);
     bclose(buf);
 
     buf = bopen(
@@ -29,21 +29,21 @@ int main(void) {
         "Alonzo Church\n"
     , 43, "r");
 
-    TEST_CASE("extract Alan"  , bgets(dest, sizeof dest, buf) == dest);
+    TEST_PCMP("extract Alan"  , dest, ==, bgets(dest, sizeof dest, buf));
     TEST_SCMP("extract Alan"  , "Alan Tu", dest);
-    TEST_CASE("extract Alan"  , bgets(dest, sizeof dest, buf) == dest);
+    TEST_PCMP("extract Alan"  , dest, ==, bgets(dest, sizeof dest, buf));
     TEST_SCMP("extract Alan"  , "ring\n", dest);
-    TEST_CASE("extract John"  , bgets(dest, sizeof dest, buf) == dest);
+    TEST_PCMP("extract John"  , dest, ==, bgets(dest, sizeof dest, buf));
     TEST_SCMP("extract John"  , "John vo", dest);
-    TEST_CASE("extract John"  , bgets(dest, sizeof dest, buf) == dest);
+    TEST_PCMP("extract John"  , dest, ==, bgets(dest, sizeof dest, buf));
     TEST_SCMP("extract John"  , "n Neuma", dest);
-    TEST_CASE("extract John"  , bgets(dest, sizeof dest, buf) == dest);
+    TEST_PCMP("extract John"  , dest, ==, bgets(dest, sizeof dest, buf));
     TEST_SCMP("extract John"  , "nn\n", dest);
-    TEST_CASE("extract Alonzo", bgets(dest, sizeof dest, buf) == dest);
+    TEST_PCMP("extract Alonzo", dest, ==, bgets(dest, sizeof dest, buf));
     TEST_SCMP("extract Alonzo", "Alonzo ", dest);
-    TEST_CASE("extract Alonzo", bgets(dest, sizeof dest, buf) == dest);
+    TEST_PCMP("extract Alonzo", dest, ==, bgets(dest, sizeof dest, buf));
     TEST_SCMP("extract Alonzo", "Church\n", dest);
-    TEST_CASE("extract nothing", bgets(dest, sizeof dest, buf) == NULL);
+    TEST_PCMP("extract nothing", NULL, ==, bgets(dest, sizeof dest, buf));
 
     bclose(buf);
 

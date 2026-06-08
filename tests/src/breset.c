@@ -4,23 +4,22 @@
 int main(void) {
     BUFFER* buf; BUFVIEW bvw; int ret;
 
-    TEST_CASE("call with null pointer", breset(NULL) != 0);
+    TEST_ICMP("call with null pointer", 0, !=, breset(NULL));
 
     buf = bopen(NULL, 0, "w");
-    TEST_CASE("call with not allocated data", breset(buf) != 0);
+    TEST_ICMP("call with not allocated data", 0, !=, breset(buf));
     bclose(buf);
 
     buf = bopen("Text", 4, "r");
-    TEST_CASE("call with not writable", breset(buf) != 0);
+    TEST_ICMP("call with not writable", 0, !=, breset(buf));
     bclose(buf);
 
     buf = bopen("Text", 4, "a");
     ret = breset(buf);
     bvw = bview(buf);
-    TEST_CASE("reset at end", ret == 0);
-    TEST_CASE("reset at end", BV_LEN(bvw, base, stop) == 0);
-    TEST_CASE("reset at end", BV_LEN(bvw, base, head) == 0);
-    TEST_CASE("reset at end", BV_LEN(bvw, head, stop) == 0);
+    TEST_ICMP("reset at end", 0, ==, ret);
+    TEST_ICMP("reset at end", 0, ==, BV_LEN(bvw, base, stop));
+    TEST_ICMP("reset at end", 0, ==, BV_LEN(bvw, base, head));
     bclose(buf);
 
     return EXIT_SUCCESS;

@@ -2,6 +2,9 @@
 #include <string.h>
 #include <stdio.h>
 
+#define _TOSTR(x) # x
+#define  TOSTR(x) _TOSTR(x)
+
 #define FILENM filename(__FILE__)
 static const char* filename(const char* path) {
     const char* loc;
@@ -43,11 +46,17 @@ void memdump(FILE* stream, const void* ptr, size_t size) {
     exit(EXIT_FAILURE); \
 } while (0)
 
-#define TEST_CASE(name, cond) ((void)(           \
-    !!(cond) || (                                \
-        fprintf(stderr,                          \
-            "%s:%i: Failed case: %s\n",          \
-            filename(__FILE__), __LINE__, name), \
-        exit(EXIT_FAILURE), 0                    \
-    )                                            \
-))
+#define TEST_VCMP(name, exp, op, rec, type, fmt) do {     \
+    const type lval = (const type)(exp);                  \
+    const type rval = (const type)(rec);                  \
+    if (lval op rval) break;                              \
+    fprintf(stderr,                                       \
+        "%s:%i: Failed value compare '"TOSTR(op)"': %s\n" \
+        , FILENM, __LINE__, (name));                      \
+    fprintf(stderr, "  Expected: "fmt"\n", lval);         \
+    fprintf(stderr, "  Received: "fmt"\n", rval);         \
+    exit(EXIT_FAILURE); \
+} while (0)
+
+#define TEST_ICMP(name, exp, op, rec) TEST_VCMP(name, exp, op, rec, int  , "%i")
+#define TEST_PCMP(name, exp, op, rec) TEST_VCMP(name, exp, op, rec, void*, "%p")

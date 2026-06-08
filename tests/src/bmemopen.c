@@ -6,47 +6,43 @@ void test_pair_ptr_size(
     char* text, size_t size,
     ptrdiff_t exp_size, ptrdiff_t exp_pos
 ) {
-    static char tmpstr[1024];
+    static char tmpstr[64];
     BUFFER* buf; BUFVIEW bvw;
 
     buf = bmemopen(text, size, mode);
     bvw = bview(buf);
     sprintf(tmpstr, "create with mode \"%s\" | not empty with ptr", mode);
-    TEST_CASE(tmpstr, buf != NULL);
-    TEST_CASE(tmpstr, bvw.base == text);
-    TEST_CASE(tmpstr, BV_LEN(bvw, base, stop) == exp_size          );
-    TEST_CASE(tmpstr, BV_LEN(bvw, base, head) ==            exp_pos);
-    TEST_CASE(tmpstr, BV_LEN(bvw, head, stop) == exp_size - exp_pos);
+    TEST_PCMP(tmpstr, NULL, !=, buf);
+    TEST_PCMP(tmpstr, text, ==, bvw.base);
+    TEST_ICMP(tmpstr, exp_size, ==, BV_LEN(bvw, base, stop));
+    TEST_ICMP(tmpstr, exp_pos , ==, BV_LEN(bvw, base, head));
     bclose(buf);
 
     buf = bmemopen(text, 0, mode);
     bvw = bview(buf);
     sprintf(tmpstr, "create with mode \"%s\" | empty with ptr", mode);
-    TEST_CASE(tmpstr, buf != NULL);
-    TEST_CASE(tmpstr, bvw.base == text);
-    TEST_CASE(tmpstr, BV_LEN(bvw, base, stop) == 0);
-    TEST_CASE(tmpstr, BV_LEN(bvw, base, head) == 0);
-    TEST_CASE(tmpstr, BV_LEN(bvw, head, stop) == 0);
+    TEST_PCMP(tmpstr, NULL, !=, buf);
+    TEST_PCMP(tmpstr, text, ==, bvw.base);
+    TEST_ICMP(tmpstr, 0, ==, BV_LEN(bvw, base, stop));
+    TEST_ICMP(tmpstr, 0, ==, BV_LEN(bvw, base, head));
     bclose(buf);
 
     buf = bmemopen(NULL, 0, mode);
     bvw = bview(buf);
     sprintf(tmpstr, "create with mode \"%s\" | empty without ptr", mode);
-    TEST_CASE(tmpstr, buf != NULL);
-    TEST_CASE(tmpstr, bvw.base == NULL);
-    TEST_CASE(tmpstr, BV_LEN(bvw, base, stop) == 0);
-    TEST_CASE(tmpstr, BV_LEN(bvw, base, head) == 0);
-    TEST_CASE(tmpstr, BV_LEN(bvw, head, stop) == 0);
+    TEST_PCMP(tmpstr, NULL, !=, buf);
+    TEST_PCMP(tmpstr, NULL, ==, bvw.base);
+    TEST_ICMP(tmpstr, 0, ==, BV_LEN(bvw, base, stop));
+    TEST_ICMP(tmpstr, 0, ==, BV_LEN(bvw, base, head));
     bclose(buf);
 
     buf = bmemopen(NULL, size, mode);
     bvw = bview(buf);
     sprintf(tmpstr, "create with mode \"%s\" | not empty without ptr", mode);
-    TEST_CASE(tmpstr, buf != NULL);
-    TEST_CASE(tmpstr, bvw.base != NULL);
-    TEST_CASE(tmpstr, BV_LEN(bvw, base, stop) == 0);
-    TEST_CASE(tmpstr, BV_LEN(bvw, base, head) == 0);
-    TEST_CASE(tmpstr, BV_LEN(bvw, head, stop) == 0);
+    TEST_PCMP(tmpstr, NULL, !=, buf);
+    TEST_PCMP(tmpstr, NULL, !=, bvw.base);
+    TEST_ICMP(tmpstr, 0, ==, BV_LEN(bvw, base, stop));
+    TEST_ICMP(tmpstr, 0, ==, BV_LEN(bvw, base, head));
     bclose(buf);
 }
 
@@ -59,13 +55,13 @@ int main(void) {
     /* Invalid mode */
 
     buf = bmemopen(NULL, 0, "m" );
-    TEST_CASE("create invalid | full incorrect",     buf == NULL);
+    TEST_PCMP("create invalid | full incorrect"    , NULL, ==, buf);
     buf = bmemopen(NULL, 0, "rm");
-    TEST_CASE("create invalid | partly incorrect 1", buf == NULL);
+    TEST_PCMP("create invalid | partly incorrect 1", NULL, ==, buf);
     buf = bmemopen(NULL, 0, "w-");
-    TEST_CASE("create invalid | partly incorrect 2", buf == NULL);
+    TEST_PCMP("create invalid | partly incorrect 2", NULL, ==, buf);
     buf = bmemopen(NULL, 0, "+a");
-    TEST_CASE("create invalid | incorrect order",    buf == NULL);
+    TEST_PCMP("create invalid | incorrect order"   , NULL, ==, buf);
 
     /* Read mode */
 

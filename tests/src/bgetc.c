@@ -4,23 +4,23 @@
 int main(void) {
     BUFFER* buf;
 
-    TEST_CASE("call with null pointer", bgetc(NULL) == EOB);
+    TEST_ICMP("call with null pointer", EOB, ==, bgetc(NULL));
 
     buf = bopen(NULL, 0, "w");
-    TEST_CASE("call with not allocated data", bgetc(buf) == EOB);
+    TEST_ICMP("call with not allocated data", EOB, ==, bgetc(buf));
     bclose(buf);
 
     buf = bopen("Text", 4, "a");
-    TEST_CASE("call with not readable", bgetc(buf) == EOB);
+    TEST_ICMP("call with not readable", EOB, ==, bgetc(buf));
     bclose(buf);
 
     buf = bopen("Text", 4, "r");
-    TEST_CASE("extract first"        , bgetc(buf) == 'T');
-    TEST_CASE("extract middle"       , bgetc(buf) == 'e');
-    TEST_CASE("extract middle"       , bgetc(buf) == 'x');
-    TEST_CASE("extract last"         , bgetc(buf) == 't');
-    TEST_CASE("extract after last"   , bgetc(buf) == EOB);
-    TEST_CASE("extract one more time", bgetc(buf) == EOB);
+    TEST_ICMP("extract first"        , 'T', ==, bgetc(buf));
+    TEST_ICMP("extract middle"       , 'e', ==, bgetc(buf));
+    TEST_ICMP("extract middle"       , 'x', ==, bgetc(buf));
+    TEST_ICMP("extract last"         , 't', ==, bgetc(buf));
+    TEST_ICMP("extract after last"   , EOB, ==, bgetc(buf));
+    TEST_ICMP("extract one more time", EOB, ==, bgetc(buf));
     bclose(buf);
 
     return EXIT_SUCCESS;

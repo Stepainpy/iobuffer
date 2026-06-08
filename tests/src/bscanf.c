@@ -12,8 +12,8 @@ void test_format(const char* fmt, int exp_count, int exp_pos, const char* input,
 
     ret = vbscanf(buf, fmt, args);
     bvw = bview(buf);
-    TEST_CASE(tcname, ret == exp_count);
-    TEST_CASE(tcname, BV_LEN(bvw, base, head) == exp_pos);
+    TEST_ICMP(tcname, exp_count, ==, ret);
+    TEST_ICMP(tcname, exp_pos, ==, BV_LEN(bvw, base, head));
 
     bclose(buf);
     va_end(args);
@@ -22,11 +22,11 @@ void test_format(const char* fmt, int exp_count, int exp_pos, const char* input,
 int main(void) {
     BUFFER* buf;
 
-    TEST_CASE("call with null pointer", bscanf(NULL, NULL) < 0);
+    TEST_ICMP("call with null pointer", 0, >, bscanf(NULL, NULL));
 
     buf = bopen(NULL, 0, "w");
-    TEST_CASE("call with not format"  , bscanf(buf, NULL) < 0);
-    TEST_CASE("call with not readable", bscanf(buf, "io") < 0);
+    TEST_ICMP("call with not format"  , 0, >, bscanf(buf, NULL));
+    TEST_ICMP("call with not readable", 0, >, bscanf(buf, "io"));
     bclose(buf);
 
     /* Plain text */
@@ -45,9 +45,9 @@ int main(void) {
     char ca[8];
 
     test_format("%c", 1, 1, "A", &ca);
-    TEST_CASE("check char spec", ca[0] == 'A');
+    TEST_ICMP("check char spec", 'A', ==, ca[0]);
     test_format("%c", 1, 1, "ABC", &ca);
-    TEST_CASE("check char spec", ca[0] == 'A');
+    TEST_ICMP("check char spec", 'A', ==, ca[0]);
     test_format("%*c", 0, 1, "ABC");
 
     test_format("%5c", 1, 5, "Two words", &ca);
@@ -102,25 +102,25 @@ int main(void) {
     int x;
 
     test_format("%i", 1, 6, "  +123", &x);
-    TEST_CASE("check int spec", x == 123);
+    TEST_ICMP("check int spec", 123, ==, x);
     test_format("%i", 1, 6, "  -123", &x);
-    TEST_CASE("check int spec", x == -123);
+    TEST_ICMP("check int spec", -123, ==, x);
 
     test_format("%i", 1, 3, "0b123", &x);
-    TEST_CASE("check bin spec", x == 1);
+    TEST_ICMP("check bin spec", 1, ==, x);
     test_format("%i", 1, 4, "0123", &x);
-    TEST_CASE("check oct spec", x == 83);
+    TEST_ICMP("check oct spec", 83, ==, x);
     test_format("%i", 1, 5, "0x123", &x);
-    TEST_CASE("check hex spec", x == 291);
+    TEST_ICMP("check hex spec", 291, ==, x);
 
     test_format("%3i", 1, 3, "12345", &x);
-    TEST_CASE("check bounds", x == 123);
+    TEST_ICMP("check bounds", 123, ==, x);
     test_format("%3i", 1, 3, "0x12345", &x);
-    TEST_CASE("check bounds", x == 1);
+    TEST_ICMP("check bounds", 1, ==, x);
     test_format("%3i", 1, 2, "00x12345", &x);
-    TEST_CASE("check bounds", x == 0);
+    TEST_ICMP("check bounds", 0, ==, x);
     test_format("%3i", 1, 3, "+0x12345", &x);
-    TEST_CASE("check bounds", x == 0);
+    TEST_ICMP("check bounds", 0, ==, x);
 
     test_format("%*d", 0, 5, " -123");
     test_format("%*b", 0, 3, " +123");
@@ -137,13 +137,13 @@ int main(void) {
     float x;
 
     test_format("%g", 1, 5, "31.25", &x);
-    TEST_CASE("check float spec", x == 31.25);
+    TEST_VCMP("check float spec", 31.25, ==, x, double, "%g");
     test_format("%f", 1, 9, "31.250000", &x);
-    TEST_CASE("check float spec", x == 31.25);
+    TEST_VCMP("check float spec", 31.25, ==, x, double, "%g");
     test_format("%e", 1, 11, "3.125000e+1", &x);
-    TEST_CASE("check float spec", x == 31.25);
+    TEST_VCMP("check float spec", 31.25, ==, x, double, "%g");
     test_format("%a", 1, 9, "0x1.f4p+4", &x);
-    TEST_CASE("check float spec", x == 31.25);
+    TEST_VCMP("check float spec", 31.25, ==, x, double, "%g");
 
     }
 
@@ -153,7 +153,7 @@ int main(void) {
     int n;
 
     test_format("%*i%n", 0, 8, "  -80085  ", &n);
-    TEST_CASE("check NoCR", n == 8);
+    TEST_ICMP("check NoCR", 8, ==, n);
 
     }
 

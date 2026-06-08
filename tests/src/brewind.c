@@ -9,7 +9,7 @@ int main(void) {
     buf = bopen("Text", 4, "a");
     brewind(buf);
     bvw = bview(buf);
-    TEST_CASE("main test", BV_LEN(bvw, base, head) == 0);
+    TEST_ICMP("main test", 0, ==, BV_LEN(bvw, base, head));
     bclose(buf);
 
     return EXIT_SUCCESS;

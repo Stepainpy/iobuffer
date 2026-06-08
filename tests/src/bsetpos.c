@@ -4,25 +4,25 @@
 int main(void) {
     BUFFER* buf; BUFVIEW bvw; bpos_t pos;
 
-    TEST_CASE("without buffer and pos", bsetpos(NULL, NULL) != 0);
+    TEST_ICMP("without buffer and pos", 0, !=, bsetpos(NULL, NULL));
 
     buf = bopen(NULL, 0, "w");
-    TEST_CASE("without data and pos", bsetpos(buf, NULL) != 0);
+    TEST_ICMP("without data and pos", 0, !=, bsetpos(buf, NULL));
     bclose(buf);
 
     buf = bopen("Text", 4, "r");
-    TEST_CASE("without pos", bsetpos(buf, NULL) != 0);
+    TEST_ICMP("without pos", 0, !=, bsetpos(buf, NULL));
     bclose(buf);
 
     buf = bopen("Text", 4, "r");
-    pos = 0;          TEST_CASE("set to start" ,    bsetpos(buf, &pos)      == 0);
-    bvw = bview(buf); TEST_CASE("set to start" ,    BV_LEN(bvw, base, head) == 0);
-    pos = 2;          TEST_CASE("set to middle",    bsetpos(buf, &pos)      == 0);
-    bvw = bview(buf); TEST_CASE("set to middle",    BV_LEN(bvw, base, head) == 2);
-    pos = 4;          TEST_CASE("set to end",       bsetpos(buf, &pos)      == 0);
-    bvw = bview(buf); TEST_CASE("set to end",       BV_LEN(bvw, base, head) == 4);
-    pos = 5;          TEST_CASE("set to after end", bsetpos(buf, &pos)      != 0);
-    bvw = bview(buf); TEST_CASE("set to after end", BV_LEN(bvw, base, head) == 4);
+    pos = 0;          TEST_ICMP("set to start"    , 0, ==, bsetpos(buf, &pos));
+    bvw = bview(buf); TEST_ICMP("set to start"    , 0, ==, BV_LEN(bvw, base, head));
+    pos = 2;          TEST_ICMP("set to middle"   , 0, ==, bsetpos(buf, &pos));
+    bvw = bview(buf); TEST_ICMP("set to middle"   , 2, ==, BV_LEN(bvw, base, head));
+    pos = 4;          TEST_ICMP("set to end"      , 0, ==, bsetpos(buf, &pos));
+    bvw = bview(buf); TEST_ICMP("set to end"      , 4, ==, BV_LEN(bvw, base, head));
+    pos = 5;          TEST_ICMP("set to after end", 0, !=, bsetpos(buf, &pos));
+    bvw = bview(buf); TEST_ICMP("set to after end", 4, ==, BV_LEN(bvw, base, head));
     bclose(buf);
 
     return EXIT_SUCCESS;

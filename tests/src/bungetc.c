@@ -4,36 +4,34 @@
 int main(void) {
     BUFFER* buf; BUFVIEW bvw;
 
-    TEST_CASE("call with null pointer", bungetc(0, NULL) == EOB);
+    TEST_ICMP("call with null pointer", EOB, ==, bungetc(0, NULL));
 
     buf = bopen(NULL, 0, "w");
-    TEST_CASE("call with not allocated data", bungetc(0, buf) == EOB);
+    TEST_ICMP("call with not allocated data", EOB, ==, bungetc(0, buf));
     bclose(buf);
 
     buf = bopen("Text", 4, "a");
-    TEST_CASE("call with not readable", bungetc(0, buf) == EOB);
+    TEST_ICMP("call with not readable", EOB, ==, bungetc(0, buf));
     bclose(buf);
 
     buf = bopen("Text", 4, "a+");
 
-    TEST_CASE("unget character", bungetc('m', buf) == 'm');
-    TEST_CASE("unget character", bungetc('r', buf) == 'r');
+    TEST_ICMP("unget character", 'm', ==, bungetc('m', buf));
+    TEST_ICMP("unget character", 'r', ==, bungetc('r', buf));
 
     bvw = bview(buf);
-    TEST_CASE("check intermedian", BV_LEN(bvw, base, stop) == 4);
-    TEST_CASE("check intermedian", BV_LEN(bvw, base, head) == 2);
-    TEST_CASE("check intermedian", BV_LEN(bvw, head, stop) == 2);
+    TEST_ICMP("check intermedian", 4, ==, BV_LEN(bvw, base, stop));
+    TEST_ICMP("check intermedian", 2, ==, BV_LEN(bvw, base, head));
     TEST_MCMP("check intermedian", "Term", bvw.base, 4);
 
-    TEST_CASE("unget character", bungetc('a', buf) == 'a');
-    TEST_CASE("unget character", bungetc('H', buf) == 'H');
-    TEST_CASE("unget character", bungetc('>', buf) == EOB);
-    TEST_CASE("unget character", bungetc(EOB, buf) == EOB);
+    TEST_ICMP("unget character", 'a', ==, bungetc('a', buf));
+    TEST_ICMP("unget character", 'H', ==, bungetc('H', buf));
+    TEST_ICMP("unget character", EOB, ==, bungetc('>', buf));
+    TEST_ICMP("unget character", EOB, ==, bungetc(EOB, buf));
 
     bvw = bview(buf);
-    TEST_CASE("check intermedian", BV_LEN(bvw, base, stop) == 4);
-    TEST_CASE("check intermedian", BV_LEN(bvw, base, head) == 0);
-    TEST_CASE("check intermedian", BV_LEN(bvw, head, stop) == 4);
+    TEST_ICMP("check intermedian", 4, ==, BV_LEN(bvw, base, stop));
+    TEST_ICMP("check intermedian", 0, ==, BV_LEN(bvw, base, head));
     TEST_MCMP("check intermedian", "Harm", bvw.base, 4);
 
     bclose(buf);

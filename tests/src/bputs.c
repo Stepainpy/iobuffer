@@ -5,34 +5,32 @@ int main(void) {
     BUFFER* buf; BUFVIEW bvw;
     char buffer[4];
 
-    TEST_CASE("call with null pointer", bputs(NULL, NULL) == EOB);
+    TEST_ICMP("call with null pointer", EOB, ==, bputs(NULL, NULL));
 
     buf = bopen("Text", 4, "r");
-    TEST_CASE("call with not writable", bputs(NULL, buf) == EOB);
+    TEST_ICMP("call with not writable", EOB, ==, bputs(NULL, buf));
     bclose(buf);
 
     buf = bopen(NULL, 0, "w");
-    TEST_CASE("call with null data", bputs(NULL, buf) == EOB);
+    TEST_ICMP("call with null data", EOB, ==, bputs(NULL, buf));
     bclose(buf);
 
     buf = bmemopen(buffer, sizeof buffer, "w");
 
-    TEST_CASE("put string", bputs("Tex", buf) >= 0);
-    TEST_CASE("put string", bputs("ts.", buf) <  0);
+    TEST_ICMP("put string", 0, <=, bputs("Tex", buf));
+    TEST_ICMP("put string", 0, > , bputs("ts.", buf));
 
     bvw = bview(buf);
-    TEST_CASE("after put", BV_LEN(bvw, base, stop) == 3);
-    TEST_CASE("after put", BV_LEN(bvw, base, head) == 3);
-    TEST_CASE("after put", BV_LEN(bvw, head, stop) == 0);
+    TEST_ICMP("after put", 3, ==, BV_LEN(bvw, base, stop));
+    TEST_ICMP("after put", 3, ==, BV_LEN(bvw, base, head));
     TEST_MCMP("after put", "Tex", buffer, 3);
 
     bseek(buf, 1, BSEEK_SET);
 
-    TEST_CASE("put string", bputs("ort", buf) >= 0);
+    TEST_ICMP("put string", 0, <=, bputs("ort", buf));
     bvw = bview(buf);
-    TEST_CASE("after put", BV_LEN(bvw, base, stop) == 4);
-    TEST_CASE("after put", BV_LEN(bvw, base, head) == 4);
-    TEST_CASE("after put", BV_LEN(bvw, head, stop) == 0);
+    TEST_ICMP("after put", 4, ==, BV_LEN(bvw, base, stop));
+    TEST_ICMP("after put", 4, ==, BV_LEN(bvw, base, head));
     TEST_MCMP("after put", "Tort", buffer, 4);
 
     bclose(buf);

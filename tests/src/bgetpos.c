@@ -4,25 +4,25 @@
 int main(void) {
     BUFFER* buf; bpos_t pos;
 
-    TEST_CASE("without buffer and pos", bgetpos(NULL, NULL) != 0);
+    TEST_ICMP("without buffer and pos", 0, !=, bgetpos(NULL, NULL));
 
     buf = bopen(NULL, 0, "w");
-    TEST_CASE("without data and pos", bgetpos(buf, NULL) != 0);
+    TEST_ICMP("without data and pos", 0, !=, bgetpos(buf, NULL));
     bclose(buf);
 
     buf = bopen("Text", 4, "r");
-    TEST_CASE("without pos", bgetpos(buf, NULL) != 0);
+    TEST_ICMP("without pos", 0, !=, bgetpos(buf, NULL));
     bclose(buf);
 
     buf = bopen("Text", 4, "r");
-    TEST_CASE("get from start", bgetpos(buf, &pos) == 0);
-    TEST_CASE("get from start", pos == 0);
+    TEST_ICMP("get from start", 0, ==, bgetpos(buf, &pos));
+    TEST_ICMP("get from start", 0, ==, pos);
     bseek(buf, 2, BSEEK_CUR);
-    TEST_CASE("get from middle", bgetpos(buf, &pos) == 0);
-    TEST_CASE("get from middle", pos == 2);
+    TEST_ICMP("get from middle", 0, ==, bgetpos(buf, &pos));
+    TEST_ICMP("get from middle", 2, ==, pos);
     bseek(buf, 0, BSEEK_END);
-    TEST_CASE("get from end", bgetpos(buf, &pos) == 0);
-    TEST_CASE("get from end", pos == 4);
+    TEST_ICMP("get from end", 0, ==, bgetpos(buf, &pos));
+    TEST_ICMP("get from end", 4, ==, pos);
     bclose(buf);
 
     return EXIT_SUCCESS;
