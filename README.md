@@ -3,6 +3,7 @@
 ## Table of content
 
 - [Overview](#overview)
+- [Build and testing](#build-and-testing)
 - [Linking](#linking)
 - [Examples](#examples)
 - [Documentation](#documentation)
@@ -10,6 +11,17 @@
 ## Overview
 
 Dynamic buffer with API like standard C files. Support standard C89 (ANSI C).
+
+## Build and testing
+
+``` console
+$ cmake -S . -B build
+$ cmake --build build --config Release
+```
+
+``` console
+$ ctest --test-dir build --output-on-failure
+```
 
 ## Linking
 
