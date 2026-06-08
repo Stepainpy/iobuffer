@@ -1,5 +1,16 @@
 # Changelog
 
+## 3.0.1 - 2026-06-08
+
+### Added
+
+- Test cases for functions
+
+### Fixed
+
+- Opening buffer in mode `w` or `w+` in `bopen` function
+- Calculating padding for hexadecimal float in `bprintf`/`vbprintf` functions
+
 ## 3.0.0 - 2026-06-03
 
 ### Changed
