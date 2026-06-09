@@ -55,3 +55,10 @@ if(PROJECT_IS_TOP_LEVEL)
     add_subdirectory(tests)
     enable_testing()
 endif()
+
+if (PROJECT_IS_TOP_LEVEL)
+    install(TARGETS iobuffer
+        ARCHIVE       DESTINATION lib
+        PUBLIC_HEADER DESTINATION include/iobuffer
+    )
+endif()
