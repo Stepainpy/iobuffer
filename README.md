@@ -3,8 +3,8 @@
 ## Table of content
 
 - [Overview](#overview)
-- [Build and testing](#build-and-testing)
-- [Linking](#linking)
+- [Working with project](#working-with-project)
+- [Linking to the library](#linking-to-the-library)
 - [Examples](#examples)
 - [Documentation](#documentation)
 
@@ -12,26 +12,40 @@
 
 Dynamic buffer with API like standard C files. Support standard C89 (ANSI C).
 
-## Build and testing
+## Working with project
 
+Building
 ``` console
 $ cmake -S . -B build
 $ cmake --build build --config Release
 ```
 
+Running tests
 ``` console
 $ ctest --test-dir build --output-on-failure
 ```
 
-## Linking
+Installation
+``` console
+$ cmake --install build --config Release
+```
+
+## Linking to the library
 
 Add in your `CMakeLists.txt` file this lines.
+To do this, use one of these methods:
 
-from local directory ...
+1) as local directory:
 ``` cmake
 add_subdirectory(path/to/iobuffer/dir) # e.g.: ./deps/iobuffer
 ```
-... or from `FetchContent`
+
+2) using `find_package()`:
+``` cmake
+find_package(iobuffer <VERSION> REQUIRED) # tag REQUIRED is optional
+```
+
+3) using `FetchContent`:
 ``` cmake
 include(FetchContent)
 FetchContent_Declare(iobuffer
