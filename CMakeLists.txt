@@ -57,8 +57,34 @@ if(PROJECT_IS_TOP_LEVEL)
 endif()
 
 if (PROJECT_IS_TOP_LEVEL)
-    install(TARGETS iobuffer
-        ARCHIVE       DESTINATION lib
-        PUBLIC_HEADER DESTINATION include/iobuffer
+    include(GNUInstallDirs)
+    include(CMakePackageConfigHelpers)
+
+    install(TARGETS iobuffer EXPORT iobuffer_targets
+        ARCHIVE       DESTINATION "${CMAKE_INSTALL_LIBDIR}"
+        PUBLIC_HEADER DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/iobuffer"
+    )
+
+    install(EXPORT iobuffer_targets
+        DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake/iobuffer"
+        NAMESPACE   iobuffer::
+        FILE        iobuffer-targets.cmake
+    )
+
+    configure_package_config_file(
+        cmake/iobuffer-config.cmake.in iobuffer-config.cmake
+        INSTALL_DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake/iobuffer"
+        PATH_VARS CMAKE_INSTALL_LIBDIR
+    )
+    write_basic_package_version_file(
+        "${CMAKE_CURRENT_BINARY_DIR}/iobuffer-config-version.cmake"
+        VERSION ${PROJECT_VERSION}
+        COMPATIBILITY SameMajorVersion
+    )
+
+    install(FILES
+        "${CMAKE_CURRENT_BINARY_DIR}/iobuffer-config.cmake"
+        "${CMAKE_CURRENT_BINARY_DIR}/iobuffer-config-version.cmake"
+        DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake/iobuffer"
     )
 endif()

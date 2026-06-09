@@ -1,0 +1,5 @@
+@PACKAGE_INIT@
+
+include("${CMAKE_CURRENT_LIST_DIR}/iobuffer-targets.cmake")
+check_required_components(iobuffer)
+message("-- Found iobuffer (version ${${CMAKE_FIND_PACKAGE_NAME}_VERSION})")
