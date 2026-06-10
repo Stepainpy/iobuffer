@@ -21,6 +21,11 @@ set(SOURCES
     src/vbiprintf.c
 )
 
+set(FLAGS -O2 -Wall -Wextra -Wpedantic)
+if(MSVC)
+    set(FLAGS /O2 /W4)
+endif()
+
 target_sources(iobuffer PRIVATE ${SOURCES})
 
 set_target_properties(iobuffer PROPERTIES
@@ -34,6 +39,7 @@ set_target_properties(iobuffer PROPERTIES
       VERSION ${PROJECT_VERSION}
 )
 
+target_compile_options(iobuffer PUBLIC ${FLAGS})
 target_include_directories(iobuffer
     PUBLIC "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>")
 
@@ -41,12 +47,6 @@ target_include_directories(iobuffer
 
 if(NOT WIN32)
     target_link_libraries(iobuffer PRIVATE m)
-endif()
-
-if(MSVC)
-    target_compile_options(iobuffer PUBLIC /O2 /W4)
-else()
-    target_compile_options(iobuffer PUBLIC -O2 -Wall -Wextra -Wpedantic)
 endif()
 
 ## Standalone build settings
