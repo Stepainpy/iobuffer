@@ -1,10 +1,14 @@
 #include <iobuffer/iobuffer.h>
 #include "test.h"
 
+#include <math.h>
 #include <limits.h>
 #if __STDC_VERSION__ >= 199901L
 #  include <stdint.h>
 #endif
+
+double getinf(void) { return HUGE_VAL + 1.0; }
+double getnan(void) { return -(getinf() - getinf()); }
 
 void test_format(const char* fmt, const char* exp_out, ...) {
     BUFFER* buf; BUFVIEW bvw;
@@ -263,14 +267,30 @@ int main(void) {
     test_format("%#.0a", "0x2.p+4", 31.25);
     test_format("%#.a", "0x2.p+4", 31.25);
 
-    test_format("%f", "inf", 1.0 / 0.0);
-    test_format("%F", "INF", 1.0 / 0.0);
-    test_format("%e", "inf", 1.0 / 0.0);
-    test_format("%E", "INF", 1.0 / 0.0);
-    test_format("%g", "inf", 1.0 / 0.0);
-    test_format("%G", "INF", 1.0 / 0.0);
-    test_format("%a", "inf", 1.0 / 0.0);
-    test_format("%A", "INF", 1.0 / 0.0);
+    test_format("%f", "inf", getinf());
+    test_format("%F", "INF", getinf());
+    test_format("%e", "inf", getinf());
+    test_format("%E", "INF", getinf());
+    test_format("%g", "inf", getinf());
+    test_format("%G", "INF", getinf());
+    test_format("%a", "inf", getinf());
+    test_format("%A", "INF", getinf());
+
+    test_format("%f", "nan", getnan());
+    test_format("%F", "NAN", getnan());
+    test_format("%e", "nan", getnan());
+    test_format("%E", "NAN", getnan());
+    test_format("%g", "nan", getnan());
+    test_format("%G", "NAN", getnan());
+    test_format("%a", "nan", getnan());
+    test_format("%A", "NAN", getnan());
+
+    test_format("%f" ,  "inf",  getinf());
+    test_format("%f" , "-inf", -getinf());
+    test_format("% f", " inf",  getinf());
+    test_format("% f", "-inf", -getinf());
+    test_format("%+f", "+inf",  getinf());
+    test_format("%+f", "-inf", -getinf());
 
     test_format("%e", "3.125000e+01", 31.25);
     test_format("%E", "3.125000E+01", 31.25);

@@ -1,6 +1,8 @@
 #include <iobuffer/iobuffer.h>
 #include "test.h"
 
+#include <float.h>
+
 void test_format(const char* fmt, int exp_count, int exp_pos, const char* input, ...) {
     BUFFER* buf; BUFVIEW bvw;
     int ret; va_list args;
@@ -134,16 +136,31 @@ int main(void) {
     /* Float-point number specifier */
 
     {
-    float x;
+    /* expect IEEE 754, float and uint is 32-bit */
+    union { float x; unsigned n; } u;
 
-    test_format("%g", 1, 5, "31.25", &x);
-    TEST_VCMP("check float spec", 31.25, ==, x, double, "%g");
-    test_format("%f", 1, 9, "31.250000", &x);
-    TEST_VCMP("check float spec", 31.25, ==, x, double, "%g");
-    test_format("%e", 1, 11, "3.125000e+1", &x);
-    TEST_VCMP("check float spec", 31.25, ==, x, double, "%g");
-    test_format("%a", 1, 9, "0x1.f4p+4", &x);
-    TEST_VCMP("check float spec", 31.25, ==, x, double, "%g");
+    test_format("%g", 1, 5, "31.25", &u.x);
+    TEST_VCMP("check float spec", 31.25, ==, u.x, double, "%g");
+    test_format("%f", 1, 9, "31.250000", &u.x);
+    TEST_VCMP("check float spec", 31.25, ==, u.x, double, "%g");
+    test_format("%e", 1, 11, "3.125000e+1", &u.x);
+    TEST_VCMP("check float spec", 31.25, ==, u.x, double, "%g");
+    test_format("%a", 1, 9, "0x1.f4p+4", &u.x);
+    TEST_VCMP("check float spec", 31.25, ==, u.x, double, "%g");
+
+    test_format("%f", 1, 4, "+nan", &u.x);
+    TEST_VCMP("check float nan", (u.x != u.x)   , ==, 1, int, "%i");
+    TEST_VCMP("check float nan", (!!(u.n >> 31)), ==, 0, int, "%i");
+    test_format("%f", 1, 4, "-nan", &u.x);
+    TEST_VCMP("check float nan", (u.x != u.x)   , ==, 1, int, "%i");
+    TEST_VCMP("check float nan", (!!(u.n >> 31)), ==, 1, int, "%i");
+
+    test_format("%f", 1, 4, "+inf", &u.x);
+    TEST_VCMP("check float inf", (u.x < -FLT_MAX || FLT_MAX < u.x), ==, 1, int, "%i");
+    TEST_VCMP("check float inf", u.x, >, 0, double, "%g");
+    test_format("%f", 1, 4, "-inf", &u.x);
+    TEST_VCMP("check float inf", (u.x < -FLT_MAX || FLT_MAX < u.x), ==, 1, int, "%i");
+    TEST_VCMP("check float inf", u.x, <, 0, double, "%g");
 
     }
 

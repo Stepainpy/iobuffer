@@ -26,6 +26,9 @@ typedef struct {
 
 typedef uintmax_t scanset_t[(256 + UINTMAX_BITS - 1) / UINTMAX_BITS];
 
+static double bigetinf(void) { return HUGE_VAL + 1.0; }
+static double bigetnan(void) { return -(bigetinf() - bigetinf()); }
+
 static void bissset(scanset_t ss, uchar value) {
     ss[value / UINTMAX_BITS] |= (uintmax_t)1 << (value % UINTMAX_BITS);
 }
@@ -306,20 +309,20 @@ static int bistrtoflt(BUFFER* buf, bifmtspec_t* fmt, va_list args, int* total) {
             }
         } else if (!has_zero && base != 16 && ch == 'n') {
             if (biimmcmp("nan", 3, buf, total)) return B_FAIL;
-            result = +0.0 / +0.0;
+            result = bigetnan();
         } else if (!has_zero && base != 16 && ch == 'N') {
             if (biimmcmp("NAN", 3, buf, total)) return B_FAIL;
-            result = +0.0 / +0.0;
+            result = bigetnan();
         } else if (!has_zero && base != 16 && ch == 'i') {
             if (biimmcmp("inf", 3, buf, total)) return B_FAIL;
             if (biimmpeek(buf) == 'i')
                 if (biimmcmp("inity", 5, buf, total)) return B_FAIL;
-            result = +1.0 / +0.0;
+            result = bigetinf();
         } else if (!has_zero && base != 16 && ch == 'I') {
             if (biimmcmp("INF", 3, buf, total)) return B_FAIL;
             if (biimmpeek(buf) == 'I')
                 if (biimmcmp("INITY", 5, buf, total)) return B_FAIL;
-            result = +1.0 / +0.0;
+            result = bigetinf();
         } else if (!has_zero)
             return B_FAIL;
     } else if (!has_zero)
