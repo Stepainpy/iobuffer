@@ -6,6 +6,8 @@ project(iobuffer
     LANGUAGES    C
 )
 
+## Create and setup library
+
 add_library(iobuffer STATIC)
 add_library(iobuffer::iobuffer ALIAS iobuffer)
 
@@ -35,6 +37,8 @@ set_target_properties(iobuffer PROPERTIES
 target_include_directories(iobuffer
     PUBLIC "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>")
 
+# Platform-depend settings
+
 if(NOT WIN32)
     target_link_libraries(iobuffer PRIVATE m)
 endif()
@@ -45,10 +49,16 @@ else()
     target_compile_options(iobuffer PUBLIC -O2 -Wall -Wextra -Wpedantic)
 endif()
 
+## Standalone build settings
+
+# Output directory
+
 if(PROJECT_IS_TOP_LEVEL)
     set_target_properties(iobuffer PROPERTIES
         ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/bin")
 endif()
+
+# Setup tests
 
 if(PROJECT_IS_TOP_LEVEL)
     include(CTest)
@@ -56,16 +66,21 @@ if(PROJECT_IS_TOP_LEVEL)
     enable_testing()
 endif()
 
+# Installation
+
 if (PROJECT_IS_TOP_LEVEL)
     include(GNUInstallDirs)
     include(CMakePackageConfigHelpers)
 
-    install(TARGETS iobuffer EXPORT iobuffer_targets
+    install(
+        TARGETS iobuffer
+        EXPORT  iobuffer_targets
         ARCHIVE       DESTINATION "${CMAKE_INSTALL_LIBDIR}"
         PUBLIC_HEADER DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/iobuffer"
     )
 
-    install(EXPORT iobuffer_targets
+    install(
+        EXPORT      iobuffer_targets
         DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake/iobuffer"
         NAMESPACE   iobuffer::
         FILE        iobuffer-targets.cmake
@@ -82,9 +97,10 @@ if (PROJECT_IS_TOP_LEVEL)
         COMPATIBILITY SameMajorVersion
     )
 
-    install(FILES
-        "${CMAKE_CURRENT_BINARY_DIR}/iobuffer-config.cmake"
-        "${CMAKE_CURRENT_BINARY_DIR}/iobuffer-config-version.cmake"
+    install(
+        FILES
+            "${CMAKE_CURRENT_BINARY_DIR}/iobuffer-config.cmake"
+            "${CMAKE_CURRENT_BINARY_DIR}/iobuffer-config-version.cmake"
         DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake/iobuffer"
     )
 endif()
