@@ -306,7 +306,7 @@ int main(void) {
     TEST_ICMP("check NoWC", 3, ==, x);
     TEST_ICMP("check NoWC", 6, ==, y);
 
-    test_format("%n%x%n", "abcdef", &x, 0xabcdef, &y);
+    test_format("%n%s%n", "abcdef", &x, "abcdef", &y);
     TEST_ICMP("check NoWC", 0, ==, x);
     TEST_ICMP("check NoWC", 6, ==, y);
 
