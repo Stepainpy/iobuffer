@@ -1,5 +1,15 @@
 # Changelog
 
+## 3.0.2 - 2026-06-10
+
+### Added
+
+- Install target to CMake
+
+### Fixed
+
+- Hadling of NaN and infinity in `bprintf`/`vbprintf`/`bscanf`/`vbscanf` functions
+
 ## 3.0.1 - 2026-06-08
 
 ### Added
@@ -16,7 +26,7 @@
 ### Changed
 
 - Structure of source files and directories
-- Cmake built as static library
+- CMake built as static library
 - Names of several macro names
 
 ### Added
