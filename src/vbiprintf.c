@@ -45,8 +45,8 @@ static bool biisnan(long double x) { return x != x; }
 static bool biisinf(long double x) { return x < -LDBL_MAX || LDBL_MAX < x; }
 
 static bool bisignbit(long double x) {
-    union { float f; ulong l; } u; u.f = (float)x;
-    return !!(u.l >> 31);
+    union { double d; ullong l; } u; u.d = (double)x;
+    return (u.l >> 63) > 0;
 }
 
 static int bigetexponent(const char* numstr, int point_pos) {
