@@ -44,6 +44,11 @@ static int bimax(int a, int b) { return a > b ? a : b; }
 static bool biisnan(long double x) { return x != x; }
 static bool biisinf(long double x) { return x < -LDBL_MAX || LDBL_MAX < x; }
 
+static bool bisignbit(long double x) {
+    union { float f; ulong l; } u; u.f = (float)x;
+    return !!(u.l >> 31);
+}
+
 static int bigetexponent(const char* numstr, int point_pos) {
     return point_pos == 1 && numstr[0] == '0'
         ? -1 - (int)strspn(numstr + 2, "0") : point_pos - 1;
@@ -351,7 +356,7 @@ static int biputfmt_feg(BUFFER* buf, va_list args, bifmtspec_t* fmt, int* total,
         fmt->precision = flen = 0; len -= 1;
     }
 
-    is_neg = received < 0;
+    is_neg = bisignbit(received);
     has_sign = fmt->signing >= 0 || is_neg;
 
     alen = fixed ? ((spec < 0 || fmt->alt_form) ? fmt->precision - flen : 0) : 2 + elen;
@@ -433,7 +438,7 @@ static int biputfmt_a(BUFFER* buf, va_list args, bifmtspec_t* fmt, int* total, b
     if (fmt->precision < 0 && !fmt->alt_form)
         if (tmpbuf[len - 1] == '.') len--, flen=0;
 
-    is_neg = received < 0;
+    is_neg = bisignbit(received);
     has_sign = fmt->signing >= 0 || is_neg;
 
     padding = bimax(0, fmt->fieldwidth

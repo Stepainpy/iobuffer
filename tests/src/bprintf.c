@@ -285,12 +285,26 @@ int main(void) {
     test_format("%a", "nan", getnan());
     test_format("%A", "NAN", getnan());
 
+    test_format("%g" ,  "1.5",  1.5);
+    test_format("%g" , "-1.5", -1.5);
+    test_format("% g", " 1.5",  1.5);
+    test_format("% g", "-1.5", -1.5);
+    test_format("%+g", "+1.5",  1.5);
+    test_format("%+g", "-1.5", -1.5);
+
     test_format("%f" ,  "inf",  getinf());
     test_format("%f" , "-inf", -getinf());
     test_format("% f", " inf",  getinf());
     test_format("% f", "-inf", -getinf());
     test_format("%+f", "+inf",  getinf());
     test_format("%+f", "-inf", -getinf());
+
+    test_format("%f" ,  "nan",  getnan());
+    test_format("%f" , "-nan", -getnan());
+    test_format("% f", " nan",  getnan());
+    test_format("% f", "-nan", -getnan());
+    test_format("%+f", "+nan",  getnan());
+    test_format("%+f", "-nan", -getnan());
 
     test_format("%e", "3.125000e+01", 31.25);
     test_format("%E", "3.125000E+01", 31.25);
