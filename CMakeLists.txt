@@ -22,9 +22,13 @@ set(SOURCES
 )
 
 set(FLAGS -O2 -Wall -Wextra -Wpedantic)
+
 if(MSVC)
     set(FLAGS /O2 /W4)
+else()
+    list(APPEND FLAGS -Wno-long-long)
 endif()
+
 if(CMAKE_C_COMPILER_ID STREQUAL "Clang")
     list(APPEND FLAGS -Wno-newline-eof)
 endif()

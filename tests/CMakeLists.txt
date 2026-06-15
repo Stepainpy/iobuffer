@@ -8,9 +8,13 @@ option(IOBT_FMT_DI_ENABLE_LIMITS "Enable check output of signed limits" ON)
 option(IOBT_FMT_BOUX_ENABLE_LIMITS "Enable check output of unsigned limits" ON)
 
 set(FLAGS -O2 -Wall -Wextra -Wpedantic -Wno-variadic-macros)
+
 if(MSVC)
     set(FLAGS /O2 /W4)
+else()
+    list(APPEND FLAGS -Wno-long-long)
 endif()
+
 if(CMAKE_C_COMPILER_ID MATCHES "Clang$")
     list(APPEND FLAGS -Wno-newline-eof)
 endif()
