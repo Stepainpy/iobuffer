@@ -19,11 +19,9 @@ jobs:
     steps:
       - uses: actions/checkout@v2
 
-      - name: Install tools with ${{ matrix.compiler }}
-        shell: bash
+      - name: Install tools
         run: |
           sudo apt update
-          sudo apt upgrade -y
           sudo apt install -y ${{ matrix.compiler }} cmake
           echo CC=${{ matrix.compiler }} >> $GITHUB_ENV
 
@@ -36,3 +34,22 @@ jobs:
       - name: Run tests
         working-directory: ./build
         run: ctest --output-on-failure
+
+  build-windows:
+    runs-on: windows-latest
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Setup MSVC
+      - uses: ilammy/msvc-dev-cmd@v1
+
+      - name: Configure CMake
+        run: cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -G "Visual Studio 18 2026"
+
+      - name: Build project
+        run: cmake --build build --config Release
+
+      - name: Run tests
+        working-directory: ./build
+        run: ctest --output-on-failure -C Release
