@@ -78,9 +78,9 @@ jobs:
 
       - name: Setup MSVC
         uses: ilammy/msvc-dev-cmd@v1
-        if: matrix.compiler == "cl"
+        if: matrix.compiler == 'cl'
       - name: Setup MSVC, pt. 2
-        if: matrix.compiler == "cl"
+        if: matrix.compiler == 'cl'
         run: |
           echo generator="Visual Studio 18 2026" | Out-File -FilePath $env:GITHUB_ENV -Append
 
@@ -88,9 +88,9 @@ jobs:
         uses: rlalik/setup-cpp-compiler@v2
         with:
           ${{ matrix.compiler }}-latest
-        if: matrix.compiler != "cl"
+        if: matrix.compiler != 'cl'
       - name: Setup GCC/Clang, pt. 2
-        if: matrix.compiler != "cl"
+        if: matrix.compiler != 'cl'
         run: |
           echo generator="Unix Makefiles" | Out-File -FilePath $env:GITHUB_ENV -Append
           echo CC=${{ matrix.compiler }}  | Out-File -FilePath $env:GITHUB_ENV -Append
