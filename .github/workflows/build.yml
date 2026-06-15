@@ -46,8 +46,14 @@ jobs:
       - uses: actions/checkout@v6
 
       - name: Install tools
+        shell: bash
         run: |
-          brew install ${{ matrix.compiler }} cmake
+          if [ "${{ matrix.compiler }}" == "clang" ]; then
+            brew install llvm
+          else
+            brew install ${{ matrix.compiler }}
+          fi
+          brew install cmake
           echo CC=${{ matrix.compiler }} >> $GITHUB_ENV
 
       - name: Configure CMake
