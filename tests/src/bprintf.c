@@ -7,10 +7,29 @@
 #  include <stdint.h>
 #endif
 
-double getinf(void) { return HUGE_VAL + 1.0; }
-double getnan(void) { return -(getinf() - getinf()); }
+double getinf(void) {
+    union { float f; unsigned u; unsigned long ul; } u;
+#if ULONG_MAX == 0xFFFFFFFFul
+    u.ul = 0x7f800000ul;
+#else
+    u.u  = 0x7f800000u;
+#endif
+    return (double)u.f;
+}
 
-void test_format(const char* fmt, const char* exp_out, ...) {
+double getnan(void) {
+    union { float f; unsigned u; unsigned long ul; } u;
+#if ULONG_MAX == 0xFFFFFFFFul
+    u.ul = 0x7fc00000ul;
+#else
+    u.u  = 0x7fc00000u;
+#endif
+    return (double)u.f;
+}
+
+#define test_format(...) test_format(__LINE__, __VA_ARGS__)
+
+void (test_format)(int line, const char* fmt, const char* exp_out, ...) {
     BUFFER* buf; BUFVIEW bvw;
     int ret; va_list args;
 
@@ -19,7 +38,7 @@ void test_format(const char* fmt, const char* exp_out, ...) {
 
     va_start(args, exp_out);
     buf = bopen(NULL, 0, "w");
-    sprintf(tcname, "check format string \"%s\"", fmt);
+    sprintf(tcname, "check format string \"%s\" on line %i", fmt, line);
 
     ret = vbprintf(buf, fmt, args);
     bvw = bview(buf);

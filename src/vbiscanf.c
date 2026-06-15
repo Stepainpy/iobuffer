@@ -26,9 +26,6 @@ typedef struct {
 
 typedef uintmax_t scanset_t[(256 + UINTMAX_BITS - 1) / UINTMAX_BITS];
 
-static double bigetinf(void) { return HUGE_VAL + 1.0; }
-static double bigetnan(void) { return -(bigetinf() - bigetinf()); }
-
 static void bissset(scanset_t ss, uchar value) {
     ss[value / UINTMAX_BITS] |= (uintmax_t)1 << (value % UINTMAX_BITS);
 }
@@ -39,6 +36,26 @@ static bool bissget(scanset_t ss, uchar value) {
 
 static bool biisspace(int ch) {
     return memchr(B_SPACE_CHARS, ch, sizeof B_SPACE_CHARS - 1) != NULL;
+}
+
+static double bigetinf(void) {
+    union { float f; unsigned u; unsigned long ul; } u;
+#if ULONG_MAX == 0xFFFFFFFFul
+    u.ul = 0x7f800000ul;
+#else
+    u.u  = 0x7f800000u;
+#endif
+    return (double)u.f;
+}
+
+static double bigetnan(void) {
+    union { float f; unsigned u; unsigned long ul; } u;
+#if ULONG_MAX == 0xFFFFFFFFul
+    u.ul = 0x7fc00000ul;
+#else
+    u.u  = 0x7fc00000u;
+#endif
+    return (double)u.f;
 }
 
 static int bichartodigit(int ch) {
