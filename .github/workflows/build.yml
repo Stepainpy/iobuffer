@@ -67,6 +67,10 @@ jobs:
         run: ctest --output-on-failure
 
   build-windows:
+    strategy:
+      matrix:
+        compiler: [gcc, clang, cl]
+
     runs-on: windows-latest
 
     steps:
@@ -74,9 +78,21 @@ jobs:
 
       - name: Setup MSVC
         uses: ilammy/msvc-dev-cmd@v1
+        if: matrix.compiler == cl
+        run: |
+          echo generator="Visual Studio 18 2026" | Out-File -FilePath $env:GITHUB_ENV -Append
+
+      - name: Setup GCC/Clang
+        uses: rlalik/setup-cpp-compiler@v2
+        with:
+          ${{ matrix.compiler }}-latest
+        if: matrix.compiler != cl
+        run: |
+          echo generator="Unix Makefiles" | Out-File -FilePath $env:GITHUB_ENV -Append
+          echo CC=${{ matrix.compiler }}  | Out-File -FilePath $env:GITHUB_ENV -Append
 
       - name: Configure CMake
-        run: cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -G "Visual Studio 18 2026"
+        run: cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -G ${{ env.generator }}
 
       - name: Build project
         run: cmake --build build --config Release
