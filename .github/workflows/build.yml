@@ -96,7 +96,7 @@ jobs:
           echo CC=${{ matrix.compiler }}  | Out-File -FilePath $env:GITHUB_ENV -Append
 
       - name: Configure CMake
-        run: cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -G ${{ env.generator }}
+        run: cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -G "${{ env.generator }}"
 
       - name: Build project
         run: cmake --build build --config Release
