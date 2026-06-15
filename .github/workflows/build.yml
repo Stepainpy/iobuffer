@@ -9,16 +9,23 @@ on:
       - main
 
 jobs:
-  build:
+  build-linux:
+    strategy:
+      matrix:
+        compiler: [gcc, clang]
+
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v2
 
-      - name: Install tools
+      - name: Install tools with ${{ matrix.compiler }}
+        shell: bash
         run: |
           sudo apt update
-          sudo apt install -y gcc cmake
+          sudo apt upgrade -y
+          sudo apt install -y ${{ matrix.compiler }} cmake
+          echo CC=${{ matrix.compiler }} >> $GITHUB_ENV
 
       - name: Configure CMake
         run: cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
