@@ -35,6 +35,31 @@ jobs:
         working-directory: ./build
         run: ctest --output-on-failure
 
+  build-macos:
+    strategy:
+      matrix:
+        compiler: [gcc, clang]
+
+    runs-on: macos-latest
+
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Install tools
+        run: |
+          brew install ${{ matrix.compiler }} cmake
+          echo CC=${{ matrix.compiler }} >> $GITHUB_ENV
+
+      - name: Configure CMake
+        run: cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
+
+      - name: Build project
+        run: cmake --build build --config Release
+
+      - name: Run tests
+        working-directory: ./build
+        run: ctest --output-on-failure
+
   build-windows:
     runs-on: windows-latest
 
