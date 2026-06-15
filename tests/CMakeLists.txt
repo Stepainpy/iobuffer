@@ -7,6 +7,14 @@ file(GLOB TESTFILES RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "src/b*.c")
 option(IOBT_FMT_DI_ENABLE_LIMITS "Enable check output of signed limits" ON)
 option(IOBT_FMT_BOUX_ENABLE_LIMITS "Enable check output of unsigned limits" ON)
 
+set(FLAGS -O2 -Wall -Wextra -Wpedantic -Wno-variadic-macros)
+if(MSVC)
+    set(FLAGS /O2 /W4)
+endif()
+if(CMAKE_C_COMPILER_ID STREQUAL "Clang")
+    list(APPEND FLAGS -Wno-newline-eof)
+endif()
+
 foreach(CVER IN ITEMS ${CVERSIONS})
     set(TESTBASE iobuffer_test_${CVER})
     foreach(TFILE IN ITEMS ${TESTFILES})
@@ -22,6 +30,8 @@ foreach(CVER IN ITEMS ${CVERSIONS})
             PRIVATE iobuffer::iobuffer)
         target_include_directories(${TESTNAME}
             PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
+        target_compile_options(${TESTNAME}
+            PRIVATE ${FLAGS})
 
         set_target_properties(${TESTNAME} PROPERTIES
             C_STANDARD          ${CVER}

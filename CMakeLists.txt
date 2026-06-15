@@ -25,6 +25,9 @@ set(FLAGS -O2 -Wall -Wextra -Wpedantic)
 if(MSVC)
     set(FLAGS /O2 /W4)
 endif()
+if(CMAKE_C_COMPILER_ID STREQUAL "Clang")
+    list(APPEND FLAGS -Wno-newline-eof)
+endif()
 
 target_sources(iobuffer PRIVATE ${SOURCES})
 
