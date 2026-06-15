@@ -87,7 +87,7 @@ jobs:
       - name: Setup GCC/Clang
         uses: rlalik/setup-cpp-compiler@v2
         with:
-          ${{ matrix.compiler }}-latest
+          compiler: ${{ matrix.compiler }}-latest
         if: matrix.compiler != 'cl'
       - name: Setup GCC/Clang, pt. 2
         if: matrix.compiler != 'cl'
