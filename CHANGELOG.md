@@ -1,5 +1,11 @@
 # Changelog
 
+## 3.0.3 - 2026-06-15
+
+### Fixed
+
+- Creating NaN and infinity float value from integer literal
+
 ## 3.0.2 - 2026-06-10
 
 ### Added
