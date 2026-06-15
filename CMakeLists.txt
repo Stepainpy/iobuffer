@@ -29,7 +29,7 @@ else()
     list(APPEND FLAGS -Wno-long-long)
 endif()
 
-if(CMAKE_C_COMPILER_ID STREQUAL "Clang")
+if(CMAKE_C_COMPILER_ID MATCHES "Clang$")
     list(APPEND FLAGS -Wno-newline-eof)
 endif()
 

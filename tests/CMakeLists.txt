@@ -10,7 +10,7 @@ option(IOBT_FMT_BOUX_ENABLE_LIMITS "Enable check output of unsigned limits" ON)
 set(FLAGS -O2 -Wall -Wextra -Wpedantic -Wno-variadic-macros)
 
 if(MSVC)
-    set(FLAGS /O2 /W4)
+    set(FLAGS /O2 /W4 /wd4267 /wd4244 /wd4146 /wd4457 /wd4456 /wd4701)
 else()
     list(APPEND FLAGS -Wno-long-long)
 endif()
@@ -50,6 +50,11 @@ foreach(CVER IN ITEMS ${CVERSIONS})
         if(IOBT_FMT_BOUX_ENABLE_LIMITS)
             target_compile_definitions(${TESTNAME}
                 PRIVATE IOBT_FMT_BOUX_ENABLE_LIMITS=1)
+        endif()
+
+        if(WIN32)
+            target_compile_definitions(${TESTNAME}
+                PRIVATE _CRT_SECURE_NO_WARNINGS=1)
         endif()
     endforeach()
 endforeach()
