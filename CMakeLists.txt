@@ -24,7 +24,7 @@ set(SOURCES
 set(FLAGS -O2 -Wall -Wextra -Wpedantic)
 
 if(MSVC)
-    set(FLAGS /O2 /W4)
+    set(FLAGS /O2 /W4 /wd4267 /wd4244 /wd4146 /wd4457 /wd4456 /wd4701)
 else()
     list(APPEND FLAGS -Wno-long-long)
 endif()
