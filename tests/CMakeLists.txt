@@ -11,7 +11,7 @@ set(FLAGS -O2 -Wall -Wextra -Wpedantic -Wno-variadic-macros)
 if(MSVC)
     set(FLAGS /O2 /W4)
 endif()
-if(CMAKE_C_COMPILER_ID STREQUAL "Clang")
+if(CMAKE_C_COMPILER_ID MATCHES "Clang$")
     list(APPEND FLAGS -Wno-newline-eof)
 endif()
 
