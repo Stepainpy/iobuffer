@@ -9,7 +9,63 @@ on:
       - main
 
 jobs:
+  build:
+    runs-on: ${{ matrix.os }}-latest
+
+    strategy:
+      fail-fast: false
+
+      matrix:
+        os:
+          - windows
+          - ubuntu
+          - macos
+        compiler:
+          - gcc
+          - llvm
+        generator:
+          - "Unix Makefiles"
+        build-type:
+          - Release
+          - Debug
+        is-shared:
+          - OFF
+          - ON
+
+        include:
+          - os: windows
+            compiler: msvc
+            generator: "Visual Studio 18 2026"
+
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Setup C compiler
+        uses: aminya/setup-cpp@v1
+        with:
+          compiler: ${{ matrix.compiler }}
+          vcvarsall: ${{ contains(matrix.os, 'windows') }}
+
+          cmake: true
+          make: true
+
+      - name: Configure CMake
+        run: >
+          cmake -S . -B build -G "${{ matrix.generator }}"
+          -DCMAKE_BUILD_TYPE:STRING=${{ matrix.build-type }}
+          -DBUILD_SHARED_LIBS:BOOL=${{ matrix.is-shared }}
+
+      - name: Build project
+        run: |
+          cmake --build build --config ${{ matrix.build-type }}
+
+      - name: Run tests
+        working-directory: ./build
+        run: |
+          ctest --output-on-failure -C ${{ matrix.build-type }}
+
   build-linux:
+    if: false
     strategy:
       matrix:
         compiler: [gcc, clang]
@@ -36,6 +92,7 @@ jobs:
         run: ctest --output-on-failure
 
   build-macos:
+    if: false
     strategy:
       matrix:
         compiler: [gcc, clang]
@@ -67,6 +124,7 @@ jobs:
         run: ctest --output-on-failure
 
   build-windows:
+    if: false
     strategy:
       matrix:
         compiler: [gcc, clang, cl]
