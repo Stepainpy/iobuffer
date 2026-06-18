@@ -55,6 +55,13 @@ foreach(CVER IN ITEMS ${CVERSIONS})
         if(WIN32)
             target_compile_definitions(${TESTNAME}
                 PRIVATE _CRT_SECURE_NO_WARNINGS=1)
+
+            add_custom_command(
+                TARGET ${TESTNAME} POST_BUILD
+                COMMAND ${CMAKE_COMMAND} -E copy_directory
+                $<TARGET_FILE_DIR:iobuffer::iobuffer>
+                $<TARGET_FILE_DIR:${TESTNAME}>
+            )
         endif()
     endforeach()
 endforeach()
