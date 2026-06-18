@@ -43,11 +43,11 @@ jobs:
       - name: Setup C compiler
         uses: aminya/setup-cpp@v1
         with:
-          compiler: ${{ matrix.compiler }}
-          vcvarsall: ${{ contains(matrix.os, 'windows') }}
+          compiler:  ${{ matrix.compiler }}
+          vcvarsall: ${{ matrix.compiler == 'msvc' }}
+          make:      ${{ matrix.compiler != 'msvc' }}
 
           cmake: true
-          make: true
 
       - name: Configure CMake
         run: >
