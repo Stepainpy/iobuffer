@@ -71,10 +71,7 @@ jobs:
 
       - name: Enable variables for MSVC
         if: ${{ matrix.compiler == 'msvc' }}
-        shell: cmd
-        working-directory: "C:\\Program Files (x86)\\Microsoft Visual Studio\\18\\BuildTools\\VS\\Auxiliary\\Build"
-        run: |
-          .\\vcvarsall.bat
+        run: "C:\\Program Files (x86)\\Microsoft Visual Studio\\18\\BuildTools\\VS\\Auxiliary\\Build\\vcvarsall.bat"
 
       - name: Configure CMake
         run: >
