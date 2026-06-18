@@ -23,19 +23,19 @@ jobs:
         compiler:
           - gcc
           - llvm
-        generator:
-          - "Unix Makefiles"
-        build-type:
-          - Release
-          - Debug
         is-shared:
           - OFF
           - ON
+        build-type:
+          - Release
+          - Debug
+        generator:
+          - "Unix Makefiles"
 
         include:
           - os: windows
             compiler: msvc
-            generator: "Visual Studio 18 2026"
+            generator: "Visual Studio 17 2022"
 
     steps:
       - uses: actions/checkout@v6
