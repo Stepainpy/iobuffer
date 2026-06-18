@@ -12,6 +12,8 @@
 #include <stdarg.h>
 #include <stddef.h>
 
+#include <biexport.h>
+
 /* Version macros */
 
 #define B_STRINGIFY_IMPL(x) # x
@@ -65,58 +67,58 @@ typedef void* (*balloc_t)(void* ptr, size_t size, void* userdata);
 
 /* Allocation */
 
-int bsetalloc(balloc_t allocator, void* userdata);
+B_API int bsetalloc(balloc_t allocator, void* userdata);
 
 /* Buffer access */
 
-int bclose(BUFFER* buffer);
+B_API int bclose(BUFFER* buffer);
 
-BUFFER* bopen   (const void* restrict data, size_t size, const char* restrict mode) B_ATTR_MALLOC;
-BUFFER* bmemopen(      void* restrict data, size_t size, const char* restrict mode) B_ATTR_MALLOC;
+B_API BUFFER* bopen   (const void* restrict data, size_t size, const char* restrict mode) B_ATTR_MALLOC;
+B_API BUFFER* bmemopen(      void* restrict data, size_t size, const char* restrict mode) B_ATTR_MALLOC;
 
 /* Operations on buffer */
 
-int berase(BUFFER* buffer, size_t count);
-int breset(BUFFER* buffer);
+B_API int berase(BUFFER* buffer, size_t count);
+B_API int breset(BUFFER* buffer);
 
 /* Buffer positioning */
 
-int bgetpos(BUFFER* restrict buffer,       bpos_t* restrict pos);
-int bsetpos(BUFFER*          buffer, const bpos_t*          pos);
+B_API int bgetpos(BUFFER* restrict buffer,       bpos_t* restrict pos);
+B_API int bsetpos(BUFFER*          buffer, const bpos_t*          pos);
 
-long btell(BUFFER* buffer);
-int  bseek(BUFFER* buffer, long offset, int origin);
+B_API long btell(BUFFER* buffer);
+B_API int  bseek(BUFFER* buffer, long offset, int origin);
 
-void brewind(BUFFER* buffer);
+B_API void brewind(BUFFER* buffer);
 
 /* Direct input/output */
 
-size_t bread (      void* restrict data, size_t size, size_t count, BUFFER* restrict buffer);
-size_t bwrite(const void* restrict data, size_t size, size_t count, BUFFER* restrict buffer);
+B_API size_t bread (      void* restrict data, size_t size, size_t count, BUFFER* restrict buffer);
+B_API size_t bwrite(const void* restrict data, size_t size, size_t count, BUFFER* restrict buffer);
 
 /* Unformatted input/output */
 
-int bgetc(BUFFER* buffer);
-int bpeek(BUFFER* buffer);
+B_API int bgetc(BUFFER* buffer);
+B_API int bpeek(BUFFER* buffer);
 
-char* bgets(char* restrict str, int count, BUFFER* restrict buffer);
+B_API char* bgets(char* restrict str, int count, BUFFER* restrict buffer);
 
-int bputc(int byte, BUFFER* buffer);
-int bputs(const char* restrict string, BUFFER* restrict buffer);
+B_API int bputc(int byte, BUFFER* buffer);
+B_API int bputs(const char* restrict string, BUFFER* restrict buffer);
 
-int bungetc(int byte, BUFFER* buffer);
+B_API int bungetc(int byte, BUFFER* buffer);
 
 /* Formatted input/output */
 
-int   bscanf(BUFFER* restrict buffer, const char* restrict format, ...         ) B_ATTR_SCAN__FMT(3);
-int  vbscanf(BUFFER* restrict buffer, const char* restrict format, va_list list) B_ATTR_SCAN__FMT(0);
+B_API int   bscanf(BUFFER* restrict buffer, const char* restrict format, ...         ) B_ATTR_SCAN__FMT(3);
+B_API int  vbscanf(BUFFER* restrict buffer, const char* restrict format, va_list list) B_ATTR_SCAN__FMT(0);
 
-int  bprintf(BUFFER* restrict buffer, const char* restrict format, ...         ) B_ATTR_PRINT_FMT(3);
-int vbprintf(BUFFER* restrict buffer, const char* restrict format, va_list list) B_ATTR_PRINT_FMT(0);
+B_API int  bprintf(BUFFER* restrict buffer, const char* restrict format, ...         ) B_ATTR_PRINT_FMT(3);
+B_API int vbprintf(BUFFER* restrict buffer, const char* restrict format, va_list list) B_ATTR_PRINT_FMT(0);
 
 /* Error handling */
 
-int beob(BUFFER* buffer);
+B_API int beob(BUFFER* buffer);
 
 /* View extension */
 
@@ -126,7 +128,7 @@ typedef struct BUFVIEW {
     const void* stop;
 } BUFVIEW;
 
-BUFVIEW bview(BUFFER* buffer);
+B_API BUFVIEW bview(BUFFER* buffer);
 
 #define BV_FMT "%.*s"
 #define BV_ARG(view, begin, end) (int)BV_LEN(view, begin, end), (const char*)(view).begin

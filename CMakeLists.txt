@@ -6,13 +6,26 @@ project(iobuffer
     LANGUAGES    C
 )
 
-## Create and setup library
+## Create library
 
-add_library(iobuffer STATIC)
+add_library(iobuffer)
 add_library(iobuffer::iobuffer ALIAS iobuffer)
+
+## Generate export macros
+
+include(GenerateExportHeader)
+
+generate_export_header(iobuffer
+    EXPORT_FILE_NAME   biexport.h
+    EXPORT_MACRO_NAME  B_API
+    INCLUDE_GUARD_NAME IOBUFFER_EXPORT_H
+)
+
+## Setup library
 
 set(HEADERS
     include/iobuffer/iobuffer.h
+    "${CMAKE_CURRENT_BINARY_DIR}/biexport.h"
 )
 set(SOURCES
     src/bidefine.h
@@ -39,6 +52,9 @@ set_target_properties(iobuffer PROPERTIES
     C_STANDARD          90
     C_STANDARD_REQUIRED ON
     C_EXTENSIONS        OFF
+    C_VISIBILITY_PRESET hidden
+
+    VISIBILITY_INLINES_HIDDEN ON
 
     PUBLIC_HEADER "${HEADERS}"
 
@@ -48,7 +64,12 @@ set_target_properties(iobuffer PROPERTIES
 
 target_compile_options(iobuffer PUBLIC ${FLAGS})
 target_include_directories(iobuffer
-    PUBLIC "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>")
+    PUBLIC
+        "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>"
+        "$<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}>"
+    PRIVATE
+        "${CMAKE_CURRENT_SOURCE_DIR}/src"
+)
 
 # Platform-depend settings
 
@@ -62,7 +83,9 @@ endif()
 
 if(PROJECT_IS_TOP_LEVEL)
     set_target_properties(iobuffer PROPERTIES
-        ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/bin")
+        ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/bin"
+        LIBRARY_OUTPUT_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/bin"
+    )
 endif()
 
 # Setup tests
@@ -83,6 +106,7 @@ if (PROJECT_IS_TOP_LEVEL)
         TARGETS iobuffer
         EXPORT  iobuffer_targets
         ARCHIVE       DESTINATION "${CMAKE_INSTALL_LIBDIR}"
+        LIBRARY       DESTINATION "${CMAKE_INSTALL_LIBDIR}"
         PUBLIC_HEADER DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/iobuffer"
     )
 
