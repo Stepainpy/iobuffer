@@ -37,25 +37,25 @@ jobs:
             compiler: msvc
             is-shared: OFF
             build-type: Release
-            generator: "Visual Studio 18 2026"
+            generator: "Visual Studio 17 2022"
 
           - os: windows
             compiler: msvc
             is-shared: ON
             build-type: Release
-            generator: "Visual Studio 18 2026"
+            generator: "Visual Studio 17 2022"
 
           - os: windows
             compiler: msvc
             is-shared: OFF
             build-type: Debug
-            generator: "Visual Studio 18 2026"
+            generator: "Visual Studio 17 2022"
 
           - os: windows
             compiler: msvc
             is-shared: ON
             build-type: Debug
-            generator: "Visual Studio 18 2026"
+            generator: "Visual Studio 17 2022"
 
     steps:
       - uses: actions/checkout@v6
