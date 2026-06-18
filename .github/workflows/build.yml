@@ -35,6 +35,12 @@ jobs:
         include:
           - os: windows
             compiler: msvc
+            is-shared:
+              - OFF
+              - ON
+            build-type:
+              - Release
+              - Debug
             generator: "Visual Studio 17 2022"
 
     steps:
