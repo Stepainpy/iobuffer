@@ -37,7 +37,12 @@ set(SOURCES
 set(FLAGS -O2 -Wall -Wextra -Wpedantic)
 
 if(MSVC)
-    set(FLAGS /O2 /W4 /wd4267 /wd4244 /wd4146 /wd4457 /wd4456 /wd4701)
+    set(FLAGS /W4 /wd4267 /wd4244 /wd4146 /wd4457 /wd4456 /wd4701)
+    if(CMAKE_BUILD_TYPE STREQUAL Debug)
+        list(APPEND FLAGS /Od)
+    else()
+        list(APPEND FLAGS /O2)
+    endif()
 else()
     list(APPEND FLAGS -Wno-long-long)
 endif()
