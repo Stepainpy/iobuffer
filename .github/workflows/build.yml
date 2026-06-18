@@ -23,9 +23,9 @@ jobs:
         compiler:
           - gcc
           - llvm
-        is-shared:
-          - OFF
-          - ON
+        lib-type:
+          - static
+          - shared
         build-type:
           - Release
           - Debug
@@ -44,7 +44,7 @@ jobs:
         run: >
           cmake -S . -B build -G "Unix Makefiles"
           -DCMAKE_BUILD_TYPE:STRING=${{ matrix.build-type }}
-          -DBUILD_SHARED_LIBS:BOOL=${{ matrix.is-shared }}
+          -DBUILD_SHARED_LIBS:BOOL=${{ case(matrix.lib-type == 'shared', 'ON', 'OFF') }}
 
       - name: Build project
         run: |
@@ -62,9 +62,9 @@ jobs:
       fail-fast: false
 
       matrix:
-        is-shared:
-          - OFF
-          - ON
+        lib-type:
+          - static
+          - shared
         build-type:
           - Release
           - Debug
@@ -79,7 +79,7 @@ jobs:
         run: >
           cmake -S . -B build -G "Visual Studio 18 2026"
           -DCMAKE_BUILD_TYPE:STRING=${{ matrix.build-type }}
-          -DBUILD_SHARED_LIBS:BOOL=${{ matrix.is-shared }}
+          -DBUILD_SHARED_LIBS:BOOL=${{ case(matrix.lib-type == 'shared', 'ON', 'OFF') }}
 
       - name: Build project
         run: |
