@@ -29,33 +29,6 @@ jobs:
         build-type:
           - Release
           - Debug
-        generator:
-          - "Unix Makefiles"
-
-        include:
-          - os: windows
-            compiler: msvc
-            is-shared: OFF
-            build-type: Release
-            generator: "Visual Studio 17 2022"
-
-          - os: windows
-            compiler: msvc
-            is-shared: ON
-            build-type: Release
-            generator: "Visual Studio 17 2022"
-
-          - os: windows
-            compiler: msvc
-            is-shared: OFF
-            build-type: Debug
-            generator: "Visual Studio 17 2022"
-
-          - os: windows
-            compiler: msvc
-            is-shared: ON
-            build-type: Debug
-            generator: "Visual Studio 17 2022"
 
     steps:
       - uses: actions/checkout@v6
@@ -63,15 +36,48 @@ jobs:
       - name: Setup C compiler
         uses: aminya/setup-cpp@v1
         with:
-          compiler:  ${{ matrix.compiler }}
-          vcvarsall: ${{ matrix.compiler == 'msvc' }}
-          make:      ${{ matrix.compiler != 'msvc' }}
-
+          compiler: ${{ matrix.compiler }}
           cmake: true
+          make: true
 
       - name: Configure CMake
         run: >
-          cmake -S . -B build -G "${{ matrix.generator }}"
+          cmake -S . -B build -G "Unix Makefiles"
+          -DCMAKE_BUILD_TYPE:STRING=${{ matrix.build-type }}
+          -DBUILD_SHARED_LIBS:BOOL=${{ matrix.is-shared }}
+
+      - name: Build project
+        run: |
+          cmake --build build --config ${{ matrix.build-type }}
+
+      - name: Run tests
+        working-directory: ./build
+        run: |
+          ctest --output-on-failure -C ${{ matrix.build-type }}
+
+  build-msvc:
+    runs-on: windows-latest
+
+    strategy:
+      fail-fast: false
+
+      matrix:
+        is-shared:
+          - OFF
+          - ON
+        build-type:
+          - Release
+          - Debug
+
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Setup C compiler
+        uses: ilammy/msvc-dev-cmd@v1
+
+      - name: Configure CMake
+        run: >
+          cmake -S . -B build -G "Visual Studio 18 2026"
           -DCMAKE_BUILD_TYPE:STRING=${{ matrix.build-type }}
           -DBUILD_SHARED_LIBS:BOOL=${{ matrix.is-shared }}
 
