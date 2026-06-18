@@ -13,7 +13,7 @@ jobs:
     runs-on: ${{ matrix.os }}-latest
 
     env:
-      msvc-gen: "Visual Studio 18 2026"
+      MSVCGEN: "Visual Studio 18 2026"
 
     strategy:
       fail-fast: false
@@ -40,25 +40,25 @@ jobs:
             compiler: msvc
             is-shared: OFF
             build-type: Release
-            generator: ${{ env.msvc-gen }}
+            generator: ${{ env.MSVCGEN }}
 
           - os: windows
             compiler: msvc
             is-shared: ON
             build-type: Release
-            generator: ${{ env.msvc-gen }}
+            generator: ${{ env.MSVCGEN }}
 
           - os: windows
             compiler: msvc
             is-shared: OFF
             build-type: Debug
-            generator: ${{ env.msvc-gen }}
+            generator: ${{ env.MSVCGEN }}
 
           - os: windows
             compiler: msvc
             is-shared: ON
             build-type: Debug
-            generator: ${{ env.msvc-gen }}
+            generator: ${{ env.MSVCGEN }}
 
     steps:
       - uses: actions/checkout@v6
