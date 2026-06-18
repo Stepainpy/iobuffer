@@ -8,6 +8,9 @@ on:
     branches:
       - main
 
+env:
+  msvc-gen: 'Visual Studio 18 2026'
+
 jobs:
   build:
     runs-on: ${{ matrix.os }}-latest
@@ -35,13 +38,27 @@ jobs:
         include:
           - os: windows
             compiler: msvc
-            is-shared:
-              - OFF
-              - ON
-            build-type:
-              - Release
-              - Debug
-            generator: "Visual Studio 17 2022"
+            is-shared: OFF
+            build-type: Release
+            generator: ${{ env.msvc-gen }}
+
+          - os: windows
+            compiler: msvc
+            is-shared: ON
+            build-type: Release
+            generator: ${{ env.msvc-gen }}
+
+          - os: windows
+            compiler: msvc
+            is-shared: OFF
+            build-type: Debug
+            generator: ${{ env.msvc-gen }}
+
+          - os: windows
+            compiler: msvc
+            is-shared: ON
+            build-type: Debug
+            generator: ${{ env.msvc-gen }}
 
     steps:
       - uses: actions/checkout@v6
@@ -57,8 +74,9 @@ jobs:
 
       - name: Enable variables for MSVC
         if: ${{ matrix.compiler == 'msvc' }}
+        working-directory: "C:\\Program Files (x86)\\Microsoft Visual Studio\\18\\BuildTools\\VS\\Auxiliary\\Build"
         run: |
-          "C:\\Program Files (x86)\\Microsoft Visual Studio\\17\\BuildTools\\VS\\Auxiliary\\Build\\vcvarsall.bat"
+          .\\vcvarsall.bat
 
       - name: Configure CMake
         run: >
