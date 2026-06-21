@@ -6,6 +6,15 @@ project(iobuffer
     LANGUAGES    C
 )
 
+## Settings
+
+option(IOBUFFER_BUILD_TESTS "Build test targets"    ${PROJECT_IS_TOP_LEVEL})
+option(IOBUFFER_INSTALL     "Create install target" ${PROJECT_IS_TOP_LEVEL})
+
+if(DEFINED IOBUFFER_SHARED_LIBS)
+    set(BUILD_SHARED_LIBS ${IOBUFFER_SHARED_LIBS})
+endif()
+
 ## Create library
 
 add_library(iobuffer)
@@ -96,7 +105,7 @@ endif()
 
 # Setup tests
 
-if(PROJECT_IS_TOP_LEVEL)
+if(IOBUFFER_BUILD_TESTS)
     include(CTest)
     add_subdirectory(tests)
     enable_testing()
@@ -104,7 +113,7 @@ endif()
 
 # Installation
 
-if (PROJECT_IS_TOP_LEVEL)
+if(IOBUFFER_INSTALL)
     include(GNUInstallDirs)
     include(CMakePackageConfigHelpers)
 
