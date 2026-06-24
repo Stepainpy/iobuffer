@@ -4,8 +4,8 @@ set(CVERSIONS 90 99 11 23)
 
 file(GLOB TESTFILES RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "src/b*.c")
 
-option(IOBT_FMT_DI_ENABLE_LIMITS "Enable check output of signed limits" ON)
-option(IOBT_FMT_BOUX_ENABLE_LIMITS "Enable check output of unsigned limits" ON)
+option(IOBT_FMT_ENABLE_SINT_LIMITS "Enable check output of   signed limits" ON)
+option(IOBT_FMT_ENABLE_UINT_LIMITS "Enable check output of unsigned limits" ON)
 
 if(NOT MSVC)
     list(APPEND FLAGS -Wno-variadic-macros)
@@ -35,13 +35,13 @@ foreach(CVER IN ITEMS ${CVERSIONS})
             C_EXTENSIONS        OFF
         )
 
-        if(IOBT_FMT_DI_ENABLE_LIMITS)
+        if(IOBT_FMT_ENABLE_SINT_LIMITS)
             target_compile_definitions(${TESTNAME}
-                PRIVATE IOBT_FMT_DI_ENABLE_LIMITS=1)
+                PRIVATE IOBT_FMT_ENABLE_SINT_LIMITS=1)
         endif()
-        if(IOBT_FMT_BOUX_ENABLE_LIMITS)
+        if(IOBT_FMT_ENABLE_UINT_LIMITS)
             target_compile_definitions(${TESTNAME}
-                PRIVATE IOBT_FMT_BOUX_ENABLE_LIMITS=1)
+                PRIVATE IOBT_FMT_ENABLE_UINT_LIMITS=1)
         endif()
 
         if(WIN32)

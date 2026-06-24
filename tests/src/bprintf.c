@@ -142,7 +142,7 @@ int main(void) {
     test_format("%05.3i", "  015", 15);
     test_format("%-05.3i", "015  ", 15);
 
-#if IOBT_FMT_DI_ENABLE_LIMITS
+#if IOBT_FMT_ENABLE_SINT_LIMITS
     test_format("%+hhi", "+127", SCHAR_MAX);
     test_format("%+hhi", "-128", SCHAR_MIN);
 
@@ -173,7 +173,7 @@ int main(void) {
     test_format("%+zi", "-1", SIZE_MAX);
     test_format("%+zi", "+0", (size_t)0);
 #endif
-#endif /* IOBT_FMT_DI_ENABLE_LIMITS */
+#endif /* IOBT_FMT_ENABLE_SINT_LIMITS */
 
     /* Unsigned integer specifier */
     /* and pointer specifier (implicit) */
@@ -234,7 +234,7 @@ int main(void) {
     test_format("%#06x", "0x000f", 15);
     test_format("%#6x", "   0xf", 15);
 
-#if IOBT_FMT_BOUX_ENABLE_LIMITS
+#if IOBT_FMT_ENABLE_UINT_LIMITS
     test_format("%hhu", "255", UCHAR_MAX);
     test_format("%hu", "65535", USHRT_MAX);
     test_format("%u", "4294967295", UINT_MAX);
@@ -251,7 +251,7 @@ int main(void) {
     test_format("%tu", "9223372036854775807", PTRDIFF_MAX);
     test_format("%zu", "18446744073709551615", SIZE_MAX);
 #endif
-#endif /* IOBT_FMT_BOUX_ENABLE_LIMITS */
+#endif /* IOBT_FMT_ENABLE_UINT_LIMITS */
 
     /* Float-point number specifier */
 
