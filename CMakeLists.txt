@@ -6,7 +6,7 @@ project(iobuffer
     LANGUAGES    C
 )
 
-## Settings
+## External settings
 
 option(IOBUFFER_BUILD_TESTS "Build test targets"    ${PROJECT_IS_TOP_LEVEL})
 option(IOBUFFER_INSTALL     "Create install target" ${PROJECT_IS_TOP_LEVEL})
@@ -20,7 +20,7 @@ endif()
 add_library(iobuffer)
 add_library(iobuffer::iobuffer ALIAS iobuffer)
 
-## Generate export macros
+## Generate export macro
 
 include(GenerateExportHeader)
 
@@ -32,6 +32,8 @@ generate_export_header(iobuffer
 
 ## Setup library
 
+# Set headers and sources
+
 set(HEADERS
     include/iobuffer/iobuffer.h
     "${CMAKE_CURRENT_BINARY_DIR}/biexport.h"
@@ -42,6 +44,8 @@ set(SOURCES
     src/vbiscanf.c
     src/vbiprintf.c
 )
+
+# Set flags for compiling
 
 set(FLAGS -O2 -Wall -Wextra -Wpedantic)
 
@@ -59,6 +63,8 @@ endif()
 if(CMAKE_C_COMPILER_ID MATCHES "Clang$")
     list(APPEND FLAGS -Wno-newline-eof)
 endif()
+
+# Set target properties
 
 target_sources(iobuffer PRIVATE ${SOURCES})
 
