@@ -7,21 +7,8 @@ file(GLOB TESTFILES RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "src/b*.c")
 option(IOBT_FMT_DI_ENABLE_LIMITS "Enable check output of signed limits" ON)
 option(IOBT_FMT_BOUX_ENABLE_LIMITS "Enable check output of unsigned limits" ON)
 
-set(FLAGS -O2 -Wall -Wextra -Wpedantic -Wno-variadic-macros)
-
-if(MSVC)
-    set(FLAGS /W4 /wd4267 /wd4244 /wd4146 /wd4457 /wd4456 /wd4701)
-    if(CMAKE_BUILD_TYPE STREQUAL Debug)
-        list(APPEND FLAGS /Od)
-    else()
-        list(APPEND FLAGS /O2)
-    endif()
-else()
-    list(APPEND FLAGS -Wno-long-long)
-endif()
-
-if(CMAKE_C_COMPILER_ID MATCHES "Clang$")
-    list(APPEND FLAGS -Wno-newline-eof)
+if(NOT MSVC)
+    list(APPEND FLAGS -Wno-variadic-macros)
 endif()
 
 foreach(CVER IN ITEMS ${CVERSIONS})
