@@ -1,5 +1,12 @@
 # Changelog
 
+## 3.1.0 - 2026-06-25
+
+### Added
+
+- Building as static or shared
+- CMake options for building
+
 ## 3.0.3 - 2026-06-15
 
 ### Fixed
