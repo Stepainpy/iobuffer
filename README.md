@@ -14,18 +14,22 @@ Dynamic buffer with API like standard C files. Support standard C89 (ANSI C).
 
 ## Working with project
 
-Building
+Building:
 ``` console
-$ cmake -S . -B build
+$ cmake -S . -B build # -D options
 $ cmake --build build --config Release
 ```
+Building options:
+* `IOBUFFER_SHARED_LIBS` (default not defined) - if defined, it is assigned as a value for `BUILD_SHARED_LIBS`.
+* `IOBUFFER_BUILD_TESTS` (default is value of `PROJECT_IS_TOP_LEVEL`) - Building test targets.
+* `IOBUFFER_INSTALL`     (default is value of `PROJECT_IS_TOP_LEVEL`) - Setup files for install.
 
-Running tests
+Running tests:
 ``` console
 $ ctest --test-dir build --output-on-failure
 ```
 
-Installation
+Installation:
 ``` console
 $ cmake --install build --config Release
 ```
