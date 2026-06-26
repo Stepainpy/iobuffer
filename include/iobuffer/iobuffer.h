@@ -9,10 +9,10 @@
 #ifndef IOBUFFER_H
 #define IOBUFFER_H
 
+#include <iobuffer/biexport.h>
+
 #include <stdarg.h>
 #include <stddef.h>
-
-#include <biexport.h>
 
 /* Version macros */
 

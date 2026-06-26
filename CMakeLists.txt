@@ -25,7 +25,7 @@ add_library(iobuffer::iobuffer ALIAS iobuffer)
 include(GenerateExportHeader)
 
 generate_export_header(iobuffer
-    EXPORT_FILE_NAME   biexport.h
+    EXPORT_FILE_NAME   include/iobuffer/biexport.h
     EXPORT_MACRO_NAME  B_API
     INCLUDE_GUARD_NAME IOBUFFER_EXPORT_H
 )
@@ -35,8 +35,8 @@ generate_export_header(iobuffer
 # Set headers and sources
 
 set(HEADERS
-    include/iobuffer/iobuffer.h
-    "${CMAKE_CURRENT_BINARY_DIR}/biexport.h"
+    "${CMAKE_CURRENT_SOURCE_DIR}/include/iobuffer/iobuffer.h"
+    "${CMAKE_CURRENT_BINARY_DIR}/include/iobuffer/biexport.h"
 )
 set(SOURCES
     src/bidefine.h
@@ -86,7 +86,8 @@ target_compile_options(iobuffer PUBLIC ${FLAGS})
 target_include_directories(iobuffer
     PUBLIC
         "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>"
-        "$<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}>"
+        "$<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/include>"
+        "$<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>"
     PRIVATE
         "${CMAKE_CURRENT_SOURCE_DIR}/src"
 )
