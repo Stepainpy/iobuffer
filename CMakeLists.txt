@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.21)
 project(iobuffer
-    VERSION      3.1.0
+    VERSION      3.1.1
     DESCRIPTION "Dynamic memory buffer with API as C standard FILE"
     HOMEPAGE_URL https://github.com/Stepainpy/iobuffer
     LANGUAGES    C
