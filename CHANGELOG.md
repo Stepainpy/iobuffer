@@ -1,5 +1,11 @@
 # Changelog
 
+## 3.1.1 - 2026-06-26
+
+### Fixed
+
+- Including `biexport.h` file
+
 ## 3.1.0 - 2026-06-25
 
 ### Added
